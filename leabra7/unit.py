@@ -9,8 +9,12 @@ class Unit:
         else:
             self.spec = spec
 
+        # Net input (excitation) without time integration
         self.net_raw = 0.0
+        # Net inpput (excitation) with time integration
         self.net = 0.0
+        # Total (feedback + feedforward) inhibition
+        self.gc_i = 0.0
 
     def add_input(self, inpt: float) -> None:
         self.net_raw += inpt
@@ -18,3 +22,6 @@ class Unit:
     def update_net(self) -> None:
         self.net += self.spec.integ * self.spec.net_dt * (
             self.net_raw - self.net)
+
+    def update_inhibition(self, gc_i: float) -> None:
+        self.gc_i = gc_i
