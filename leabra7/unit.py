@@ -22,6 +22,7 @@ class Unit:
     def update_net_input(self) -> None:
         self.net += self.spec.integ * self.spec.net_dt * (
             self.net_raw - self.net)
+        self.net_raw = 0.0
 
     def update_inhibition(self, gc_i: float) -> None:
         self.gc_i = gc_i
