@@ -20,3 +20,7 @@ class Layer:
 
     def avg_act(self) -> float:
         return statistics.mean(unit.act for unit in self.units)
+
+    def update_net_input(self) -> None:
+        for u in self.units:
+            u.update_net_input()
