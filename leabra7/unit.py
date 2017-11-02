@@ -15,6 +15,8 @@ class Unit:
         self.net = 0.0
         # Total (feedback + feedforward) inhibition
         self.gc_i = 0.0
+        # Activation
+        self.act = 0.0
 
     def add_input(self, inpt: float) -> None:
         self.net_raw += inpt

@@ -16,6 +16,11 @@ class Spec:
         return self.__dict__ == other.__dict__
 
 
+class UnitSpec(Spec):
+    # Net input integration time constant
+    net_dt = 1 / 1.4
+
+
 class LayerSpec(Spec):
     # Feedforward inhibition multiplier
     ff = 1.0
@@ -28,7 +33,5 @@ class LayerSpec(Spec):
     # Global (feedforward + feedback) inhibition multiplier
     gi = 1.8
 
-
-class UnitSpec(Spec):
-    # Net input integration time constant
-    net_dt = 1 / 1.4
+    # Layers need to know how to construct their units
+    unit_spec = UnitSpec()
