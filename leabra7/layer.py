@@ -18,9 +18,24 @@ class Layer:
 
         self.units = [unit.Unit(self.spec.unit_spec) for _ in range(size)]
 
+        self.fbi = 0.0
+
     def avg_act(self) -> float:
         return statistics.mean(unit.act for unit in self.units)
 
-    def update_net_input(self) -> None:
-        for u in self.units:
-            u.update_net_input()
+    def avg_net(self) -> float:
+        return statistics.mean(unit.net for unit in self.units)
+
+    def update_net(self) -> None:
+        for i in self.units:
+            i.update_net()
+
+    def update_inhibition(self) -> None:
+        # Feedforward inhibition
+        ffi = self.spec.ff * max(self.avg_net() - self.spec.ff0, 0)
+        # Feedback inhibition
+        self.fbi = self.spec.fb_dt * (self.spec.fb * self.avg_act() - self.fbi)
+        gc_i = self.spec.gi * (ffi * self.fbi)
+
+        for i in self.units:
+            i.update_inhibition(gc_i)
