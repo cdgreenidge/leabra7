@@ -17,8 +17,18 @@ class Spec:
 
 
 class UnitSpec(Spec):
+    # Excitation (net input) reversal potential
+    e_rev_e = 1
+    # Inhibitory reversal potential
+    e_rev_i = 0.25
+    # Leak reversal potential
+    e_rev_l = 0.3
+    # Leak current (this never updates, so it is a constant)
+    gc_l = 0.1
     # Net input integration time constant
     net_dt = 1 / 1.4
+    # Membrane potential integration time constant
+    vm_dt = 1 / 3.3
 
 
 class LayerSpec(Spec):
