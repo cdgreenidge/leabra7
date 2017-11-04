@@ -22,3 +22,8 @@ def test_unit_can_add_inputs_to_the_raw_net_input():
     unit = un.Unit()
     unit.add_input(3)
     assert unit.net_raw == 3
+
+
+def test_unit_can_update_its_membrane_potential():
+    unit = un.Unit()
+    unit.update_membrane_potential()
