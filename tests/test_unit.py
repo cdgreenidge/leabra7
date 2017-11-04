@@ -92,3 +92,8 @@ def test_unit_can_add_inputs_to_the_raw_un_input():
 def test_unit_can_update_its_membrane_potential():
     unit = un.Unit()
     unit.update_membrane_potential()
+
+
+def test_unit_can_update_its_activation():
+    unit = un.Unit()
+    unit.update_activation()

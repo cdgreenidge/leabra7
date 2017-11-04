@@ -25,10 +25,20 @@ class UnitSpec(Spec):
     e_rev_l = 0.3
     # Leak current (this never updates, so it is a constant)
     gc_l = 0.1
+    # Spiking threshold
+    spk_thr = 0.5
+    # Potential reset value after spike
+    v_m_r = 0.3
+    # Adaption current gain from potential
+    vm_gain = 0.04
+    # Adaption current gain from spiking
+    spike_gain = 0.00805
     # Net input integration time constant
     net_dt = 1 / 1.4
     # Membrane potential integration time constant
     vm_dt = 1 / 3.3
+    # Adaption current integration time constant
+    adapt_dt = 1 / 144
 
 
 class LayerSpec(Spec):

@@ -1,6 +1,5 @@
 """A single computational unit, similar to a neuron."""
 from typing import Any
-from typing import Callable
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -60,26 +59,10 @@ def nxx1_table() -> Any:
     return (xs_valid, conv)
 
 
-def nxx1_interpolator() -> Callable[[float], float]:
-    """Returns a function that caches and interpolates the noisy xx1 lookup
-    table.
-
-    """
-    xs, conv = nxx1_table()
-    f = scipy.interpolate.interp1d(xs, conv, copy=False)
-
-    def nxx1(x: float) -> float:
-        if x < xs[0]:
-            return conv[0]
-        elif x > xs[-1]:
-            return conv[-1]
-        return f(x)
-
-    return nxx1
-
-
 class Unit:
-    nxx1 = staticmethod(nxx1_interpolator())
+    nxx1_xs, nxx1_ys = nxx1_table()
+    nxx1_interpolator = scipy.interpolate.interp1d(
+        nxx1_xs, nxx1_ys, copy=False)
 
     def __init__(self, spec: specs.UnitSpec = None) -> None:
         if spec is None:
@@ -105,6 +88,8 @@ class Unit:
         self.v_m_eq = 0.0
         # Adaption current
         self.adapt = 0.0
+        # Are we spiking? (0 or 1)
+        self.spike = 0
 
     def add_input(self, inpt: float) -> None:
         self.net_raw += inpt
@@ -131,3 +116,34 @@ class Unit:
         self.v_m_eq += self.spec.integ * self.spec.vm_dt * (
             self.i_net_r - self.adapt)
         # yapf: enable
+
+    def nxx1(self, x: float) -> float:
+        if x < self.nxx1_xs[0]:
+            return self.nxx1_ys[0]
+        elif x > self.nxx1_xs[-1]:
+            return self.nxx1_ys[-1]
+        return self.nxx1_interpolator(x)
+
+    def update_activation(self) -> None:
+        # yapf: disable
+        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) *
+                   self.spec.gc_l * (self.spec.e_rev_l - self.spec.spk_thr) -
+                   self.adapt) / (self.spec.spk_thr - self.spec.e_rev_e)
+        # yapf: enable
+
+        if self.v_m > self.spec.spk_thr:
+            self.spike = 1
+            self.v_m = self.spec.v_m_r
+        else:
+            self.spike = 0
+
+        if self.v_m_eq <= self.spec.spk_thr:
+            new_act = self.nxx1(self.v_m_eq - self.spec.spk_thr)
+        else:
+            new_act = self.nxx1(self.net - g_e_thr)
+        self.act += self.spec.integ * self.spec.vm_dt * (new_act - self.act)
+
+        self.adapt += self.spec.integ * (
+            self.spec.adapt_dt *
+            (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
+            self.spike * self.spec.spike_gain)
