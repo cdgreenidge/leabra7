@@ -1,6 +1,6 @@
 """Classes that bundle simulation parameters."""
-from typing import Dict
 from typing import Any
+from typing import Dict
 
 
 class Spec:
