@@ -54,3 +54,13 @@ def test_layer_should_be_able_to_update_its_units_net_input(mocker):
 def test_layer_should_be_able_to_update_its_units_inhibition(mocker):
     layer = lr.Layer(name="in", size=3)
     layer.update_inhibition()
+
+
+def test_layer_should_be_able_to_update_its_units_activation(mocker):
+    layer = lr.Layer(name="in", size=3)
+    layer.update_activation()
+
+
+def test_layer_should_be_able_to_do_an_activation_cycle():
+    layer = lr.Layer(name="in", size=3)
+    layer.activation_cycle()
