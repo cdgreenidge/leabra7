@@ -55,3 +55,11 @@ class LayerSpec(Spec):
 
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
+
+
+class ConnSpec(Spec):
+    pass
+
+
+class ProjnSpec(Spec):
+    pass
