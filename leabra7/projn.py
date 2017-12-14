@@ -58,5 +58,4 @@ class Projn:
     def flush(self) -> None:
         for c in self.conns:
             scale_eff = 1.0  # Currently netin scaling is not implemented
-            input = scale_eff * c.pre.act * c.wt
-            c.post.add_input(input)
+            c.post.add_input(scale_eff * c.pre.act * c.wt)

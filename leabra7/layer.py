@@ -40,6 +40,10 @@ class Layer:
         for i in self.units:
             i.update_inhibition(gc_i)
 
+    def update_membrane_potential(self) -> None:
+        for i in self.units:
+            i.update_membrane_potential()
+
     def update_activation(self) -> None:
         for i in self.units:
             i.update_activation()
@@ -47,4 +51,5 @@ class Layer:
     def activation_cycle(self) -> None:
         self.update_net()
         self.update_inhibition()
+        self.update_membrane_potential()
         self.update_activation()

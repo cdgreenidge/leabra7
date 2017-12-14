@@ -11,7 +11,7 @@ check:
 
 clean:
 	rm -rf .cache .mypy_cache *.egg-info .tox $(PROJECT)/__pycache__ \
-		tests/__pycache $(PROJECT)/*.pyc tests/*.pyc
+		tests/__pycache__ $(PROJECT)/*.pyc tests/*.pyc
 
 distclean: clean
 	rm -rf $(VIRTUALENV_DIR)/$(PROJECT)
