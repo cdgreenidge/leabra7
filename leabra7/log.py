@@ -46,6 +46,9 @@ class DataFrameBuffer:
         doesn't contain all the attributes in the dataframe, the missing
         attributes take None for their values.
 
+        Args:
+            row: The list of attribute observations to append to the buffer.
+
         """
         for k, v in row:
             self.buf[k].append(v)
