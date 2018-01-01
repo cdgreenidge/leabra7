@@ -16,11 +16,14 @@ class Net:
         self.layers = []  # type: List[layer.Layer]
         self.projns = []  # type: List[projn.Projn]
 
+    def _register(self, obj: Any) -> None:
+        self.objs[obj.name] = obj
+
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:
         lr = layer.Layer(name, size, spec)
         self.layers.append(lr)
-        self.objs[name] = lr
+        self._register(lr)
 
     def new_projn(self,
                   name: str,
@@ -31,7 +34,7 @@ class Net:
         post_lr = self.objs[post]
         pr = projn.Projn(name, pre_lr, post_lr, spec)
         self.projns.append(pr)
-        self.objs[name] = pr
+        self._register(pr)
 
     def cycle(self) -> None:
         for lr in self.layers:
