@@ -65,3 +65,35 @@ class DataFrameBuffer:
         for _, v in self.buf.items():
             while len(v) < self.length:
                 v.append(None)
+
+
+class Logger:
+    """Records target attributes to an internal buffer.
+
+    Args:
+        target: The object from which to record attributes. It must implement
+            an "observe" method with the signature Callable[[str], Any] that
+            takes any attribute name in attrs and returns the attribute value.
+        attrs: A list of attribute names to log.
+
+    """
+
+    def __init__(self, target: Any, attrs: List[str]) -> None:
+        self.target = target
+        self.attrs = attrs
+        self.buffer = DataFrameBuffer()
+
+    def record(self) -> None:
+        """Records the attributes to an internal buffer."""
+        row = [(a, self.target.observe(a)) for a in self.attrs]
+        self.buffer.append(row)
+
+    def to_df(self) -> pd.DataFrame:
+        """Converts the internal buffer to a dataframe.
+
+        Returns: A dataframe containing the contents of the internal buffer.
+          The columns names are the attribute names, and each row contains the
+          observations for one call of the record() method.
+
+        """
+        return self.buffer.to_df()

@@ -25,3 +25,22 @@ def test_it_converts_the_buffer_to_a_dataframe_on_flush():
     dfb.append([("a", 2), ("b", 4)])
     expected = pd.DataFrame.from_dict({"a": [1, 2], "b": [3, 4]})
     assert dfb.to_df().equals(expected)
+
+
+# Test log.Logger
+class ObjToLog:
+    """A dummy class with which to test logging."""
+
+    def observe(self, attr):
+        return getattr(self, attr)
+
+
+def test_it_can_record_attributes_from_an_object():
+    obj = ObjToLog()
+    logger = log.Logger(obj, ["a"])
+    obj.a = 3
+    logger.record()
+    obj.a = 4
+    logger.record()
+    expected = pd.DataFrame.from_dict({"a": [3, 4]})
+    assert logger.to_df().equals(expected)
