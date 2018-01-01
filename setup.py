@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages  # type: ignore
 
 setup(
     name="Leabra7",
@@ -8,5 +8,8 @@ setup(
     # We put the test requirements in the extra requirements also to access
     # them from outside tools, e.g. pip3 install .[dev]
     extras_require={
-        "dev": ["mypy", "pylint", "pytest", "pytest-mock", "tox", "yapf"]
+        "dev": [
+            "mypy", "pylint", "pytest", "pytest-cov", "pytest-mock", "tox",
+            "yapf"
+        ]
     })

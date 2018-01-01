@@ -20,4 +20,4 @@ format:
 	@yapf --parallel --recursive --in-place $(PROJECT) tests
 
 test:
-	@pytest
+	@pytest --cov=$(PROJECT)
