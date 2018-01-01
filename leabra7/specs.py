@@ -56,9 +56,6 @@ class LayerSpec(Spec):
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
 
-    # Attributes to log
-    log_on_cycle = []
-
 
 class ConnSpec(Spec):
     pass
