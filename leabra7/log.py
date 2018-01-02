@@ -74,12 +74,22 @@ class Logger:
         target: The object from which to record attributes. It must implement
             an "observe" method with the signature Callable[[str], Any] that
             takes any attribute name in attrs and returns the attribute value.
+            It must also have a "name" attribute, which is a string.
+        freq: The frequency at which the observations will be recorded.
+            Currently only "cycle" is allowed."
         attrs: A list of attribute names to log.
 
+    Attrs:
+        target_name (str): The name of the target object.
+        freq (str): The frequency at which the observations are recorded.
     """
 
-    def __init__(self, target: Any, attrs: List[str]) -> None:
+    def __init__(self, target: Any, freq: str, attrs: List[str]) -> None:
         self.target = target
+        self.target_name = target.name
+        if freq not in "cycle":
+            raise ValueError("Invalid frequency name.")
+        self.freq = freq
         self.attrs = attrs
         self.buffer = DataFrameBuffer()
 

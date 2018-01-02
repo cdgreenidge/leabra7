@@ -1,5 +1,6 @@
 """Test log.py"""
 import pandas as pd  # type: ignore
+import pytest
 
 from leabra7 import log
 
@@ -30,6 +31,7 @@ def test_dataframebuffer_can_serialize_itself_to_a_dataframe():
 # Test log.Logger
 class ObjToLog:
     """A dummy class with which to test logging."""
+    name = "obj"
 
     def observe(self, attr):
         return getattr(self, attr)
@@ -37,10 +39,29 @@ class ObjToLog:
 
 def test_logger_can_record_attributes_from_an_object():
     obj = ObjToLog()
-    logger = log.Logger(obj, ["a"])
+    logger = log.Logger(obj, "cycle", ["a"])
     obj.a = 3
     logger.record()
     obj.a = 4
     logger.record()
     expected = pd.DataFrame.from_dict({"a": [3, 4]})
     assert logger.to_df().equals(expected)
+
+
+def test_logger_has_a_name_property():
+    obj = ObjToLog()
+    logger = log.Logger(obj, "cycle", ["a"])
+    logger.name = "obj"
+    assert logger.name == "obj"
+
+
+def test_logger_has_a_frequency_property():
+    obj = ObjToLog()
+    logger = log.Logger(obj, "cycle", ["a"])
+    assert logger.freq == "cycle"
+
+
+def test_logger_throws_an_error_for_invalid_frequencies():
+    obj = ObjToLog()
+    with pytest.raises(ValueError):
+        log.Logger(obj, "antenna", ["a"])
