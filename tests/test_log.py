@@ -34,7 +34,7 @@ class ObjToLog:
     name = "obj"
 
     def observe(self, attr):
-        return getattr(self, attr)
+        return [(attr, getattr(self, attr))]
 
 
 def test_logger_can_record_attributes_from_an_object():

@@ -72,9 +72,12 @@ class Logger:
 
     Args:
         target: The object from which to record attributes. It must implement
-            an "observe" method with the signature Callable[[str], Any] that
-            takes any attribute name in attrs and returns the attribute value.
-            It must also have a "name" attribute, which is a string.
+            an "observe" method with the signature Callable[[str],
+            List[Tuple[str, Any]]] that takes any attribute name in attrs and
+            returns a list of observations (tuples with the attribute name and
+            attribute value.) This is neccessary because sometimes one
+            attribute, like "unit_act" can generate many observations like
+            "unit0_act", "unit1_act", etc.
         freq: The frequency at which the observations will be recorded.
             Currently only "cycle" is allowed."
         attrs: A list of attribute names to log.
@@ -82,6 +85,7 @@ class Logger:
     Attrs:
         target_name (str): The name of the target object.
         freq (str): The frequency at which the observations are recorded.
+
     """
 
     def __init__(self, target: Any, freq: str, attrs: List[str]) -> None:
@@ -95,15 +99,17 @@ class Logger:
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        row = [(a, self.target.observe(a)) for a in self.attrs]
+        row = []
+        for a in self.attrs:
+            row.extend(self.target.observe(a))
         self.buffer.append(row)
 
     def to_df(self) -> pd.DataFrame:
         """Converts the internal buffer to a dataframe.
 
         Returns: A dataframe containing the contents of the internal buffer.
-          The columns names are the attribute names, and each row contains the
-          observations for one call of the record() method.
+            The columns names are the attribute names, and each row contains
+            the observations for one call of the record() method.
 
         """
         return self.buffer.to_df()
