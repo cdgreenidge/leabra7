@@ -64,3 +64,24 @@ def test_layer_should_be_able_to_update_its_units_activation(mocker):
 def test_layer_should_be_able_to_do_an_activation_cycle():
     layer = lr.Layer(name="in", size=3)
     layer.activation_cycle()
+
+
+def test_layer_should_be_able_to_observe_simple_attributes():
+    layer = lr.Layer(name="in", size=3)
+    assert layer.observe("avg_act") == [("avg_act", 0.0)]
+
+
+def test_layer_should_be_able_to_identify_unit_attributes():
+    attr = "unit_act"
+    lr._parse_unit_attr(attr) == "act"
+    with pytest.raises(ValueError):
+        lr._parse_unit_attr("foobar")
+
+
+def test_layer_shuld_be_able_to_observe_unit_attributes():
+    layer = lr.Layer(name="in", size=3)
+    # yapf: disable
+    assert layer.observe("unit_act") == [("unit0_act", 0.0),
+                                         ("unit1_act", 0.0),
+                                         ("unit2_act", 0.0)]
+    # yapf: enable

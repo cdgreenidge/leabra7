@@ -99,7 +99,7 @@ class Logger:
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        row = []
+        row = []  # type: ObjObs
         for a in self.attrs:
             row.extend(self.target.observe(a))
         self.buffer.append(row)

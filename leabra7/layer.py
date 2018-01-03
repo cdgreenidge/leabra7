@@ -1,8 +1,17 @@
 """A layer, or group, of units."""
 import statistics
 
+from leabra7 import log
 from leabra7 import specs
 from leabra7 import unit
+
+
+def _parse_unit_attr(attr: str) -> str:
+    parts = attr.split('_')
+    valid_attr = len(parts) == 2 and parts[0] == "unit"
+    if not valid_attr:
+        raise ValueError("{0} is not a valid unit attribute.".format(attr))
+    return parts[1]
 
 
 class Layer:
@@ -53,3 +62,20 @@ class Layer:
         self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
+
+    def observe(self, attr: str) -> log.ObjObs:
+        try:
+            parsed = _parse_unit_attr(attr)
+            return [("unit{0}_{1}".format(i, parsed),
+                     unit.observe(parsed)[0][1])
+                    for i, unit in enumerate(self.units)]
+        except ValueError:
+            pass
+
+        if attr == "avg_act":
+            return [("avg_act", self.avg_act())]
+        elif attr == "avg_net":
+            return [("avg_net", self.avg_net())]
+        else:
+            raise ValueError(
+                "{0} is not a valid layer attribute.".format(attr))

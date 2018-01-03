@@ -53,6 +53,9 @@ class LayerSpec(Spec):
     # Global (feedforward + feedback) inhibition multiplier
     gi = 1.8
 
+    # Attrs to log every cycle. Possible values are ("avg_act", "avg_net")
+    log_on_cycle = ()
+
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
 

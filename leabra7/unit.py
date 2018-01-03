@@ -1,5 +1,7 @@
 """A single computational unit, similar to a neuron."""
 from typing import Any
+from typing import List
+from typing import Tuple
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -147,3 +149,11 @@ class Unit:
             self.spec.adapt_dt *
             (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
             self.spike * self.spec.spike_gain)
+
+    def observe(self, attr: str) -> List[Tuple[str, Any]]:
+        simple_attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r",
+                        "v_m", "v_m_eq", "adapt", "spike")
+        if attr in simple_attrs:
+            return [("attr", getattr(self, attr))]
+        else:
+            raise ValueError("{0} is not a loggable attr.".format(attr))
