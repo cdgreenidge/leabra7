@@ -7,7 +7,7 @@ from leabra7 import unit
 
 
 def _parse_unit_attr(attr: str) -> str:
-    parts = attr.split('_')
+    parts = attr.split('_', maxsplit=1)
     valid_attr = len(parts) == 2 and parts[0] == "unit"
     if not valid_attr:
         raise ValueError("{0} is not a valid unit attribute.".format(attr))

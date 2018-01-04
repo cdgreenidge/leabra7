@@ -1,6 +1,7 @@
 """Classes that bundle simulation parameters."""
 from typing import Any
 from typing import Dict
+from typing import Tuple  # noqa pylint: disable=W0611
 
 
 class Spec:
@@ -54,7 +55,7 @@ class LayerSpec(Spec):
     gi = 1.8
 
     # Attrs to log every cycle. Possible values are ("avg_act", "avg_net")
-    log_on_cycle = ()
+    log_on_cycle = ()  # type: Tuple[str, ...]
 
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()

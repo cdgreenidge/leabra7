@@ -78,22 +78,16 @@ class Logger:
             attribute value.) This is neccessary because sometimes one
             attribute, like "unit_act" can generate many observations like
             "unit0_act", "unit1_act", etc.
-        freq: The frequency at which the observations will be recorded.
-            Currently only "cycle" is allowed."
         attrs: A list of attribute names to log.
 
     Attrs:
         target_name (str): The name of the target object.
-        freq (str): The frequency at which the observations are recorded.
 
     """
 
-    def __init__(self, target: Any, freq: str, attrs: List[str]) -> None:
+    def __init__(self, target: Any, attrs: Tuple[str, ...]) -> None:
         self.target = target
         self.target_name = target.name
-        if freq not in "cycle":
-            raise ValueError("Invalid frequency name.")
-        self.freq = freq
         self.attrs = attrs
         self.buffer = DataFrameBuffer()
 

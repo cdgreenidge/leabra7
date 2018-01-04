@@ -39,7 +39,7 @@ class ObjToLog:
 
 def test_logger_can_record_attributes_from_an_object():
     obj = ObjToLog()
-    logger = log.Logger(obj, "cycle", ["a"])
+    logger = log.Logger(obj, ["a"])
     obj.a = 3
     logger.record()
     obj.a = 4
@@ -50,18 +50,6 @@ def test_logger_can_record_attributes_from_an_object():
 
 def test_logger_has_a_name_property():
     obj = ObjToLog()
-    logger = log.Logger(obj, "cycle", ["a"])
+    logger = log.Logger(obj, ["a"])
     logger.name = "obj"
     assert logger.name == "obj"
-
-
-def test_logger_has_a_frequency_property():
-    obj = ObjToLog()
-    logger = log.Logger(obj, "cycle", ["a"])
-    assert logger.freq == "cycle"
-
-
-def test_logger_throws_an_error_for_invalid_frequencies():
-    obj = ObjToLog()
-    with pytest.raises(ValueError):
-        log.Logger(obj, "antenna", ["a"])
