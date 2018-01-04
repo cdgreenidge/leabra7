@@ -22,3 +22,5 @@ def test_spec_supports_equality_comparison():
     a = Foo()
     b = Foo()
     assert a == b
+    a.a = 4
+    assert a != b
