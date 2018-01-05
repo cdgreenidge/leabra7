@@ -41,6 +41,10 @@ class Spec(metaclass=abc.ABCMeta):
     def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
 
+    # The following two assert methods could be pure functions, but this
+    # way we have access to the attr name, which makes our error messages more
+    # friendly
+
     def assert_in_range(self, attr: str, low: float, high: float) -> None:
         """Asserts that an attribute is in a closed interval.
 
@@ -60,8 +64,8 @@ class Spec(metaclass=abc.ABCMeta):
                 attr, low, high)
             raise ValidationError(msg)
 
-    def assert_not_nan(self, attr: str) -> None:
-        """Asserts that an attribute is not NaN.
+    def assert_sane_float(self, attr: str) -> None:
+        """Asserts that an attribute is not NaN, -Inf, or +Inf.
 
         Args:
             attr: The attribute to check.
@@ -70,12 +74,25 @@ class Spec(metaclass=abc.ABCMeta):
             ValidationError: If the attribute is Nan.
 
         """
-        if math.isnan(getattr(self, attr)):
+        value = getattr(self, attr)
+        if math.isnan(value):
             raise ValidationError("Attribute {0} is NaN.".format(attr))
+        elif value == float("-Inf"):
+            raise ValidationError("Attribute {0} is -Inf.".format(attr))
+        elif value == float("+Inf"):
+            raise ValidationError("Attribute {0} is +Inf.".format(attr))
 
     @abc.abstractmethod
     def validate(self) -> None:
-        """Raises ValidationError if any parameter is out of range."""
+        """Checks if any parameter has an invalid value.
+
+        Be sure to extend this method when subclassing.
+
+        Raises:
+            ValidationError: if any parameter has an invalid value.
+
+        """
+        self.assert_in_range("integ", 0, float("Inf"))
 
 
 class UnitSpec(Spec):
@@ -104,8 +121,23 @@ class UnitSpec(Spec):
     adapt_dt = 1 / 144
 
     def validate(self) -> None:
-        """Overrides `Spec.validate`."""
-        raise NotImplementedError
+        """Extends `Spec.validate`."""
+        super().validate()
+        self.assert_sane_float("e_rev_e")
+        self.assert_sane_float("e_rev_i")
+        self.assert_sane_float("e_rev_l")
+        self.assert_sane_float("gc_l")
+        self.assert_sane_float("spk_thr")
+        self.assert_sane_float("v_m_r")
+        self.assert_sane_float("spike_gain")
+        self.assert_in_range("net_dt", 0, float("Inf"))
+        self.assert_in_range("vm_dt", 0, float("Inf"))
+        self.assert_in_range("adapt_dt", 0, float("Inf"))
+
+        if self.v_m_r >= self.spk_thr:
+            raise ValidationError(
+                "v_m_r ({0}) cannot be >= spk_thr ({1}).".format(
+                    self.v_m_r, self.spk_thr))
 
 
 class LayerSpec(Spec):

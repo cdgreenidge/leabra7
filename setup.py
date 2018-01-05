@@ -9,7 +9,7 @@ setup(
     # them from outside tools, e.g. pip3 install .[dev]
     extras_require={
         "dev": [
-            "mypy", "pylint", "pytest", "pytest-cov", "pytest-mock", "tox",
-            "yapf"
+            "hypothesis", "mypy", "pylint", "pytest", "pytest-cov",
+            "pytest-mock", "tox", "yapf"
         ]
     })
