@@ -4,6 +4,7 @@ from typing import Any
 from typing import Dict  # noqa pylint: disable=W0611
 from typing import List
 from typing import Tuple
+from typing import Iterable
 
 import pandas as pd  # type: ignore
 
@@ -85,7 +86,7 @@ class Logger:
 
     """
 
-    def __init__(self, target: Any, attrs: Tuple[str, ...]) -> None:
+    def __init__(self, target: Any, attrs: Iterable[str]) -> None:
         self.target = target
         self.target_name = target.name
         self.attrs = attrs

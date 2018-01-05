@@ -1,9 +1,10 @@
 """Classes that bundle simulation parameters."""
 import abc
 import math
+
 from typing import Any
 from typing import Dict
-from typing import Tuple  # noqa pylint: disable=W0611
+from typing import Iterable  # noqa pylint: disable=W0611
 
 
 class ValidationError(Exception):
@@ -141,6 +142,7 @@ class UnitSpec(Spec):
 
 
 class LayerSpec(Spec):
+    """Spec for Layer objects."""
     # Feedforward inhibition multiplier
     ff = 1.0
     # Feedforward inhibition offset
@@ -153,23 +155,32 @@ class LayerSpec(Spec):
     gi = 1.8
 
     # Attrs to log every cycle. Possible values are ("avg_act", "avg_net")
-    log_on_cycle = ()  # type: Tuple[str, ...]
+    log_on_cycle = ()  # type: Iterable[str]
 
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
 
     def validate(self) -> None:
-        """Overrides `Spec.validate`."""
-        raise NotImplementedError
+        """Extends `Spec.validate`."""
+        super().validate()
+        self.assert_sane_float("ff")
+        self.assert_sane_float("fb")
+        self.assert_in_range("fb_dt", 0, float("Inf"))
+        self.assert_sane_float("gi")
+        self.unit_spec.validate()
 
 
 class ConnSpec(Spec):
-    def validate(self) -> None:
-        """Overrides `Spec.validate`."""
-        raise NotImplementedError
+    """Spec for `Conn`(ection) objects."""
+
+    def validate(self) -> None:  # pylint: disable=W0235
+        """Extends `Spec.validate`."""
+        super().validate()
 
 
 class ProjnSpec(Spec):
-    def validate(self) -> None:
-        """Overrides `Spec.validate`."""
-        raise NotImplementedError
+    """Spec for `Projn` objects."""
+
+    def validate(self) -> None:  # pylint: disable=W0235
+        """Extends `Spec.validate`."""
+        super().validate()
