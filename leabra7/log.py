@@ -96,6 +96,9 @@ class ObservableMixin(metaclass=abc.ABCMeta):
             because one attribute, like a layer's "unit_act", can return many
             observations, e.g. [("unit0_act", 0.0), ("unit1_act", 0.0), ...]
 
+        Raises:
+            ValueError: if attr is not a loggable attribute.
+
         """
 
 

@@ -97,3 +97,14 @@ def test_unit_can_update_its_membrane_potential():
 def test_unit_can_update_its_activation():
     unit = un.Unit()
     unit.update_activation()
+
+
+def test_unit_can_observe_its_attributes():
+    unit = un.Unit()
+    assert unit.observe("act") == [("act", 0.0)]
+
+
+def test_unit_raises_valueerror_if_attr_is_unobservable():
+    unit = un.Unit()
+    with pytest.raises(ValueError):
+        unit.observe("banannas")

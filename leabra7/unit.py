@@ -1,4 +1,10 @@
-"""A single computational unit, similar to a neuron."""
+"""A single computational unit, similar to a neuron.
+
+For details on the algorithm, see O'Reilly, R. C., Munakata, Y., Frank, M. J.,
+Hazy, T. E., and Contributors (2012). Computational Cognitive Neuroscience.
+Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
+
+"""
 from typing import Any
 from typing import List
 from typing import Tuple
@@ -13,8 +19,17 @@ from leabra7 import specs
 
 
 def gaussian(res: float, std: float) -> Any:
-    """Returns a Gaussian PDF with mean 0 and variance std^2, in an array of
-    resolution res.
+    """Returns a Gaussian PDF in a Numpy array.
+
+    It has mean 0. Some of the math here is funky but it exactly matches the
+    Emergent implementation.
+
+    Args:
+        res: The resolution of the array.
+        std: The standard deviation of the PDF.
+
+    Returns:
+        A Numpy array containing the Gaussian PDF.
 
     """
     if std < 1e-3:
@@ -23,15 +38,22 @@ def gaussian(res: float, std: float) -> Any:
         raise ValueError("Gaussian res cannot be greater than 3.0 * std.")
     xlim = 3.0 * std
     xs = np.arange(-xlim, xlim + res, res)
-    # Not sure why variance is half the normal size
+    # Not sure why variance is half the normal size in Emergent
     gauss = np.exp(-(xs * xs) / (std * std))
     # We need to normalize with a sum because our tails do not go to infinity
     return gauss / sum(gauss)
 
 
 def xx1(res: float, xmin: float, xmax: float) -> Any:
-    """Returns the xx1 function from xmin to xmax in an array with resolution
-    res.
+    """Evaluates the xx1 from xmin to xmax.
+
+    Args:
+        res: The resolution of the array.
+        xmin: The lower bound.
+        xmax: The upper bound.
+
+    Returns:
+        A Numpy array containing the xx1 function evaluated from xmin to xmax.
 
     """
     xs = np.arange(xmin, xmax, res)
@@ -41,8 +63,13 @@ def xx1(res: float, xmin: float, xmax: float) -> Any:
 
 
 def nxx1_table() -> Any:
-    """Returns an (x, y) tuple where x and y are arrays holding the x and f(x)
-    values of the xx1 function convolved with Gaussian noise.
+    """Returns a lookup table for the noisy XX1 function.
+
+    The standard XX1 function is convolved with Gaussian noise.
+
+    Returns:
+        An (x, y) tuple where x and y are Numpy arrays holding the x and f(x)
+        values of the xx1 function convolved with Gaussian noise.
 
     """
     res = 0.001  # Resolution of x-axis
@@ -62,6 +89,12 @@ def nxx1_table() -> Any:
 
 
 class Unit():
+    """A computational unit (aka neuron.)
+
+    Args:
+        spec: The specification for the unit.
+
+    """
     nxx1_xs, nxx1_ys = nxx1_table()
     nxx1_interpolator = scipy.interpolate.interp1d(
         nxx1_xs, nxx1_ys, copy=False)
@@ -94,17 +127,26 @@ class Unit():
         self.spike = 0
 
     def add_input(self, inpt: float) -> None:
+        """Registers an input to the unit."""
         self.net_raw += inpt
 
     def update_net(self) -> None:
+        """Calculates the input for the next cycle by integrating over time."""
         self.net += self.spec.integ * self.spec.net_dt * (
             self.net_raw - self.net)
         self.net_raw = 0.0
 
     def update_inhibition(self, gc_i: float) -> None:
+        """Sets the unit inhibition."""
         self.gc_i = gc_i
 
     def update_membrane_potential(self) -> None:
+        """Updates the membrane potential.
+
+        This assumes we already have updated the net input and unit
+        inhibition.
+
+        """
         # yapf: disable
         self.i_net = (self.net * (self.spec.e_rev_e - self.v_m) +
                       self.spec.gc_l * (self.spec.e_rev_l - self.v_m) +
@@ -120,6 +162,19 @@ class Unit():
         # yapf: enable
 
     def nxx1(self, x: float) -> float:
+        """Evaluates the noisy X/(X + 1) function.
+
+        This is used to approximate the rate-coded unit response to a given
+        input.
+
+        Args:
+            x: The value at which to evaluate the noisy X/(X + 1) function.
+
+        Returns:
+            The value of the noisy X/(X + 1) function at `x`.
+
+        """
+        # We clamp x to the lookup table bounds if it lies outside them.
         if x < self.nxx1_xs[0]:
             return self.nxx1_ys[0]
         elif x > self.nxx1_xs[-1]:
@@ -127,6 +182,11 @@ class Unit():
         return self.nxx1_interpolator(x)
 
     def update_activation(self) -> None:
+        """Updates the unit activation.
+
+        This assumes we have already updated the unit membrane potential.
+
+        """
         # yapf: disable
         g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) *
                    self.spec.gc_l * (self.spec.e_rev_l - self.spec.spk_thr) -
@@ -151,9 +211,10 @@ class Unit():
             self.spike * self.spec.spike_gain)
 
     def observe(self, attr: str) -> List[Tuple[str, Any]]:
+        """Exactly the same as Log.ObservableMixin.observe()."""
         simple_attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r",
                         "v_m", "v_m_eq", "adapt", "spike")
         if attr in simple_attrs:
-            return [("attr", getattr(self, attr))]
+            return [(attr, getattr(self, attr))]
         else:
             raise ValueError("{0} is not a loggable attr.".format(attr))
