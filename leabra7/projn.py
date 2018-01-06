@@ -7,6 +7,17 @@ from leabra7 import unit
 
 
 class Conn:
+    """A connection links two units/neurons.
+
+    Args:
+        name: The name of the connection.
+        pre: The presynaptic, or sending, unit.
+        post: The postsynaptic, or receiving, unit.
+        spec: The connection specification. If none is provided, the default
+            spec will be used.
+
+    """
+
     def __init__(self,
                  name: str,
                  pre: unit.Unit,
@@ -26,7 +37,25 @@ class Conn:
 
 def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
                         spec: specs.ConnSpec) -> List[Conn]:
+    """Constructs the connections needed for a full projection.
+
+    In a full projection, every unit in the sending layer is connected to
+    every unit in the receiving layer.
+
+    Args:
+        proj_name: The name of the projection. Used to generate the connection
+            names.
+        pre: The sending layer.
+        post: The receiving layer.
+        spec: The spec to use for every connection.
+
+    Returns:
+        A full list of connections from the sending to the receiving layer.
+
+    """
+
     def name(conn_number: int) -> str:
+        """Generates a name for each connection."""
         return "{0}_conn{1}".format(proj_name, conn_number)
 
     connections = []

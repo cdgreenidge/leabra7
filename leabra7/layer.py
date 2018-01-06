@@ -14,10 +14,9 @@ def _parse_unit_attr(attr: str) -> str:
     return parts[1]
 
 
-class Layer:
+class Layer(log.ObservableMixin):
     def __init__(self, name: str, size: int,
                  spec: specs.LayerSpec = None) -> None:
-        self.name = name
         self.size = size
 
         if spec is None:
@@ -28,6 +27,7 @@ class Layer:
         self.units = [unit.Unit(self.spec.unit_spec) for _ in range(size)]
 
         self.fbi = 0.0
+        super().__init__(name)
 
     def avg_act(self) -> float:
         return statistics.mean(unit.act for unit in self.units)

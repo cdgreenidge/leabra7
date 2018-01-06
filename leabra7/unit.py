@@ -61,7 +61,7 @@ def nxx1_table() -> Any:
     return (xs_valid, conv)
 
 
-class Unit:
+class Unit():
     nxx1_xs, nxx1_ys = nxx1_table()
     nxx1_interpolator = scipy.interpolate.interp1d(
         nxx1_xs, nxx1_ys, copy=False)

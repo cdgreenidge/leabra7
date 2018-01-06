@@ -1,6 +1,5 @@
 """Test log.py"""
 import pandas as pd  # type: ignore
-import pytest
 
 from leabra7 import log
 

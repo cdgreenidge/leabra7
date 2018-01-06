@@ -1,4 +1,5 @@
 """Tools to log data from the network."""
+import abc
 import collections
 from typing import Any
 from typing import Dict  # noqa pylint: disable=W0611
@@ -68,25 +69,50 @@ class DataFrameBuffer:
                 v.append(None)
 
 
+class ObservableMixin(metaclass=abc.ABCMeta):
+    """Defines the interface required by `Logger` to record attributes.
+
+    Attributes:
+        name (str): The name of the object.
+
+    """
+
+    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+        self.name = name
+        super().__init__(*args, **kwargs)  # type: ignore
+
+    @abc.abstractmethod
+    def observe(self, attr: str) -> List[Tuple[str, Any]]:
+        """Observes an attribute on this object.
+
+        Args:
+            attr: The attribute to observe. The name "attribute" is a bit of a
+                misnomer, because it could be something computed on-the-fly.
+
+        Returns:
+            A list of observations of the attribute. A single observation is a
+            Tuple[str, Any], where the first element is the attribute name and
+            the second element is the observation value. We return a list
+            because one attribute, like a layer's "unit_act", can return many
+            observations, e.g. [("unit0_act", 0.0), ("unit1_act", 0.0), ...]
+
+        """
+
+
 class Logger:
     """Records target attributes to an internal buffer.
 
     Args:
-        target: The object from which to record attributes. It must implement
-            an "observe" method with the signature Callable[[str],
-            List[Tuple[str, Any]]] that takes any attribute name in attrs and
-            returns a list of observations (tuples with the attribute name and
-            attribute value.) This is neccessary because sometimes one
-            attribute, like "unit_act" can generate many observations like
-            "unit0_act", "unit1_act", etc.
+        target: The object from which to record attributes. It must inherit
+            from `ObservableMixin`.
         attrs: A list of attribute names to log.
 
     Attrs:
-        target_name (str): The name of the target object.
+        name (str): The name of the target object.
 
     """
 
-    def __init__(self, target: Any, attrs: Iterable[str]) -> None:
+    def __init__(self, target: ObservableMixin, attrs: Iterable[str]) -> None:
         self.target = target
         self.target_name = target.name
         self.attrs = attrs
@@ -102,9 +128,10 @@ class Logger:
     def to_df(self) -> pd.DataFrame:
         """Converts the internal buffer to a dataframe.
 
-        Returns: A dataframe containing the contents of the internal buffer.
-            The columns names are the attribute names, and each row contains
-            the observations for one call of the record() method.
+        Returns:
+            A dataframe containing the contents of the internal buffer. The
+            columns names are the attribute names, and each row contains the
+            observations for one call of the record() method.
 
         """
         return self.buffer.to_df()
