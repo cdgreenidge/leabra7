@@ -9,7 +9,14 @@ project](https://grey.colorado.edu/emergent/index.php/Main_Page).
 Why is this interesting? Current neural network technology struggles with
 recurrence and focuses on global learning algorithms. The leabra algorithm
 allows simulation of neural networks with massive recurrence and local
-learning algorithms.
+learning algorithms. Currently, we are using it explore interaction
+between the hippocampus and neocortex during memory recall (see the
+[Princeton Computational Memory Lab](https://compmem.princeton.edu/) for more
+details).
+
+To see it in action, look at the IPython notebook in `docs`. It's not very
+verbose but the docs will be fully written once the API stabilizes (0.1 release
+targeted in roughly 1 month).
 
 ## Getting started
 
