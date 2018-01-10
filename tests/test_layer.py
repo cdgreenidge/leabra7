@@ -6,6 +6,13 @@ from leabra7 import specs as sp
 from leabra7 import unit as un
 
 
+def test_parse_unit_attribute_strips_the_unit_prefix():
+    attr = "unit_act"
+    lr._parse_unit_attr(attr) == "act"
+    with pytest.raises(ValueError):
+        lr._parse_unit_attr("foobar")
+
+
 def test_layer_init_uses_the_spec_you_pass_it():
     spec = sp.LayerSpec()
     layer = lr.Layer(name="in", spec=spec, size=1)
@@ -69,13 +76,6 @@ def test_layer_should_be_able_to_do_an_activation_cycle():
 def test_layer_should_be_able_to_observe_simple_attributes():
     layer = lr.Layer(name="in", size=3)
     assert layer.observe("avg_act") == [("avg_act", 0.0)]
-
-
-def test_layer_should_be_able_to_identify_unit_attributes():
-    attr = "unit_act"
-    lr._parse_unit_attr(attr) == "act"
-    with pytest.raises(ValueError):
-        lr._parse_unit_attr("foobar")
 
 
 def test_layer_shuld_be_able_to_observe_unit_attributes():

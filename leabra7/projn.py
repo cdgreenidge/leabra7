@@ -78,6 +78,7 @@ class Projn:
             spec will be used.
 
     """
+
     def __init__(self,
                  name: str,
                  pre: layer.Layer,
