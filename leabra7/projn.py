@@ -68,6 +68,17 @@ def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
 
 
 class Projn:
+    """A projection links two layers. It is a bundle of connections.
+
+    Args:
+        name: The name of the projection.
+        pre: The sending layer.
+        post: The receiving layer.
+        spec: The projection specification. If none is provided, the default
+            spec will be used.
+
+    """
+
     def __init__(self,
                  name: str,
                  pre: layer.Layer,
@@ -85,6 +96,12 @@ class Projn:
         self.conns = make_full_conn_list(name, pre, post, specs.ConnSpec())
 
     def flush(self) -> None:
+        """Propagates sending layer activation to the recieving layer.
+
+        Separating this step from the activation and firing of the sending
+        layer makes it easier to compute the net input scaling factor.
+
+        """
         for c in self.conns:
             scale_eff = 1.0  # Currently netin scaling is not implemented
             c.post.add_input(scale_eff * c.pre.act * c.wt)
