@@ -1,5 +1,7 @@
 # leabra7
-[![Build Status](https://travis-ci.org/cdgreenidge/leabra7.svg?branch=master)](https://travis-ci.org/cdgreenidge/leabra7) [![codecov](https://codecov.io/gh/cdgreenidge/leabra7/branch/master/graph/badge.svg)](https://codecov.io/gh/cdgreenidge/leabra7)
+| linux | windows | coverage |
+|-------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [![Build Status](https://travis-ci.org/cdgreenidge/leabra7.svg?branch=windows-ci)](https://travis-ci.org/cdgreenidge/leabra7) | [![Build status](https://ci.appveyor.com/api/projects/status/pu47got47lql75j2/branch/master?svg=true)](https://ci.appveyor.com/project/cdgreenidge/leabra7/branch/master) | [![codecov](https://codecov.io/gh/cdgreenidge/leabra7/branch/master/graph/badge.svg)](https://codecov.io/gh/cdgreenidge/leabra7) |
 
 **leabra7** is an implementation of the "Local, Error-driven and Associative,
 Biologically Realistic Algorithm" in Python. It targets quantitative
