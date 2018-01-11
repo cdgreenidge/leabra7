@@ -3,7 +3,7 @@ package:
   version: 0.0.1
 
 source:
-  git_rev: d47c524 
+  git_rev: HEAD
   git_url: https://github.com/cdgreenidge/leabra7.git
 
 requirements:
