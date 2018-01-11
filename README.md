@@ -58,18 +58,7 @@ $ tox
 ```
 
 ### Roadmap
-- [X] Prototype core algorithm
-- [X] Implement logging system
-- [ ] Raise code to production-quality
-  - [ ] `layer.py`
-  - [X] `log.py`
-  - [ ] `net.py`
-  - [ ] `projn.py`
-  - [X] `specs.py`
-  - [X] `unit.py`
-- [ ] Implement netin scaling
-- [ ] Write example notebook for two-neuron simulation
-- [ ] Write tutorial
+See the "Projects" tab for more info.
 
 ## For developers
 
