@@ -1,0 +1,9 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Miniconda36-x64"
+
+install:
+    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+build:
+    - conda-build .

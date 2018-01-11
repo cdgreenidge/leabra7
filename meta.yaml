@@ -1,0 +1,40 @@
+package:
+  name: leabra7
+  version: 0.0.1
+
+source:
+  git_rev: d47c524 
+  git_url: git@github.com:cdgreenidge/leabra7.git
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - numpy
+    - scipy
+    - pandas
+
+test:
+  requires:
+    - pytest
+    - pytest-mock
+    - hypothesis
+
+  imports:
+    - pandas
+    - pytest
+    - hypothesis
+    - leabra7
+
+  source_files:
+    - tests
+
+  commands:
+    - py.test
+
+about:
+  home: https://github.com/cdgreenidge/leabra7
+  license: Copyright (c) 2018 Daniel Greenidge
