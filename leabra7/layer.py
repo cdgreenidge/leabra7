@@ -17,6 +17,9 @@ def _parse_unit_attr(attr: str) -> str:
     Returns:
         `attr`, but with the `"unit_"` prefix removed.
 
+    Raises:
+        ValueError: If `attr` cannot be parsed.
+
     """
     parts = attr.split('_', maxsplit=1)
     valid_attr = len(parts) == 2 and parts[0] == "unit"
