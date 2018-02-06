@@ -184,6 +184,14 @@ class LayerSpec(Spec):
 
 class ConnSpec(Spec):
     """Spec for `Conn`(ection) objects."""
+
+    def validate(self) -> None:  # pylint: disable=W0235
+        """Extends `Spec.validate`."""
+        super().validate()
+
+
+class ProjnSpec(Spec):
+    """Spec for `Projn` objects."""
     # The probability distribution from which the connection weights will be
     # drawn
     dist = random.Scalar(0.5)  # type: random.Distribution
@@ -194,12 +202,4 @@ class ConnSpec(Spec):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
 
-        super().validate()
-
-
-class ProjnSpec(Spec):
-    """Spec for `Projn` objects."""
-
-    def validate(self) -> None:  # pylint: disable=W0235
-        """Extends `Spec.validate`."""
         super().validate()
