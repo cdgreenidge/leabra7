@@ -80,7 +80,6 @@ def test_projn_can_specify_its_weight_distribution():
         assert conn.wt == 7
 
 
-
 def test_projn_can_flush():
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)

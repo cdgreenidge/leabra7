@@ -3,7 +3,6 @@ import abc
 import math
 
 from typing import Any
-from typing import Dict
 from typing import Iterable  # noqa pylint: disable=W0611
 
 from leabra7 import random
@@ -34,7 +33,7 @@ class Spec(metaclass=abc.ABCMeta):
     # Global integration time constant
     integ = 1.0
 
-    def __init__(self, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         for name, value in kwargs.items():
             if not hasattr(self, name):
                 raise ValueError("{0} is not a valid parameter name for this "
