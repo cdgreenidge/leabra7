@@ -198,7 +198,7 @@ def test_every_valid_log_on_cycle_attribute_can_be_logged():
 
 def test_it_should_check_for_invalid_log_on_cycle_attrs():
     with pytest.raises(sp.ValidationError):
-        sp.LayerSpec(log_on_cycle=("whales",)).validate()
+        sp.LayerSpec(log_on_cycle=("whales", )).validate()
 
 
 # Test ConnSpec validation
