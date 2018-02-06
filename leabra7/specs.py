@@ -184,9 +184,16 @@ class LayerSpec(Spec):
 
 class ConnSpec(Spec):
     """Spec for `Conn`(ection) objects."""
+    # The probability distribution from which the connection weight will be
+    # drawn
+    dist = random.Scalar(0.5)  # type: random.Distribution
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
+        if not isinstance(self.dist, random.Distribution):
+            raise ValidationError("{0} is not a valid "
+                                  "distribution.".format(self.dist))
+
         super().validate()
 
 
