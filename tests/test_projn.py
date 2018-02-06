@@ -2,6 +2,7 @@
 from leabra7 import unit as un
 from leabra7 import layer as lr
 from leabra7 import projn as pr
+from leabra7 import random as rn
 from leabra7 import specs as sp
 
 
@@ -37,8 +38,8 @@ def test_conn_has_a_receiving_unit():
 def test_conn_has_a_weight():
     pre = un.Unit()
     post = un.Unit()
-    conn = pr.Conn("con1", pre, post)
-    assert conn.wt > 0
+    conn = pr.Conn("con1", pre, post, sp.ConnSpec(dist=rn.Scalar(0.3)))
+    assert conn.wt == 0.3
 
 
 def test_make_full_conn_list_returns_a_full_connection_list():
@@ -69,6 +70,15 @@ def test_projn_has_a_receiving_layer():
     post = lr.Layer("lr2", size=1)
     projn = pr.Projn("proj", pre, post)
     assert projn.post == post
+
+
+def test_projn_can_specify_its_weight_distribution():
+    pre = lr.Layer("lr1", size=3)
+    post = lr.Layer("lr2", size=3)
+    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(dist=rn.Scalar(7)))
+    for conn in projn.conns:
+        assert conn.wt == 7
+
 
 
 def test_projn_can_flush():
