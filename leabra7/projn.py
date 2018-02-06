@@ -32,7 +32,7 @@ class Conn:
         else:
             self.spec = spec
 
-        self.wt = 0.5
+        self.wt = self.spec.dist.draw()
 
 
 def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
@@ -93,7 +93,8 @@ class Projn:
         else:
             self.spec = spec
 
-        self.conns = make_full_conn_list(name, pre, post, specs.ConnSpec())
+        conn_spec = specs.ConnSpec(dist=self.spec.dist)
+        self.conns = make_full_conn_list(name, pre, post, conn_spec)
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
