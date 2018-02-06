@@ -154,8 +154,13 @@ class LayerSpec(Spec):
     # Global (feedforward + feedback) inhibition multiplier
     gi = 1.8
 
-    # Attrs to log every cycle. Possible values are ("avg_act", "avg_net")
+    # Attrs to log every cycle.
     log_on_cycle = ()  # type: Iterable[str]
+    # Valid attributes to log on every cycle
+    _valid_log_on_cycle = ("avg_act", "avg_net", "fbi", "unit_net_raw",
+                           "unit_net", "unit_gc_i", "unit_act", "unit_i_net",
+                           "unit_i_net_r", "unit_v_m", "unit_v_m_eq",
+                           "unit_adapt", "unit_spike")
 
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
@@ -168,6 +173,11 @@ class LayerSpec(Spec):
         self.assert_in_range("fb_dt", 0, float("Inf"))
         self.assert_sane_float("gi")
         self.unit_spec.validate()
+
+        for attr in self.log_on_cycle:
+            if attr not in self._valid_log_on_cycle:
+                raise ValidationError("{0} is not a valid member of "
+                                      "log_on_cycle.".format(attr))
 
 
 class ConnSpec(Spec):

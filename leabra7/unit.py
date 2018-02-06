@@ -105,6 +105,9 @@ class Unit():
         else:
             self.spec = spec
 
+        # When adding any attribute to this class, update
+        # layer.LayerSpec._valid_log_on_cycle
+
         # Net input (excitation) without time integration
         self.net_raw = 0.0
         # Net inpput (excitation) with time integration

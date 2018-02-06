@@ -3,6 +3,7 @@ from hypothesis import given
 import hypothesis.strategies as st
 import pytest
 
+from leabra7 import layer as lr
 from leabra7 import specs as sp
 
 
@@ -186,6 +187,18 @@ def test_it_should_validate_global_inhibition_multiplier(f):
 def test_it_should_validate_the_unit_spec():
     with pytest.raises(sp.ValidationError):
         sp.LayerSpec(unit_spec=sp.UnitSpec(vm_dt=-1)).validate()
+
+
+def test_every_valid_log_on_cycle_attribute_can_be_logged():
+    valid_attrs = sp.LayerSpec()._valid_log_on_cycle
+    lr1 = lr.Layer("lr1", 3)
+    for attr in valid_attrs:
+        lr1.observe(attr)
+
+
+def test_it_should_check_for_invalid_log_on_cycle_attrs():
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(log_on_cycle=("whales",)).validate()
 
 
 # Test ConnSpec validation
