@@ -50,13 +50,18 @@ class Layer(log.ObservableMixin):
 
         self.units = [unit.Unit(self.spec.unit_spec) for _ in range(size)]
 
+        # When adding any attribute or property to this class, update
+        # layer.LayerSpec._valid_log_on_cycle
+
         self.fbi = 0.0
         super().__init__(name)
 
+    @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
         return statistics.mean(unit.act for unit in self.units)
 
+    @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
         return statistics.mean(unit.net for unit in self.units)
@@ -69,9 +74,9 @@ class Layer(log.ObservableMixin):
     def update_inhibition(self) -> None:
         """Updates the inhibition of the layer's units."""
         # Compute feedforward inhibition
-        ffi = self.spec.ff * max(self.avg_net() - self.spec.ff0, 0)
+        ffi = self.spec.ff * max(self.avg_net - self.spec.ff0, 0)
         # Compute feedback inhibition
-        self.fbi = self.spec.fb_dt * (self.spec.fb * self.avg_act() - self.fbi)
+        self.fbi = self.spec.fb_dt * (self.spec.fb * self.avg_act - self.fbi)
         # Compute global inhibition
         gc_i = self.spec.gi * (ffi * self.fbi)
 
@@ -105,10 +110,9 @@ class Layer(log.ObservableMixin):
         except ValueError:
             pass
 
-        if attr == "avg_act":
-            return [("avg_act", self.avg_act())]
-        elif attr == "avg_net":
-            return [("avg_net", self.avg_net())]
-        else:
+        valid = ("avg_act", "avg_net", "fbi")
+        if attr not in valid:
             raise ValueError(
                 "{0} is not a valid layer attribute.".format(attr))
+
+        return [(attr, getattr(self, attr))]
