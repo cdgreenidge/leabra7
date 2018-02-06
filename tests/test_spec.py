@@ -208,6 +208,11 @@ def test_conn_spec_validates_integ(f):
         sp.ConnSpec(integ=f).validate()
 
 
+def test_conn_spec_validates_distribution():
+    with pytest.raises(sp.ValidationError):
+        sp.ConnSpec(dist=3).validate()
+
+
 # Test ProjnSpec validation
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f):
