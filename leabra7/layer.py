@@ -112,6 +112,9 @@ class Layer(log.ObservableMixin):
     def force(self, acts: Iterable[float]) -> None:
         """Forces the layer's activations.
 
+        After forcing, the layer's activations will be set to the values
+        contained in `acts` and will not change from cycle to cycle.
+
         Args:
             acts: An iterable containing the activations that the layer's
                 units will be forced to. If its length is less than the number

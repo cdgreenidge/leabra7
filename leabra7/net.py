@@ -2,6 +2,7 @@
 from typing import Any  # noqa pylint: disable=W0611
 from typing import Callable  # noqa pylint: disable=W0611
 from typing import Dict  # noqa pylint: disable=W0611
+from typing import Iterable
 from typing import List  # noqa pylint: disable=W0611
 from typing import Tuple  # noqa pylint: disable=W0611
 
@@ -43,6 +44,26 @@ class Net:
 
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
+
+
+    def force_layer(self, name: str, acts: Iterable[float]) -> None:
+        """Forces the layer's activations.
+
+        After forcing, the layer's activations will be set to the values
+        contained in `acts` and will not change from cycle to cycle.
+
+        Args:
+            name: The name of the layer.
+            acts: An iterable containing the activations that the layer's
+                units will be forced to. If its length is less than the number
+                of units in the layer, it will be tiled. If its length is
+                greater, the extra values will be ignored.
+
+        """
+        try:
+            self.objs[name].force(acts)
+        except KeyError:
+            raise ValueError("No layer found with name {0}.".format(name))
 
     def new_projn(self,
                   name: str,
