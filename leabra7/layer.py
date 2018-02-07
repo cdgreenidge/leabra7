@@ -1,5 +1,7 @@
 """A layer, or group, of units."""
+import itertools
 import statistics
+from typing import Iterable
 
 from leabra7 import log
 from leabra7 import specs
@@ -53,7 +55,11 @@ class Layer(log.ObservableMixin):
         # When adding any attribute or property to this class, update
         # layer.LayerSpec._valid_log_on_cycle
 
+        # Feedback inhibition
         self.fbi = 0.0
+        # Is the layer activation forced?
+        self.forced = False
+
         super().__init__(name)
 
     @property
@@ -90,6 +96,9 @@ class Layer(log.ObservableMixin):
 
     def update_activation(self) -> None:
         """Updates the activation of the layer's units."""
+        if self.forced:
+            return
+
         for i in self.units:
             i.update_activation()
 
@@ -99,6 +108,20 @@ class Layer(log.ObservableMixin):
         self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
+
+    def force(self, acts: Iterable[float]) -> None:
+        """Forces the layer's activations.
+
+        Args:
+            acts: An iterable containing the activations that the layer's
+                units will be forced to. If its length is less than the number
+                of units in the layer, it will be tiled. If its length is
+                greater, the extra values will be ignored.
+
+        """
+        self.forced = True
+        for i, act in zip(range(len(self.units)), itertools.cycle(acts)):
+            self.units[i].act = act
 
     def observe(self, attr: str) -> log.ObjObs:
         """Overrides `log.ObservableMixin.observe`."""

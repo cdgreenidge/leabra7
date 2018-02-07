@@ -85,3 +85,16 @@ def test_layer_shuld_be_able_to_observe_unit_attributes():
                                          ("unit1_act", 0.0),
                                          ("unit2_act", 0.0)]
     # yapf: enable
+
+
+def test_layer_forcing_should_change_the_unit_activations():
+    layer = lr.Layer(name="in", size=4)
+    layer.force([0, 1])
+    assert [u.act for u in layer.units] == [0, 1, 0, 1]
+
+
+def test_layer_forcing_should_not_change_after_cycles():
+    layer = lr.Layer(name="in", size=4)
+    layer.force([0, 1])
+    layer.activation_cycle()
+    assert [u.act for u in layer.units] == [0, 1, 0, 1]
