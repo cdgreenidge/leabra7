@@ -45,7 +45,6 @@ class Net:
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
 
-
     def force_layer(self, name: str, acts: Iterable[float]) -> None:
         """Forces the layer's activations.
 
