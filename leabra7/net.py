@@ -22,6 +22,38 @@ class Net:
 
         self.cycle_loggers = []  # type: List[log.Logger]
 
+    def _validate_obj_name(self, name: str) -> None:
+        """Checks if a name exists within the objects dict.
+
+        Args:
+            name: The name to check.
+
+        Raises:
+            ValueError: If the name does not exist within the objects dict.
+                This is not AssertionError because it is intended to be called
+                within user-facing methods.
+
+        """
+        if name not in self.objs:
+            raise ValueError("No object found with name {0}".format(name))
+
+    def _validate_layer_name(self, name: str) -> None:
+        """Checks if a name refers to a layer
+
+        Args:
+            name: The name to check.
+
+        Raises:
+            ValueError: If the name does not refer to a layer.
+                This is not AssertionError because it is intended to be called
+                within user-facing methods.
+
+        """
+        self._validate_obj_name(name)
+        if not isinstance(self.objs[name], layer.Layer):
+            raise ValueError(
+                "Name {0} does not refer to a layer.".format(name))
+
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:
         """Adds a new layer to the network.
@@ -61,10 +93,8 @@ class Net:
         ValueError: If `name` does not match any existing layer name.
 
         """
-        try:
-            self.objs[name].force(acts)
-        except KeyError:
-            raise ValueError("No layer found with name {0}.".format(name))
+        self._validate_layer_name(name)
+        self.objs[name].force(acts)
 
     def new_projn(self,
                   name: str,
@@ -88,17 +118,11 @@ class Net:
         """
         if spec is not None:
             spec.validate()
+        self._validate_layer_name(pre)
+        self._validate_layer_name(post)
 
-        try:
-            pre_lr = self.objs[pre]
-        except KeyError:
-            raise ValueError("No layer found with name {0}.".format(pre))
-
-        try:
-            post_lr = self.objs[post]
-        except KeyError:
-            raise ValueError("No layer found with name {0}.".format(post))
-
+        pre_lr = self.objs[pre]
+        post_lr = self.objs[post]
         pr = projn.Projn(name, pre_lr, post_lr, spec)
         self.projns.append(pr)
         self.objs[pr.name] = pr

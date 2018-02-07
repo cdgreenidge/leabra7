@@ -5,6 +5,25 @@ from leabra7 import net
 from leabra7 import specs
 
 
+def test_the_network_can_check_if_an_object_exists_within_it():
+    n = net.Net()
+    n.new_layer("layer1", 3)
+    n._validate_obj_name("layer1")
+    with pytest.raises(ValueError):
+        n._validate_obj_name("whales")
+
+
+def test_the_network_can_check_if_an_object_is_a_layer():
+    n = net.Net()
+    n.new_layer("layer1", 3)
+    n.new_layer("layer2", 3)
+    n.new_projn("proj1", "layer1", "layer2")
+    with pytest.raises(ValueError):
+        n._validate_layer_name("whales")
+    with pytest.raises(ValueError):
+        n._validate_layer_name("proj1")
+
+
 def test_a_new_layer_validates_its_spec():
     n = net.Net()
     with pytest.raises(specs.ValidationError):
