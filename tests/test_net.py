@@ -5,12 +5,6 @@ from leabra7 import net
 from leabra7 import specs
 
 
-def test_the_network_can_check_if_an_object_exists_within_it():
-    n = net.Net()
-    n.new_layer("layer1", 3)
-    assert n._assert_obj_exits("layer1")
-    with pytest.raises(AssertionError)
-
 def test_a_new_layer_validates_its_spec():
     n = net.Net()
     with pytest.raises(specs.ValidationError):
