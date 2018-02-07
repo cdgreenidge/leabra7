@@ -58,6 +58,8 @@ class Net:
                 of units in the layer, it will be tiled. If its length is
                 greater, the extra values will be ignored.
 
+        ValueError: If `name` does not match any existing layer name.
+
         """
         try:
             self.objs[name].force(acts)
