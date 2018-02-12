@@ -202,6 +202,15 @@ class ProjnSpec(Spec):
     # drawn
     dist = random.Scalar(0.5)  # type: random.Distribution
 
+    # Selects which pre layer units will be included in the projection
+    # If the length is less than the number of units in the pre_layer, it will
+    # be tiled. If the length is more, it will be truncated.
+    pre_mask = (True, )  # type: Iterable[bool]
+    # Selects which post layer units will be included in the projection
+    # If the length is less than the number of units in the pre_layer, it will
+    # be tiled. If the length is more, it will be truncated.
+    post_mask = (True, )  # type: Iterable[bool]
+
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
         if not isinstance(self.dist, random.Distribution):
