@@ -1,5 +1,8 @@
 """A connection between layers."""
+import itertools
+from typing import Iterable
 from typing import List
+from typing import TypeVar
 
 from leabra7 import specs
 from leabra7 import layer
@@ -35,7 +38,8 @@ class Conn:
         self.wt = self.spec.dist.draw()
 
 
-def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
+def make_full_conn_list(proj_name: str, pre_units: Iterable[unit.Unit],
+                        post_units: Iterable[unit.Unit],
                         spec: specs.ConnSpec) -> List[Conn]:
     """Constructs the connections needed for a full projection.
 
@@ -45,12 +49,13 @@ def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
     Args:
         proj_name: The name of the projection. Used to generate the connection
             names.
-        pre: The sending layer.
-        post: The receiving layer.
+        pre: The sending layer's units.
+        post: The receiving layer's units.
         spec: The spec to use for every connection.
 
     Returns:
-        A full list of connections from the sending to the receiving layer.
+        A full list of connections from the sending layer's units to the
+            receiving layer's units.
 
     """
 
@@ -60,11 +65,29 @@ def make_full_conn_list(proj_name: str, pre: layer.Layer, post: layer.Layer,
 
     connections = []
     num = 0
-    for i in pre.units:
-        for j in post.units:
+    for i in pre_units:
+        for j in post_units:
             connections.append(Conn(name(num), i, j, spec))
             num += 1
     return connections
+
+
+T = TypeVar('T')
+
+
+def mask(xs: Iterable[T], xs_mask: Iterable[bool]) -> List[T]:
+    """Filters an iterable using a boolean mask.
+
+    Args:
+        xs: The iterable to filter.
+        xs_mask: The boolean mask. If it is shorter than xs, it will be tiled.
+            If it is longer than xs, it will be truncated.
+
+    Returns:
+        A list containing the values of xs for which mask is true.
+
+    """
+    return [x for x, m in zip(xs, itertools.cycle(xs_mask)) if m]
 
 
 class Projn:
@@ -94,7 +117,13 @@ class Projn:
             self.spec = spec
 
         conn_spec = specs.ConnSpec(dist=self.spec.dist)
-        self.conns = make_full_conn_list(name, pre, post, conn_spec)
+
+        # Only create the projection between the units selected by the masks
+        pre_units = mask(self.pre.units, self.spec.pre_mask)
+        post_units = mask(self.post.units, self.spec.post_mask)
+
+        self.conns = make_full_conn_list(name, pre_units, post_units,
+                                         conn_spec)
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
