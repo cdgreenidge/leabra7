@@ -164,6 +164,13 @@ def test_layer_spec_validates_inhibition_type(f):
             sp.LayerSpec(inhibition_type=f).validate()
 
 
+@given(st.integers())
+def test_layer_spec_validates_k(f):
+    if f < 1:
+        with pytest.raises(sp.ValidationError):
+            sp.LayerSpec(inhibition_type="kwta", k=f).validate()
+
+
 @given(float_outside_range(0, float("Inf")))
 def test_layer_spec_validates_integ(f):
     with pytest.raises(sp.ValidationError):
