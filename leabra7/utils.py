@@ -13,6 +13,9 @@ def partition(n: int, iterable: List[T], key: Callable[[T], Any] = lambda x: x
               ) -> Tuple[List[T], List[T]]:
     """Partitions an iterable using heap-based partial sort.
 
+    Right now this is dead code, but it could eventually be useful for
+    the averaging version of kWTA inhibition, so I'm leaving it in.
+
     Args:
       n: The number of elements in the first partition.
       iterable: The iterable to partition.
