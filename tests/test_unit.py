@@ -108,3 +108,15 @@ def test_unit_raises_valueerror_if_attr_is_unobservable():
     unit = un.Unit()
     with pytest.raises(ValueError):
         unit.observe("banannas")
+
+
+def test_unit_can_calculate_the_amount_of_inhibition_to_put_it_at_threshold():
+    unit = un.Unit()
+    unit.add_input(3)
+    unit.update_net()
+    unit.update_inhibition(unit.g_i_thr())
+
+    for i in range(200):
+        unit.update_membrane_potential()
+
+    assert math.isclose(unit.v_m, unit.spec.spk_thr, rel_tol=1e-4)
