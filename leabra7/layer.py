@@ -1,4 +1,5 @@
 """A layer, or group, of units."""
+import heapq
 import itertools
 import statistics
 from typing import Iterable
@@ -57,6 +58,8 @@ class Layer(log.ObservableMixin):
 
         # Feedback inhibition
         self.fbi = 0.0
+        # Global inhibition
+        self.gc_i = 0.0
         # Is the layer activation forced?
         self.forced = False
 
@@ -77,17 +80,32 @@ class Layer(log.ObservableMixin):
         for i in self.units:
             i.update_net()
 
-    def update_inhibition(self) -> None:
-        """Updates the inhibition of the layer's units."""
-        # Compute feedforward inhibition
+    def calc_fffb_inhibition(self) -> None:
+        """Calculates feedforward-feedback inhibition for the layer."""
+        # Feedforward inhibition
         ffi = self.spec.ff * max(self.avg_net - self.spec.ff0, 0)
-        # Compute feedback inhibition
+        # Feedback inhibition
         self.fbi = self.spec.fb_dt * (self.spec.fb * self.avg_act - self.fbi)
-        # Compute global inhibition
-        gc_i = self.spec.gi * (ffi * self.fbi)
+        # Global inhibition
+        self.gc_i = self.spec.gi * (ffi * self.fbi)
+
+    def calc_kwta_inhibition(self) -> None:
+        """Calculates k-winner-take-all inhibition for the layer."""
+        # Notation: m = k + 1
+        top_m_units = heapq.nlargest(
+            self.spec.k + 1, self.units, key=lambda x: x.net)
+        g_i_thr_m = top_m_units[-1].g_i_thr()
+        g_i_thr_k = top_m_units[-2].g_i_thr()
+        self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
+
+    def update_inhibition(self) -> None:
+        if self.spec.inhibition_type == "fffb":
+            self.calc_fffb_inhibition()
+        else:
+            self.calc_kwta_inhibition()
 
         for i in self.units:
-            i.update_inhibition(gc_i)
+            i.update_inhibition(self.gc_i)
 
     def update_membrane_potential(self) -> None:
         """Updates the membrane potential of the layer's units."""

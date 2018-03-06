@@ -129,6 +129,12 @@ class Unit():
         # Are we spiking? (0 or 1)
         self.spike = 0
 
+    def g_i_thr(self) -> float:
+        """The inhibition that will place the unit at its spike threshold."""
+        return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net +
+                 (self.spec.e_rev_l - self.spec.spk_thr) * self.spec.gc_l) /
+                (self.spec.spk_thr - self.spec.e_rev_i))
+
     def add_input(self, inpt: float) -> None:
         """Registers an input to the unit."""
         self.net_raw += inpt

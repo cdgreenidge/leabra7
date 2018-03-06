@@ -144,6 +144,11 @@ class UnitSpec(Spec):
 
 class LayerSpec(Spec):
     """Spec for Layer objects."""
+    # Can be either "fffb" for feedforward-feedback inhibition, or
+    # "kwta" for k-winner-take-all inhibition
+    inhibition_type = "fffb"
+    # Number of winners for k-winner-take-all inhibition
+    k = 1
     # Feedforward inhibition multiplier
     ff = 1.0
     # Feedforward inhibition offset
@@ -169,6 +174,15 @@ class LayerSpec(Spec):
     def validate(self) -> None:
         """Extends `Spec.validate`."""
         super().validate()
+
+        valid_inhibition_types = ["fffb", "kwta"]
+        if self.inhibition_type not in valid_inhibition_types:
+            raise ValidationError("Inhibition type {0} not one of [\"fffb\", "
+                                  "\"kwta\"]".format(self.inhibition_type))
+
+        if self.k < 1:
+            raise ValidationError("k must be >= 1.")
+
         self.assert_sane_float("ff")
         self.assert_sane_float("fb")
         self.assert_in_range("fb_dt", 0, float("Inf"))

@@ -1,4 +1,5 @@
 """Test specs.py"""
+from hypothesis import example
 from hypothesis import given
 import hypothesis.strategies as st
 import pytest
@@ -154,6 +155,22 @@ def test_it_should_validate_adapt_dt(f):
 
 
 # Test LayerSpec validation
+@given(st.text())
+@example("kwta")
+@example("fffb")
+def test_layer_spec_validates_inhibition_type(f):
+    if f not in ["kwta", "fffb"]:
+        with pytest.raises(sp.ValidationError):
+            sp.LayerSpec(inhibition_type=f).validate()
+
+
+@given(st.integers())
+def test_layer_spec_validates_k(f):
+    if f < 1:
+        with pytest.raises(sp.ValidationError):
+            sp.LayerSpec(inhibition_type="kwta", k=f).validate()
+
+
 @given(float_outside_range(0, float("Inf")))
 def test_layer_spec_validates_integ(f):
     with pytest.raises(sp.ValidationError):
