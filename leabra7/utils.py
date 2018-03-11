@@ -44,4 +44,4 @@ def partition(n: int, iterable: List[T], key: Callable[[T], Any] = lambda x: x
         x = iterable[i]
         rest.append(heapq.heappushpop(nlargest, (key(x), x)))
 
-    return ([x[1] for x in nlargest], [x[1] for x in rest])
+    return [x[1] for x in nlargest], [x[1] for x in rest]

@@ -1,10 +1,10 @@
 """Integration tests k-winner-take-all activation."""
 from leabra7 import net
 from leabra7 import specs as sp
-from leabra7 import random as rn
+from leabra7 import rand as rn
 
 
-def test_kwta_suppresses_all_but_k_units():
+def test_kwta_suppresses_all_but_k_units() -> None:
     n = net.Net()
 
     n.new_layer(name="lr1", size=1)
@@ -26,5 +26,6 @@ def test_kwta_suppresses_all_but_k_units():
     for i in range(100):
         n.cycle()
 
-    acts = n.logs("cycle", "lr2").tail(1).as_matrix()
+    logs = n.logs("cycle", "lr2")
+    acts = logs[logs.time == 99]["act"]
     assert (acts > 0.8).sum() == 2

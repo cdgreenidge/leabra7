@@ -1,3 +1,4 @@
+"""The packaging script for leabra7."""
 from setuptools import setup, find_packages  # type: ignore
 
 setup(

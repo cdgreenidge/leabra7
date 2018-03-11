@@ -3,9 +3,9 @@ import abc
 import math
 
 from typing import Any
-from typing import Iterable  # noqa pylint: disable=W0611
+from typing import Iterable
 
-from leabra7 import random
+from leabra7 import rand
 
 
 class ValidationError(Exception):
@@ -161,7 +161,7 @@ class LayerSpec(Spec):
     gi = 1.8
 
     # Attrs to log every cycle.
-    log_on_cycle = ()  # type: Iterable[str]
+    log_on_cycle: Iterable[str] = ()
     # Valid attributes to log on every cycle
     _valid_log_on_cycle = ("avg_act", "avg_net", "fbi", "unit_net_raw",
                            "unit_net", "unit_gc_i", "unit_act", "unit_i_net",
@@ -199,11 +199,11 @@ class ConnSpec(Spec):
     """Spec for `Conn`(ection) objects."""
     # The probability distribution from which the connection weight will be
     # drawn
-    dist = random.Scalar(0.5)  # type: random.Distribution
+    dist: rand.Distribution = rand.Scalar(0.5)
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
-        if not isinstance(self.dist, random.Distribution):
+        if not isinstance(self.dist, rand.Distribution):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
 
@@ -214,20 +214,20 @@ class ProjnSpec(Spec):
     """Spec for `Projn` objects."""
     # The probability distribution from which the connection weights will be
     # drawn
-    dist = random.Scalar(0.5)  # type: random.Distribution
+    dist: rand.Distribution = rand.Scalar(0.5)
 
     # Selects which pre layer units will be included in the projection
     # If the length is less than the number of units in the pre_layer, it will
     # be tiled. If the length is more, it will be truncated.
-    pre_mask = (True, )  # type: Iterable[bool]
+    pre_mask: Iterable[bool] = (True, )
     # Selects which post layer units will be included in the projection
     # If the length is less than the number of units in the pre_layer, it will
     # be tiled. If the length is more, it will be truncated.
-    post_mask = (True, )  # type: Iterable[bool]
+    post_mask: Iterable[bool] = (True, )
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
-        if not isinstance(self.dist, random.Distribution):
+        if not isinstance(self.dist, rand.Distribution):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
 

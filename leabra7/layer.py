@@ -2,6 +2,7 @@
 import heapq
 import itertools
 import statistics
+from typing import List
 from typing import Iterable
 
 from leabra7 import log
@@ -68,12 +69,12 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return statistics.mean(unit.act for unit in self.units)
+        return statistics.mean(u.act for u in self.units)
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
-        return statistics.mean(unit.net for unit in self.units)
+        return statistics.mean(u.net for u in self.units)
 
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""
@@ -99,6 +100,7 @@ class Layer(log.ObservableMixin):
         self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
 
     def update_inhibition(self) -> None:
+        """Updates the inhibition for the layer's units."""
         if self.spec.inhibition_type == "fffb":
             self.calc_fffb_inhibition()
         else:
@@ -144,13 +146,14 @@ class Layer(log.ObservableMixin):
         for i, act in zip(range(len(self.units)), itertools.cycle(acts)):
             self.units[i].act = act
 
-    def observe(self, attr: str) -> log.ObjObs:
+    def observe(self, attr: str) -> List[log.Obs]:
         """Overrides `log.ObservableMixin.observe`."""
         try:
             parsed = _parse_unit_attr(attr)
-            return [("unit{0}_{1}".format(i, parsed),
-                     unit.observe(parsed)[0][1])
-                    for i, unit in enumerate(self.units)]
+            # yapf: disable
+            return [{**{"unit": i}, **u.observe(parsed)}
+                    for i, u in enumerate(self.units)]
+            # yapf: enable
         except ValueError:
             pass
 
@@ -159,4 +162,4 @@ class Layer(log.ObservableMixin):
             raise ValueError(
                 "{0} is not a valid layer attribute.".format(attr))
 
-        return [(attr, getattr(self, attr))]
+        return [{attr: getattr(self, attr)}]
