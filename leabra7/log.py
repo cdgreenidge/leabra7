@@ -2,7 +2,7 @@
 import abc
 import collections
 from typing import Any
-from typing import Dict  # noqa pylint: disable=W0611
+from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Iterable
@@ -36,9 +36,10 @@ class DataFrameBuffer:
         self.length = 0
 
         def new() -> List[Any]:
+            """Returns an empty row."""
             return [None] * self.length
 
-        self.buf = collections.defaultdict(new)  # type: Dict[str, List[Any]]
+        self.buf: Dict[str, List[Any]] = collections.defaultdict(new)
 
     def append(self, row: ObjObs) -> None:
         """Appends a row to the dataframe buffer.
@@ -79,6 +80,7 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
     def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
         self.name = name
+        # noinspection PyArgumentList
         super().__init__(*args, **kwargs)  # type: ignore
 
     @abc.abstractmethod
@@ -123,7 +125,7 @@ class Logger:
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        row = []  # type: ObjObs
+        row: ObjObs = []
         for a in self.attrs:
             row.extend(self.target.observe(a))
         self.buffer.append(row)

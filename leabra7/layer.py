@@ -68,12 +68,12 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return statistics.mean(unit.act for unit in self.units)
+        return statistics.mean(u.act for u in self.units)
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
-        return statistics.mean(unit.net for unit in self.units)
+        return statistics.mean(u.net for u in self.units)
 
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""
@@ -148,9 +148,8 @@ class Layer(log.ObservableMixin):
         """Overrides `log.ObservableMixin.observe`."""
         try:
             parsed = _parse_unit_attr(attr)
-            return [("unit{0}_{1}".format(i, parsed),
-                     unit.observe(parsed)[0][1])
-                    for i, unit in enumerate(self.units)]
+            return [("unit{0}_{1}".format(i, parsed), u.observe(parsed)[0][1])
+                    for i, u in enumerate(self.units)]
         except ValueError:
             pass
 

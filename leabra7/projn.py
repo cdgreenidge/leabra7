@@ -49,8 +49,8 @@ def make_full_conn_list(proj_name: str, pre_units: Iterable[unit.Unit],
     Args:
         proj_name: The name of the projection. Used to generate the connection
             names.
-        pre: The sending layer's units.
-        post: The receiving layer's units.
+        pre_units: The sending layer's units.
+        post_units: The receiving layer's units.
         spec: The spec to use for every connection.
 
     Returns:

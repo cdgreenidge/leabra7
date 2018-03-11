@@ -83,12 +83,12 @@ def nxx1_table() -> Any:
     conv = np.convolve(ys, gaussian(res, std), mode="same")
 
     xs_valid = np.arange(-rng, 1.0 + res, res)
-    conv = conv[np.searchsorted(xs, xs_valid[0], side="left"):
-                np.searchsorted(xs, xs_valid[-1], side="left") + 1]
-    return (xs_valid, conv)
+    conv = conv[np.searchsorted(xs, xs_valid[0]):
+                np.searchsorted(xs, xs_valid[-1]) + 1]
+    return xs_valid, conv
 
 
-class Unit():
+class Unit:
     """A computational unit (aka neuron.)
 
     Args:
@@ -188,6 +188,7 @@ class Unit():
             return self.nxx1_ys[0]
         elif x > self.nxx1_xs[-1]:
             return self.nxx1_ys[-1]
+        # noinspection PyTypeChecker
         return self.nxx1_interpolator(x)
 
     def update_activation(self) -> None:

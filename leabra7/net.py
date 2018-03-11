@@ -1,10 +1,10 @@
 """A network."""
-from typing import Any  # noqa pylint: disable=W0611
-from typing import Callable  # noqa pylint: disable=W0611
-from typing import Dict  # noqa pylint: disable=W0611
+from typing import Any
+from typing import Dict
 from typing import Iterable
-from typing import List  # noqa pylint: disable=W0611
-from typing import Tuple  # noqa pylint: disable=W0611
+from typing import List
+
+import pandas as pd  # type: ignore
 
 from leabra7 import layer
 from leabra7 import log
@@ -16,11 +16,11 @@ class Net:
     """A leabra7 network. This is the main class."""
 
     def __init__(self) -> None:
-        self.objs = {}  # type: Dict[str, Any]
-        self.layers = []  # type: List[layer.Layer]
-        self.projns = []  # type: List[projn.Projn]
+        self.objs: Dict[str, Any] = {}
+        self.layers: List[layer.Layer] = []
+        self.projns: List[projn.Projn] = []
 
-        self.cycle_loggers = []  # type: List[log.Logger]
+        self.cycle_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -138,7 +138,7 @@ class Net:
         for pr in self.projns:
             pr.flush()
 
-    def logs(self, freq: str, name: str) -> None:
+    def logs(self, freq: str, name: str) -> pd.DataFrame:
         """Retrieves logs for an object in the network.
 
         Args:
