@@ -1,73 +1,57 @@
 """Tools to log data from the network."""
 import abc
-import collections
+import functools
+import itertools
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Tuple
 from typing import Iterable
 
 import pandas as pd  # type: ignore
 
-Attr = str
-"""In our logs, we record attributes as strings."""
+Obs = Dict[str, Any]
+"""An observation is a specially-formatted dict.
 
-AttrObs = Tuple[Attr, Any]
+Here are some examples:
+
+- An observation of 'unit0_act' for a layer could look
+  like this: {"unit": 0, "act": 0.5}.
+
+- An observation of 'avg_act' for a layer
+  could look like this: {"avg_act": 0.333}.
+
 """
-An observation of one of an object's attributes.
-
-It is a tuple containing the attribute name, and the value of that attribute,
-e.g. ("unit_act", 0.3).
-
-"""
-
-ObjObs = List[AttrObs]
-"""An observation of an object (i.e. many of the object's attributes."""
 
 
 class DataFrameBuffer:
-    """A buffer of dataframe rows.
+    """A buffer of dataframe records.
 
     This gives us constant time append. When we're done collecting rows, we
     can condense them all into a dataframe.
     """
 
     def __init__(self) -> None:
-        self.length = 0
+        self.time = 0
+        self.buffer: List[pd.DataFrame] = []
 
-        def new() -> List[Any]:
-            """Returns an empty row."""
-            return [None] * self.length
+    def append(self, record: pd.DataFrame) -> None:
+        """Appends a record to the dataframe buffer.
 
-        self.buf: Dict[str, List[Any]] = collections.defaultdict(new)
-
-    def append(self, row: ObjObs) -> None:
-        """Appends a row to the dataframe buffer.
-
-        If the row contains an attribute that hasn't been logged before, the
-        column is filled in with Nones for previous time steps. If the row
-        doesn't contain all the attributes in the dataframe, the missing
-        attributes take None for their values.
+        A "time" column is added to each record.
 
         Args:
-            row: The list of attribute observations to append to the buffer.
+            record: A dataframe containing some rows in the output log,
+                for a single time step.
 
         """
-        for k, v in row:
-            self.buf[k].append(v)
-        self.length += 1
-        self._pad()
+        df: pd.DataFrame = record.copy()
+        df["time"] = self.time
+        self.buffer.append(df)
+        self.time += 1
 
     def to_df(self) -> pd.DataFrame:
         """Returns a DataFrame containing the data in the buffer."""
-        return pd.DataFrame.from_dict(self.buf)
-
-    def _pad(self) -> None:
-        """Pads all the columns in the buffer with Nones until they are the
-        same length."""
-        for _, v in self.buf.items():
-            while len(v) < self.length:
-                v.append(None)
+        return pd.concat(self.buffer, ignore_index=True)
 
 
 class ObservableMixin(metaclass=abc.ABCMeta):
@@ -84,7 +68,7 @@ class ObservableMixin(metaclass=abc.ABCMeta):
         super().__init__(*args, **kwargs)  # type: ignore
 
     @abc.abstractmethod
-    def observe(self, attr: str) -> List[Tuple[str, Any]]:
+    def observe(self, attr: str) -> List[Obs]:
         """Observes an attribute on this object.
 
         Args:
@@ -92,16 +76,37 @@ class ObservableMixin(metaclass=abc.ABCMeta):
                 misnomer, because it could be something computed on-the-fly.
 
         Returns:
-            A list of observations of the attribute. A single observation is a
-            Tuple[str, Any], where the first element is the attribute name and
-            the second element is the observation value. We return a list
-            because one attribute, like a layer's "unit_act", can return many
-            observations, e.g. [("unit0_act", 0.0), ("unit1_act", 0.0), ...]
+            A list of observations from the attribute. We need a list because
+            some attributes produce more than one observation,
+            e.g. observing "unit_act" on a layer.
 
         Raises:
             ValueError: if attr is not a loggable attribute.
 
         """
+
+
+def merge_observations(observations: Iterable[Obs]) -> pd.DataFrame:
+    """Merges a list of observations together.
+
+    This is done using full outer joins.
+
+    Args:
+        observations: The list of observations.
+
+    Returns:
+        A DataFrame containing the merged observations.
+
+    """
+
+    def merge(df: pd.DataFrame, obs: Obs) -> pd.DataFrame:
+        """Merges two observations."""
+        df2 = pd.DataFrame(obs, index=[0])
+        if df.columns.intersection(df2.columns).empty:
+            return pd.concat((df, df2))
+        return pd.merge(df, df2, how="outer", copy=False)
+
+    return functools.reduce(merge, observations, pd.DataFrame())
 
 
 class Logger:
@@ -125,10 +130,9 @@ class Logger:
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        row: ObjObs = []
-        for a in self.attrs:
-            row.extend(self.target.observe(a))
-        self.buffer.append(row)
+        observations = itertools.chain.from_iterable(
+            self.target.observe(a) for a in self.attrs)
+        self.buffer.append(merge_observations(observations))
 
     def to_df(self) -> pd.DataFrame:
         """Converts the internal buffer to a dataframe.

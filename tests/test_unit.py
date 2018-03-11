@@ -104,7 +104,7 @@ def test_unit_can_update_its_activation() -> None:
 
 def test_unit_can_observe_its_attributes() -> None:
     unit = un.Unit()
-    assert unit.observe("act") == [("act", 0.0)]
+    assert unit.observe("act") == {"act": 0.0}
 
 
 def test_unit_raises_valueerror_if_attr_is_unobservable() -> None:
@@ -113,7 +113,7 @@ def test_unit_raises_valueerror_if_attr_is_unobservable() -> None:
         unit.observe("banannas")
 
 
-def test_unit_can_calculate_the_amount_of_inhibition_to_put_it_at_threshold():
+def test_unit_can_calculate_the_inhibition_to_put_it_at_threshold() -> None:
     unit = un.Unit()
     unit.add_input(3)
     unit.update_net()

@@ -2,6 +2,7 @@
 import heapq
 import itertools
 import statistics
+from typing import List
 from typing import Iterable
 
 from leabra7 import log
@@ -99,6 +100,7 @@ class Layer(log.ObservableMixin):
         self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
 
     def update_inhibition(self) -> None:
+        """Updates the inhibition for the layer's units."""
         if self.spec.inhibition_type == "fffb":
             self.calc_fffb_inhibition()
         else:
@@ -144,11 +146,11 @@ class Layer(log.ObservableMixin):
         for i, act in zip(range(len(self.units)), itertools.cycle(acts)):
             self.units[i].act = act
 
-    def observe(self, attr: str) -> log.ObjObs:
+    def observe(self, attr: str) -> List[log.Obs]:
         """Overrides `log.ObservableMixin.observe`."""
         try:
             parsed = _parse_unit_attr(attr)
-            return [("unit{0}_{1}".format(i, parsed), u.observe(parsed)[0][1])
+            return [{**{"unit": i}, **u.observe(parsed)}
                     for i, u in enumerate(self.units)]
         except ValueError:
             pass
@@ -158,4 +160,4 @@ class Layer(log.ObservableMixin):
             raise ValueError(
                 "{0} is not a valid layer attribute.".format(attr))
 
-        return [(attr, getattr(self, attr))]
+        return [{attr: getattr(self, attr)}]

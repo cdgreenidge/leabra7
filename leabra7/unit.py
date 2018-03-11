@@ -6,12 +6,11 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
-from typing import List
-from typing import Tuple
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
 
+from leabra7 import log
 from leabra7 import specs
 
 # The next few functions deal with the noisy x/(x + 1) activation
@@ -220,11 +219,23 @@ class Unit:
             (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
             self.spike * self.spec.spike_gain)
 
-    def observe(self, attr: str) -> List[Tuple[str, Any]]:
-        """Exactly the same as Log.ObservableMixin.observe()."""
+    def observe(self, attr: str) -> log.Obs:
+        """Observes an attribute.
+
+        This is not quite the same as log.ObservableMixin.observe(), because
+        we don't want to give every unit a name. This lets us return a dict
+        instead of a list containing one dict.
+
+        Args:
+            attr: The attribute to observe.
+
+        Returns:
+            A dict: {attr: val} where val is the value of the attribute.
+
+        """
         simple_attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r",
                         "v_m", "v_m_eq", "adapt", "spike")
         if attr in simple_attrs:
-            return [(attr, getattr(self, attr))]
+            return {attr: getattr(self, attr)}
         else:
             raise ValueError("{0} is not a loggable attr.".format(attr))

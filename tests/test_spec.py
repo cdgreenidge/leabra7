@@ -160,14 +160,14 @@ def test_it_should_validate_adapt_dt(f) -> None:
 @given(st.text())
 @example("kwta")
 @example("fffb")
-def test_layer_spec_validates_inhibition_type(f):
+def test_layer_spec_validates_inhibition_type(f) -> None:
     if f not in ["kwta", "fffb"]:
         with pytest.raises(sp.ValidationError):
             sp.LayerSpec(inhibition_type=f).validate()
 
 
 @given(st.integers())
-def test_layer_spec_validates_k(f):
+def test_layer_spec_validates_k(f) -> None:
     if f < 1:
         with pytest.raises(sp.ValidationError):
             sp.LayerSpec(inhibition_type="kwta", k=f).validate()

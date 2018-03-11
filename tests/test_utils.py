@@ -1,4 +1,6 @@
 """Test utils.py"""
+from typing import List
+from typing import Tuple
 import unittest
 
 from hypothesis import given
@@ -9,14 +11,15 @@ from leabra7 import utils as ut
 
 
 @st.composite
-def k_and_list(draw, elements=st.integers()):
+def k_and_list(draw, elements=st.integers()) -> Tuple[int, List[int]]:
+    """A strategy that returns a list of integers and an index into the list."""
     xs = draw(st.lists(elements, min_size=1))
     i = draw(st.integers(min_value=0, max_value=len(xs)))
-    return (i, xs)
+    return i, xs
 
 
 @given(k_and_list())
-def test_partition_partitions_a_list_without_key_function(x):
+def test_partition_partitions_a_list_without_key_function(x) -> None:
     n, ys = x
     first, second = ut.partition(n, ys)
 
@@ -36,10 +39,10 @@ def test_partition_partitions_a_list_without_key_function(x):
 
 
 @given(k_and_list())
-def test_partition_partitions_a_list_with_key_function(x):
+def test_partition_partitions_a_list_with_key_function(x) -> None:
     n, ys = x
     zs = [(-y, y) for y in ys]
-    first, second = ut.partition(n, zs, key=lambda x: x[1])
+    first, second = ut.partition(n, zs, key=lambda y: y[1])
 
     # Check that we have a partition
     unittest.TestCase().assertCountEqual(first + second, zs)
@@ -56,6 +59,6 @@ def test_partition_partitions_a_list_with_key_function(x):
             assert i[1] >= bound
 
 
-def test_partition_validates_n():
+def test_partition_validates_n() -> None:
     with pytest.raises(ValueError):
         ut.partition(5, [1, 2, 3])
