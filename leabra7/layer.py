@@ -150,8 +150,10 @@ class Layer(log.ObservableMixin):
         """Overrides `log.ObservableMixin.observe`."""
         try:
             parsed = _parse_unit_attr(attr)
+            # yapf: disable
             return [{**{"unit": i}, **u.observe(parsed)}
                     for i, u in enumerate(self.units)]
+            # yapf: enable
         except ValueError:
             pass
 
