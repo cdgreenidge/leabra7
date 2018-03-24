@@ -242,3 +242,9 @@ def test_projn_spec_validates_integ(f) -> None:
 def test_projn_spec_validates_the_distribution() -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(dist=3).validate()
+
+
+@given(float_outside_range(0, 1))
+def test_projn_spec_validates_sparsity(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(sparsity=f).validate()

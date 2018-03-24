@@ -1,5 +1,6 @@
 """A connection between layers."""
 import itertools
+import random
 from typing import Iterable
 from typing import List
 from typing import TypeVar
@@ -124,6 +125,15 @@ class Projn:
 
         self.conns = make_full_conn_list(name, pre_units, post_units,
                                          conn_spec)
+
+        # Enforce sparsity
+        # This could be done more functionally (better) but we're going to
+        # throw all this code out soon anyway, in favor of connection groups.
+        # This is closer to the code we'll have then
+        n = len(self.conns)
+        num_to_disable = int((1 - self.spec.sparsity) * n)
+        for i in random.sample(range(n), num_to_disable):
+            self.conns[i].wt = 0
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
