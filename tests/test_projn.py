@@ -146,3 +146,12 @@ def test_projn_post_mask_truncates_if_it_is_too_long() -> None:
     projn = pr.Projn("proj", pre, post, spec)
     assert projn.conns[0].post == post.units[0]
     assert len(projn.conns) == 1
+
+
+def test_projns_can_be_sparse() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    spec = sp.ProjnSpec(dist=rn.Scalar(1.0), sparsity=0.5)
+    projn = pr.Projn("proj", pre, post, spec)
+    num_on = sum(x.wt for x in projn.conns)
+    assert num_on == 2.0

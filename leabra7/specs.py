@@ -215,7 +215,6 @@ class ProjnSpec(Spec):
     # The probability distribution from which the connection weights will be
     # drawn
     dist: rand.Distribution = rand.Scalar(0.5)
-
     # Selects which pre layer units will be included in the projection
     # If the length is less than the number of units in the pre_layer, it will
     # be tiled. If the length is more, it will be truncated.
@@ -224,11 +223,13 @@ class ProjnSpec(Spec):
     # If the length is less than the number of units in the pre_layer, it will
     # be tiled. If the length is more, it will be truncated.
     post_mask: Iterable[bool] = (True, )
+    # Sparsity of the connection (i.e. the percentage of active connections.)
+    sparsity: float = 1.0
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
         if not isinstance(self.dist, rand.Distribution):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
-
+        self.assert_in_range("sparsity", low=0.0, high=1.0)
         super().validate()
