@@ -4,6 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import pytest
+import torch
 
 from leabra7 import specs as sp
 from leabra7 import unit as un
@@ -123,3 +124,94 @@ def test_unit_can_calculate_the_inhibition_to_put_it_at_threshold() -> None:
         unit.update_membrane_potential()
 
     assert math.isclose(unit.v_m, unit.spec.spk_thr, rel_tol=1e-4)
+
+
+def test_unitgroup_init_checks_that_size_is_positive() -> None:
+    with pytest.raises(ValueError):
+        un.UnitGroup(size=0)
+
+
+def test_unitgroup_update_net_checks_input_dimensions() -> None:
+    ug = un.UnitGroup(size=3)
+    with pytest.raises(AssertionError):
+        ug.add_input(torch.Tensor([1, 2]))
+
+
+def test_unitgroup_update_inhibition_checks_input_dimensions() -> None:
+    ug = un.UnitGroup(size=3)
+    with pytest.raises(AssertionError):
+        ug.update_inhibition(torch.Tensor([1, 2]))
+
+
+def test_you_can_observe_attrs_from_the_unit_group() -> None:
+    n = 3
+    ug = un.UnitGroup(size=n)
+    for i in ug.loggable_attrs:
+        logs = ug.observe(i)
+        assert logs["unit"] == list(range(n))
+        assert logs[i] == list(getattr(ug, i))
+
+
+def test_it_checks_for_unobservable_attrs() -> None:
+    ug = un.UnitGroup(3)
+    with pytest.raises(ValueError):
+        ug.observe("rabbit cm")
+
+
+def test_unitgroup_can_calculate_the_threshold_inhibition() -> None:
+    group = un.UnitGroup(size=10)
+    group.add_input(torch.Tensor(np.linspace(0.3, 0.8, 10)))
+    group.update_net()
+    group.update_inhibition(group.g_i_thr())
+
+    for i in range(200):
+        group.update_membrane_potential()
+
+    assert (torch.abs(group.v_m - group.spec.spk_thr) < 1e-6).all()
+
+
+def test_unitgroup_uses_the_default_spec_if_none_is_provided() -> None:
+    group = un.UnitGroup(size=3)
+    assert group.spec == sp.UnitSpec()
+
+
+def test_unitgroup_sets_the_spec_you_provide() -> None:
+    spec = sp.UnitSpec()
+    assert un.UnitGroup(size=3, spec=spec).spec is spec
+
+
+def test_unitgroup_has_the_same_behavior_as_unit() -> None:
+    def units_are_equal(u0: un.Unit, u1: un.Unit) -> bool:
+        """Returns true if two units have the same state."""
+        attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r", "v_m",
+                 "v_m_eq", "adapt", "spike")
+        for i in attrs:
+            assert getattr(u0, i) == getattr(u1, i)
+
+    unit0 = un.Unit()
+    unit1 = un.Unit()
+    group = un.UnitGroup(size=2)
+
+    for i in range(500):
+        unit0.add_input(0.3)
+        unit1.add_input(0.5)
+        group.add_input(torch.Tensor([0.3, 0.5]))
+        unit0.update_net()
+        unit1.update_net()
+        group.update_net()
+        unit0.update_inhibition(0.1)
+        unit1.update_inhibition(0.1)
+        group.update_inhibition(torch.Tensor([0.1, 0.1]))
+        unit0.update_membrane_potential()
+        unit1.update_membrane_potential()
+        group.update_membrane_potential()
+        unit0.update_activation()
+        unit1.update_activation()
+        group.update_activation()
+
+        attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r", "v_m",
+                 "v_m_eq", "adapt", "spike")
+        for i in attrs:
+            group_attr = getattr(group, i)
+            assert math.isclose(getattr(unit0, i), group_attr[0], abs_tol=1e-6)
+            assert math.isclose(getattr(unit1, i), group_attr[1], abs_tol=1e-6)
