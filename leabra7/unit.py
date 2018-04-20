@@ -95,8 +95,26 @@ class Unit:
 
     """
     nxx1_xs, nxx1_ys = nxx1_table()
-    nxx1_interpolator = scipy.interpolate.interp1d(
-        nxx1_xs, nxx1_ys, copy=False)
+
+    nxx1 = scipy.interpolate.interp1d(
+        nxx1_xs,
+        nxx1_ys,
+        copy=False,
+        fill_value=(nxx1_ys[0], nxx1_ys[-1]),
+        bounds_error=False)
+    """Evaluates the noisy X/(X + 1) function.
+
+    This is used to approximate the rate-coded unit response to a given
+    input. This is a function, since interp1d is callable.
+
+    Args:
+        x: The value at which to evaluate the noisy X/(X + 1)
+            function. Can be any array-like type.
+
+    Returns:
+        The value of the noisy X/(X + 1) function at `x`.
+
+    """
 
     def __init__(self, spec: specs.UnitSpec = None) -> None:
         if spec is None:
@@ -168,27 +186,6 @@ class Unit:
         self.v_m_eq += self.spec.integ * self.spec.vm_dt * (
             self.i_net_r - self.adapt)
         # yapf: enable
-
-    def nxx1(self, x: float) -> float:
-        """Evaluates the noisy X/(X + 1) function.
-
-        This is used to approximate the rate-coded unit response to a given
-        input.
-
-        Args:
-            x: The value at which to evaluate the noisy X/(X + 1) function.
-
-        Returns:
-            The value of the noisy X/(X + 1) function at `x`.
-
-        """
-        # We clamp x to the lookup table bounds if it lies outside them.
-        if x < self.nxx1_xs[0]:
-            return self.nxx1_ys[0]
-        elif x > self.nxx1_xs[-1]:
-            return self.nxx1_ys[-1]
-        # noinspection PyTypeChecker
-        return self.nxx1_interpolator(x)
 
     def update_activation(self) -> None:
         """Updates the unit activation.
