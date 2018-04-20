@@ -15,6 +15,7 @@ requirements:
     - python
     - numpy
     - scipy
+    - torch
     - pandas
 
 test:
