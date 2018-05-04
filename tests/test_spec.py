@@ -220,18 +220,6 @@ def test_it_should_check_for_invalid_log_on_cycle_attrs() -> None:
         sp.LayerSpec(log_on_cycle=("whales", )).validate()
 
 
-# Test ConnSpec validation
-@given(float_outside_range(0, float("Inf")))
-def test_conn_spec_validates_integ(f) -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.ConnSpec(integ=f).validate()
-
-
-def test_conn_spec_validates_distribution() -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.ConnSpec(dist=3).validate()
-
-
 # Test ProjnSpec validation
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f) -> None:

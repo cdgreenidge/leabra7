@@ -6,36 +6,6 @@ import torch  # type: ignore
 
 from leabra7 import specs
 from leabra7 import layer
-from leabra7 import unit
-
-
-class Conn:
-    """A connection links two units/neurons.
-
-    Args:
-        name: The name of the connection.
-        pre: The presynaptic, or sending, unit.
-        post: The postsynaptic, or receiving, unit.
-        spec: The connection specification. If none is provided, the default
-            spec will be used.
-
-    """
-
-    def __init__(self,
-                 name: str,
-                 pre: unit.Unit,
-                 post: unit.Unit,
-                 spec: specs.ConnSpec = None) -> None:
-        self.name = name
-        self.pre = pre
-        self.post = post
-
-        if spec is None:
-            self.spec = specs.ConnSpec()
-        else:
-            self.spec = spec
-
-        self.wt = self.spec.dist.draw()
 
 
 class Projn:
@@ -64,6 +34,8 @@ class Projn:
         else:
             self.spec = spec
 
+        # Rows encode the postsynaptic units, and columns encode the
+        # presynaptic units
         self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
 
         # Only create the projection between the units selected by the masks
@@ -79,7 +51,7 @@ class Projn:
             torch.ByteTensor(expanded_post_mask),
             torch.ByteTensor(expanded_pre_mask))
 
-        # Enforce sparsity
+        # Enforce sparsitya
         # TODO: Make this a separate method
         nonzero = mask.nonzero()
         num_nonzero = nonzero.shape[0]
@@ -87,12 +59,12 @@ class Projn:
         if num_to_kill > 0:
             to_kill = nonzero[torch.randperm(num_nonzero)[:num_to_kill], :]
             mask[to_kill[:, 0], to_kill[:, 1]] = 0
+        num_nonzero = num_nonzero - num_to_kill
 
-        # TODO: Modify distribution objects to be able to fill tensors
-        # using native torch methods
-        random_numbers = torch.Tensor(
-            [self.spec.dist.draw() for _ in range(mask.sum())])
-        self.wts[mask] = random_numbers
+        # Fill the weight matrix with values
+        rand_nums = torch.Tensor(num_nonzero)
+        self.spec.dist.fill(rand_nums)
+        self.wts[mask] = rand_nums
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.

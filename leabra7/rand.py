@@ -5,15 +5,16 @@ At the moment, this module is not thread-safe.
 """
 import abc
 import math
-import random
+
+import torch  # type: ignore
 
 
 class Distribution(metaclass=abc.ABCMeta):
     """Abstract base class for all random number distributions."""
 
     @abc.abstractmethod
-    def draw(self) -> float:
-        """Draws a random number from the distribution."""
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Fills a tensor in-place with random numbers."""
 
 
 class Scalar(Distribution):
@@ -27,9 +28,9 @@ class Scalar(Distribution):
     def __init__(self, value: float) -> None:
         self.value = value
 
-    def draw(self) -> float:
-        """Overrides `Distribution.draw()`."""
-        return self.value
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Overrides `Distribution.fill()`."""
+        tensor.fill_(self.value)
 
 
 class Uniform(Distribution):
@@ -51,9 +52,9 @@ class Uniform(Distribution):
         self.low = low
         self.high = high
 
-    def draw(self) -> float:
-        """Overrides `Distribution.draw()`."""
-        return random.uniform(self.low, self.high)
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Overrides ``Distribution.fill`."""
+        tensor.uniform_(self.low, self.high)
 
 
 class Gaussian(Distribution):
@@ -74,9 +75,9 @@ class Gaussian(Distribution):
         self.mu = mean
         self.sigma = math.sqrt(var)
 
-    def draw(self) -> float:
-        """Overrides `Distribution.draw()`."""
-        return random.gauss(self.mu, self.sigma)
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Overrides ``Distribution.fill`."""
+        tensor.normal_(self.mu, self.sigma)
 
 
 class LogNormal(Distribution):
@@ -97,9 +98,9 @@ class LogNormal(Distribution):
         self.mu = mean
         self.sigma = math.sqrt(var)
 
-    def draw(self) -> float:
-        """Overrides `Distribution.draw()`."""
-        return random.lognormvariate(self.mu, self.sigma)
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Overrides ``Distribution.fill`."""
+        tensor.log_normal_(self.mu, self.sigma)
 
 
 class Exponential(Distribution):
@@ -113,6 +114,6 @@ class Exponential(Distribution):
     def __init__(self, lambd: float) -> None:
         self.lambd = lambd
 
-    def draw(self) -> float:
-        """Overrides `Distribution.draw()`."""
-        return random.expovariate(self.lambd)
+    def fill(self, tensor: torch.Tensor) -> None:
+        """Overrides ``Distribution.fill`."""
+        tensor.exponential_(self.lambd)

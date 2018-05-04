@@ -6,42 +6,6 @@ from leabra7 import rand as rn
 from leabra7 import specs as sp
 
 
-def test_conn_init_uses_the_spec_you_pass_it() -> None:
-    spec = sp.ConnSpec()
-    pre = un.Unit()
-    post = un.Unit()
-    conn = pr.Conn("proj1", pre, post, spec=spec)
-    assert conn.spec is spec
-
-
-def test_conn_has_a_name() -> None:
-    pre = un.Unit()
-    post = un.Unit()
-    conn = pr.Conn("con1", pre, post)
-    assert conn.name == "con1"
-
-
-def test_projn_has_a_sending_unit() -> None:
-    pre = un.Unit()
-    post = un.Unit()
-    conn = pr.Conn("con1", pre, post)
-    assert conn.pre == pre
-
-
-def test_conn_has_a_receiving_unit() -> None:
-    pre = un.Unit()
-    post = un.Unit()
-    conn = pr.Conn("con1", pre, post)
-    assert conn.post == post
-
-
-def test_conn_has_a_weight() -> None:
-    pre = un.Unit()
-    post = un.Unit()
-    conn = pr.Conn("con1", pre, post, sp.ConnSpec(dist=rn.Scalar(0.3)))
-    assert conn.wt == 0.3
-
-
 def test_projn_has_a_name() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
