@@ -6,6 +6,7 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
+from typing import List
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -294,9 +295,18 @@ class UnitGroup:
         # In the future, this could be a ByteTensor
         self.spike = torch.Tensor(self.size).zero_()
 
-    def g_i_thr(self) -> float:
-        """The inhibition that will place the unit at its spike threshold."""
-        return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net +
+    def g_i_thr(self, unit_idx: int) -> float:
+        """The inhibition that will place a unit at its spike threshold.
+
+        Args:
+            unit_idx: The index of the unit.
+
+        Returns:
+            The inhibbition that will place the unit denoted by
+            unit_idx at its spike threshold.
+
+        """
+        return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net[unit_idx] +
                  (self.spec.e_rev_l - self.spec.spk_thr) * self.spec.gc_l) /
                 (self.spec.spk_thr - self.spec.e_rev_i))
 
@@ -386,7 +396,21 @@ class UnitGroup:
             (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
             self.spike * self.spec.spike_gain)
 
-    def observe(self, attr: str) -> log.Obs:
+    def top_k_net_indices(self, k: int) -> torch.Tensor:
+        """Returns the indices of the top k units, sorted by net input.
+
+        Args:
+            k: The number of top units to return.
+
+        Returns:
+            A 1D torch tensor containing the indices of the units with the top
+            k net input values, sorted descending by net input.
+
+        """
+        _, indices = torch.topk(self.net, k, largest=True, sorted=True)
+        return indices
+
+    def observe(self, attr: str) -> List[log.Obs]:
         """Observes an attribute.
 
         This is not quite the same as log.ObservableMixin.observe(), because
@@ -401,9 +425,9 @@ class UnitGroup:
 
         """
         if attr in self.loggable_attrs:
-            return {
-                "unit": list(range(self.size)),
-                attr: list(getattr(self, attr))
-            }
+            return [{
+                "unit": i,
+                attr: getattr(self, attr)[i]
+            } for i in range(self.size)]
         else:
             raise ValueError("{0} is not a loggable attr.".format(attr))

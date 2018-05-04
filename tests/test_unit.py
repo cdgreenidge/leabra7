@@ -144,12 +144,12 @@ def test_unitgroup_update_inhibition_checks_input_dimensions() -> None:
 
 
 def test_you_can_observe_attrs_from_the_unit_group() -> None:
-    n = 3
+    n = 2
     ug = un.UnitGroup(size=n)
-    for i in ug.loggable_attrs:
-        logs = ug.observe(i)
-        assert logs["unit"] == list(range(n))
-        assert logs[i] == list(getattr(ug, i))
+    for attr in ug.loggable_attrs:
+        logs = ug.observe(attr)
+        assert logs[0] == {"unit": 0, attr: getattr(ug, attr)[0]}
+        assert logs[1] == {"unit": 1, attr: getattr(ug, attr)[1]}
 
 
 def test_it_checks_for_unobservable_attrs() -> None:
@@ -162,12 +162,13 @@ def test_unitgroup_can_calculate_the_threshold_inhibition() -> None:
     group = un.UnitGroup(size=10)
     group.add_input(torch.Tensor(np.linspace(0.3, 0.8, 10)))
     group.update_net()
-    group.update_inhibition(group.g_i_thr())
+    g_i_thr = group.g_i_thr(unit_idx=2)
+    group.update_inhibition(torch.Tensor(10).fill_(g_i_thr))
 
     for i in range(200):
         group.update_membrane_potential()
 
-    assert (torch.abs(group.v_m - group.spec.spk_thr) < 1e-6).all()
+    assert (torch.abs(group.v_m - group.spec.spk_thr) < 1e-6)[2]
 
 
 def test_unitgroup_uses_the_default_spec_if_none_is_provided() -> None:
@@ -178,6 +179,12 @@ def test_unitgroup_uses_the_default_spec_if_none_is_provided() -> None:
 def test_unitgroup_sets_the_spec_you_provide() -> None:
     spec = sp.UnitSpec()
     assert un.UnitGroup(size=3, spec=spec).spec is spec
+
+
+def test_unitgroup_can_return_the_top_k_net_input_values() -> None:
+    group = un.UnitGroup(size=10)
+    group.net = torch.Tensor([9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
+    assert (group.top_k_net_indices(3) == torch.Tensor([0, 1, 2]).long()).all()
 
 
 def test_unitgroup_has_the_same_behavior_as_unit() -> None:

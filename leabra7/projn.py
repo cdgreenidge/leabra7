@@ -1,9 +1,8 @@
 """A connection between layers."""
 import itertools
-import random
-from typing import Iterable
-from typing import List
-from typing import TypeVar
+import math
+
+import torch  # type: ignore
 
 from leabra7 import specs
 from leabra7 import layer
@@ -39,58 +38,6 @@ class Conn:
         self.wt = self.spec.dist.draw()
 
 
-def make_full_conn_list(proj_name: str, pre_units: Iterable[unit.Unit],
-                        post_units: Iterable[unit.Unit],
-                        spec: specs.ConnSpec) -> List[Conn]:
-    """Constructs the connections needed for a full projection.
-
-    In a full projection, every unit in the sending layer is connected to
-    every unit in the receiving layer.
-
-    Args:
-        proj_name: The name of the projection. Used to generate the connection
-            names.
-        pre_units: The sending layer's units.
-        post_units: The receiving layer's units.
-        spec: The spec to use for every connection.
-
-    Returns:
-        A full list of connections from the sending layer's units to the
-            receiving layer's units.
-
-    """
-
-    def name(conn_number: int) -> str:
-        """Generates a name for each connection."""
-        return "{0}_conn{1}".format(proj_name, conn_number)
-
-    connections = []
-    num = 0
-    for i in pre_units:
-        for j in post_units:
-            connections.append(Conn(name(num), i, j, spec))
-            num += 1
-    return connections
-
-
-T = TypeVar('T')
-
-
-def mask(xs: Iterable[T], xs_mask: Iterable[bool]) -> List[T]:
-    """Filters an iterable using a boolean mask.
-
-    Args:
-        xs: The iterable to filter.
-        xs_mask: The boolean mask. If it is shorter than xs, it will be tiled.
-            If it is longer than xs, it will be truncated.
-
-    Returns:
-        A list containing the values of xs for which mask is true.
-
-    """
-    return [x for x, m in zip(xs, itertools.cycle(xs_mask)) if m]
-
-
 class Projn:
     """A projection links two layers. It is a bundle of connections.
 
@@ -117,23 +64,35 @@ class Projn:
         else:
             self.spec = spec
 
-        conn_spec = specs.ConnSpec(dist=self.spec.dist)
+        self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
 
         # Only create the projection between the units selected by the masks
-        pre_units = mask(self.pre.units, self.spec.pre_mask)
-        post_units = mask(self.post.units, self.spec.post_mask)
-
-        self.conns = make_full_conn_list(name, pre_units, post_units,
-                                         conn_spec)
+        # Currently, only full connections are supported
+        # TODO: Refactor mask expansion and creation into new methods + test
+        expanded_pre_mask = list(
+            itertools.islice(
+                itertools.cycle(self.spec.pre_mask), self.pre.size))
+        expanded_post_mask = list(
+            itertools.islice(
+                itertools.cycle(self.spec.post_mask), self.post.size))
+        mask = torch.ger(
+            torch.ByteTensor(expanded_post_mask),
+            torch.ByteTensor(expanded_pre_mask))
 
         # Enforce sparsity
-        # This could be done more functionally (better) but we're going to
-        # throw all this code out soon anyway, in favor of connection groups.
-        # This is closer to the code we'll have then
-        n = len(self.conns)
-        num_to_disable = int((1 - self.spec.sparsity) * n)
-        for i in random.sample(range(n), num_to_disable):
-            self.conns[i].wt = 0
+        # TODO: Make this a separate method
+        nonzero = mask.nonzero()
+        num_nonzero = nonzero.shape[0]
+        num_to_kill = math.floor((1 - self.spec.sparsity) * nonzero.shape[0])
+        if num_to_kill > 0:
+            to_kill = nonzero[torch.randperm(num_nonzero)[:num_to_kill], :]
+            mask[to_kill[:, 0], to_kill[:, 1]] = 0
+
+        # TODO: Modify distribution objects to be able to fill tensors
+        # using native torch methods
+        random_numbers = torch.Tensor(
+            [self.spec.dist.draw() for _ in range(mask.sum())])
+        self.wts[mask] = random_numbers
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
@@ -142,6 +101,6 @@ class Projn:
         layer makes it easier to compute the net input scaling factor.
 
         """
-        for c in self.conns:
-            scale_eff = 1.0  # Currently netin scaling is not implemented
-            c.post.add_input(scale_eff * c.pre.act * c.wt)
+        scale_eff = 1.0
+        # TODO: stop violating law of Demeter here
+        self.post.units.add_input(scale_eff * self.wts @ self.pre.units.act)

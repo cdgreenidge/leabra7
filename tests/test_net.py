@@ -40,7 +40,7 @@ def test_you_can_force_a_layer() -> None:
     n.new_layer("layer1", 4)
     n.force_layer("layer1", [0, 1])
     n.cycle()
-    assert [u.act for u in n.objs["layer1"].units] == [0, 1, 0, 1]
+    assert list(n.objs["layer1"].units.act) == [0, 1, 0, 1]
 
 
 def test_forcing_a_layer_validates_its_name() -> None:

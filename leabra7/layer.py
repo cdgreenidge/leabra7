@@ -1,9 +1,10 @@
 """A layer, or group, of units."""
-import heapq
 import itertools
 import statistics
 from typing import List
 from typing import Iterable
+
+import torch  # type: ignore
 
 from leabra7 import log
 from leabra7 import specs
@@ -52,7 +53,7 @@ class Layer(log.ObservableMixin):
         else:
             self.spec = spec
 
-        self.units = [unit.Unit(self.spec.unit_spec) for _ in range(size)]
+        self.units = unit.UnitGroup(size=size, spec=self.spec.unit_spec)
 
         # When adding any attribute or property to this class, update
         # layer.LayerSpec._valid_log_on_cycle
@@ -69,17 +70,16 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return statistics.mean(u.act for u in self.units)
+        return statistics.mean(self.units.act)
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
-        return statistics.mean(u.net for u in self.units)
+        return statistics.mean(self.units.net)
 
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""
-        for i in self.units:
-            i.update_net()
+        self.units.update_net()
 
     def calc_fffb_inhibition(self) -> None:
         """Calculates feedforward-feedback inhibition for the layer."""
@@ -92,11 +92,9 @@ class Layer(log.ObservableMixin):
 
     def calc_kwta_inhibition(self) -> None:
         """Calculates k-winner-take-all inhibition for the layer."""
-        # Notation: m = k + 1
-        top_m_units = heapq.nlargest(
-            self.spec.k + 1, self.units, key=lambda x: x.net)
-        g_i_thr_m = top_m_units[-1].g_i_thr()
-        g_i_thr_k = top_m_units[-2].g_i_thr()
+        top_m_units = self.units.top_k_net_indices(self.spec.k + 1)
+        g_i_thr_m = self.units.g_i_thr(top_m_units[-1])
+        g_i_thr_k = self.units.g_i_thr(top_m_units[-2])
         self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
 
     def update_inhibition(self) -> None:
@@ -106,21 +104,17 @@ class Layer(log.ObservableMixin):
         else:
             self.calc_kwta_inhibition()
 
-        for i in self.units:
-            i.update_inhibition(self.gc_i)
+        self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
 
     def update_membrane_potential(self) -> None:
         """Updates the membrane potential of the layer's units."""
-        for i in self.units:
-            i.update_membrane_potential()
+        self.units.update_membrane_potential()
 
     def update_activation(self) -> None:
         """Updates the activation of the layer's units."""
         if self.forced:
             return
-
-        for i in self.units:
-            i.update_activation()
+        self.units.update_activation()
 
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
@@ -143,17 +137,15 @@ class Layer(log.ObservableMixin):
 
         """
         self.forced = True
-        for i, act in zip(range(len(self.units)), itertools.cycle(acts)):
-            self.units[i].act = act
+        for i, act in zip(range(self.size), itertools.cycle(acts)):
+            self.units.act[i] = act
 
     def observe(self, attr: str) -> List[log.Obs]:
         """Overrides `log.ObservableMixin.observe`."""
+        # TODO: fix the logging system, which is kinda broken
         try:
             parsed = _parse_unit_attr(attr)
-            # yapf: disable
-            return [{**{"unit": i}, **u.observe(parsed)}
-                    for i, u in enumerate(self.units)]
-            # yapf: enable
+            return self.units.observe(parsed)
         except ValueError:
             pass
 
