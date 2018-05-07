@@ -112,6 +112,15 @@ def test_expand_layer_mask_full_has_the_correct_connectivity_pattern() -> None:
     assert (pr.expand_layer_mask_full(pre_mask, post_mask) == expected).all()
 
 
+# TODO: turn this into a Hypothesis test
+def test_sparsify_can_make_a_matrix_sparse() -> None:
+    original = torch.ByteTensor([0, 1, 1, 0, 0, 0, 1, 0, 1])
+    sparse, num_nonzero = pr.sparsify(0.75, original)
+    assert sparse.sum() == num_nonzero
+    assert num_nonzero == 3
+    assert sparse.shape == original.shape
+
+
 def test_projn_post_mask_tiles_if_it_is_too_short() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=4)
