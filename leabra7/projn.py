@@ -1,11 +1,20 @@
 """A connection between layers."""
 import itertools
 import math
+from typing import TypeVar
+from typing import Iterable
+from typing import List
 
 import torch  # type: ignore
 
 from leabra7 import specs
 from leabra7 import layer
+
+T = TypeVar('T')
+
+
+def tile(length: int, xs: Iterable[T]) -> List[T]:
+    return list(itertools.islice(itertools.cycle(xs), length))
 
 
 class Projn:
@@ -41,12 +50,8 @@ class Projn:
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
         # TODO: Refactor mask expansion and creation into new methods + test
-        expanded_pre_mask = list(
-            itertools.islice(
-                itertools.cycle(self.spec.pre_mask), self.pre.size))
-        expanded_post_mask = list(
-            itertools.islice(
-                itertools.cycle(self.spec.post_mask), self.post.size))
+        expanded_pre_mask = tile(self.pre.size, self.spec.pre_mask)
+        expanded_post_mask = tile(self.post.size, self.spec.post_mask)
         mask = torch.ger(
             torch.ByteTensor(expanded_post_mask),
             torch.ByteTensor(expanded_pre_mask))

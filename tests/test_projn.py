@@ -92,6 +92,11 @@ def test_projn_can_mask_post_layer_units() -> None:
                 assert projn.wts[i, j] == 0
 
 
+def test_tile_can_tile_an_iterable() -> None:
+    xs = [0, 1]
+    assert pr.tile(4, xs) == [0, 1, 0, 1]
+
+
 def test_projn_post_mask_tiles_if_it_is_too_short() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=4)
