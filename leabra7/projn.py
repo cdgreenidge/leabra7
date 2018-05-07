@@ -14,7 +14,41 @@ T = TypeVar('T')
 
 
 def tile(length: int, xs: Iterable[T]) -> List[T]:
+    """Tiles an iterable.
+
+    Args:
+        length: The length to tile the iterable to.
+        xs: The iterable to tile.
+
+    Returns:
+        An iterable of size `length`, containing elements from xs, tiled.
+
+    """
     return list(itertools.islice(itertools.cycle(xs), length))
+
+
+def expand_layer_mask_full(pre_mask: List[bool],
+                           post_mask: List[bool]) -> torch.ByteTensor:
+    """Expands layer masks into a weight matrix mask with full connectivity.
+
+    Args:
+        pre_mask: The mask for the pre layer specifying which pre layer
+            units are included in the projection. Note that this mask will not
+            be tiled, so it has as many elements as pre layer units.
+
+        post_mask: The mask for the post layer specifying which post layer
+            units are included in the projection. Has as many elements as post
+            layer units.
+
+    Returns:
+        A mask for the full projection weight matrix indicating
+        which elements of the matrix correspond to active connections
+        in the full connectivity pattern.
+
+    """
+    # In the full connectivity case, it can be concisely calculated with an
+    # outer product
+    return torch.ger(torch.ByteTensor(post_mask), torch.ByteTensor(pre_mask))
 
 
 class Projn:
@@ -43,6 +77,7 @@ class Projn:
         else:
             self.spec = spec
 
+        # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
         # presynaptic units
         self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
@@ -50,13 +85,11 @@ class Projn:
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
         # TODO: Refactor mask expansion and creation into new methods + test
-        expanded_pre_mask = tile(self.pre.size, self.spec.pre_mask)
-        expanded_post_mask = tile(self.post.size, self.spec.post_mask)
-        mask = torch.ger(
-            torch.ByteTensor(expanded_post_mask),
-            torch.ByteTensor(expanded_pre_mask))
+        tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
+        tiled_post_mask = tile(self.post.size, self.spec.post_mask)
+        mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
-        # Enforce sparsitya
+        # Enforce sparsity
         # TODO: Make this a separate method
         nonzero = mask.nonzero()
         num_nonzero = nonzero.shape[0]

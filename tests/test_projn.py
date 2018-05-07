@@ -1,5 +1,6 @@
 """Test projn.py"""
-from leabra7 import unit as un
+import torch
+
 from leabra7 import layer as lr
 from leabra7 import projn as pr
 from leabra7 import rand as rn
@@ -95,6 +96,20 @@ def test_projn_can_mask_post_layer_units() -> None:
 def test_tile_can_tile_an_iterable() -> None:
     xs = [0, 1]
     assert pr.tile(4, xs) == [0, 1, 0, 1]
+
+
+def test_expand_layer_mask_full_has_the_correct_connectivity_pattern() -> None:
+    pre_mask = [True, False, True, True]
+    post_mask = [True, True, True, False]
+    # yapf: disable
+    expected = torch.ByteTensor(
+        [[True, False, True, True],
+         [True, False, True, True],
+         [True, False, True, True],
+         [False, False, False, False]]
+    )
+    # yapf: enable
+    assert (pr.expand_layer_mask_full(pre_mask, post_mask) == expected).all()
 
 
 def test_projn_post_mask_tiles_if_it_is_too_short() -> None:
