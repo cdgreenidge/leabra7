@@ -1,6 +1,5 @@
 """A layer, or group, of units."""
 import itertools
-import statistics
 from typing import List
 from typing import Iterable
 
@@ -70,12 +69,12 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return statistics.mean(self.units.act)
+        return torch.mean(self.units.act)
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
-        return statistics.mean(self.units.net)
+        return torch.mean(self.units.net)
 
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""

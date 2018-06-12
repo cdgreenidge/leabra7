@@ -103,7 +103,7 @@ def merge_observations(observations: Iterable[Obs]) -> pd.DataFrame:
         """Merges two observations."""
         df2 = pd.DataFrame(obs, index=[0])
         if df.columns.intersection(df2.columns).empty:
-            return pd.concat((df, df2))
+            return pd.concat((df, df2), sort=True)
         return pd.merge(df, df2, how="outer", copy=False)
 
     return functools.reduce(merge, observations, pd.DataFrame())

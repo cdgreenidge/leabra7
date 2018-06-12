@@ -13,9 +13,13 @@ def test_dataframebuffer_can_record_observations() -> None:
     dfb = log.DataFrameBuffer()
     dfb.append(pd.DataFrame({"unit": [0, 1], "act": [0.5, 0.3]}))
     dfb.append(pd.DataFrame({"unit": [0, 1], "act": [0.6, 0.7]}))
-    expected = pd.DataFrame.from_items((("act", [0.5, 0.3, 0.6,
-                                                 0.7]), ("unit", [0, 1, 0, 1]),
-                                        ("time", [0, 0, 1, 1])))
+    expected = pd.DataFrame({
+        "unit": [0, 1, 0, 1],
+        "act": [0.5, 0.3, 0.6, 0.7],
+        "time": [0, 0, 1, 1]
+    })
+    print(expected)
+    print(dfb.to_df())
     assert dfb.to_df().equals(expected)
 
 

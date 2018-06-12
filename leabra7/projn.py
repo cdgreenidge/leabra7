@@ -78,7 +78,7 @@ def sparsify(sparsity: float,
     # All we want to do is set the elements of sparse given by the
     # indices in to_keep to True. The list comprehension below is pretty hacky,
     # but I can't find a cleaner way to do it in torch 0.3
-    sparse[[to_keep[:, i] for i in range(to_keep.shape[1])]] = True
+    sparse[[to_keep[:, i] for i in range(to_keep.shape[1])]] = 1
     return (sparse, num_to_keep)
 
 

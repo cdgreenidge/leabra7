@@ -213,9 +213,9 @@ class Unit:
         self.act += self.spec.integ * self.spec.vm_dt * (new_act - self.act)
 
         self.adapt += self.spec.integ * (
-            self.spec.adapt_dt *
-            (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
-            self.spike * self.spec.spike_gain)
+            self.spec.adapt_dt * (self.spec.vm_gain *
+                                  (self.v_m - self.spec.e_rev_l) - self.adapt)
+            + self.spike * self.spec.spike_gain)
 
     def observe(self, attr: str) -> log.Obs:
         """Observes an attribute.
@@ -392,9 +392,9 @@ class UnitGroup:
                      (self.nxx1(act_driver) - self.act))
 
         self.adapt += self.spec.integ * (
-            self.spec.adapt_dt *
-            (self.spec.vm_gain * (self.v_m - self.spec.e_rev_l) - self.adapt) +
-            self.spike * self.spec.spike_gain)
+            self.spec.adapt_dt * (self.spec.vm_gain *
+                                  (self.v_m - self.spec.e_rev_l) - self.adapt)
+            + self.spike * self.spec.spike_gain)
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.
