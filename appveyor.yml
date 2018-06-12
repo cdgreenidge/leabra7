@@ -4,9 +4,13 @@ environment:
 
 install:
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-    - conda install -y conda-build
+    - pip install pipenv
+    - pipenv install --dev
 
 build: off
 
 test_script:
-    - conda-build .
+    - mypy leabra7
+    - pylint leabra7
+    - yapf --parallel --recursive --diff leabra7 tests
+    - pytest
