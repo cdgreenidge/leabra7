@@ -10,7 +10,7 @@ install:
 build: off
 
 test_script:
-    - mypy leabra7
-    - pylint leabra7
-    - yapf --parallel --recursive --diff leabra7 tests
-    - pytest
+    - pipenv run mypy leabra7
+    - pipenv run pylint leabra7
+    - pipenv run yapf --parallel --recursive --diff leabra7 tests
+    - pipenv run pytest
