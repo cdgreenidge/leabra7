@@ -1,6 +1,5 @@
 PROJECT=leabra7
 PYTHON=python3
-VIRTUALENV_DIR=$(HOME)/.virtualenvs
 
 all: check format test
 

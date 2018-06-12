@@ -11,6 +11,7 @@ pylint = ">=1.9"
 pytest = ">=3.6"
 pytest-cov = ">=2.5"
 pytest-mock = ">=1.10"
+tox = ">=3.0"
 yapf = ">=0.22"
 
 [requires]

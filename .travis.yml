@@ -2,9 +2,8 @@ language: python
 python:
   - 3.6
 install:
-  - pip install codecov pipenv
-  - pipenv install -d
+  - pip install codecov tox-travis
 script:
-  - pipenv run make
+  - tox
 after_success:
   - codecov
