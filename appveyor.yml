@@ -3,14 +3,8 @@ environment:
     - PYTHON: "C:\\Miniconda36-x64"
 
 install:
-    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-    - pip install pipenv
-    - pipenv install --dev
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - conda install conda-build
 
-build: off
-
-test_script:
-    - pipenv run mypy leabra7
-    - pipenv run pylint leabra7
-    - pipenv run yapf --parallel --recursive --diff leabra7 tests
-    - pipenv run pytest
+build:
+  - conda-build .

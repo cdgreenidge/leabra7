@@ -28,6 +28,7 @@ test:
     - yapf
 
   source_files:
+    - .git
     - .pylintrc
     - leabra7
     - setup.cfg
