@@ -31,6 +31,9 @@ targeted in roughly 1 month).
 commands `python3` and `pip3` instead of `pip` and `python`.
 
 ### Installation
+
+### For development
+
 First, clone the repository. It can go anywhere, as long as you do not delete
 it after installation:
 
@@ -38,43 +41,40 @@ it after installation:
 $ git clone https://github.com/cdgreenidge/leabra7.git
 ```
 
-Now, install the python package in development mode:
+Leabra7 requires Python 3.6 or higher, as well as the
+[conda](https://www.anaconda.com/distribution/) package
+manager. Run the following commands:
 
 ```
-# Standard
-$ cd leabra7
-$ python setup.py develop
-
-# Anaconda
-$ conda install conda-build
-$ cd leabra7
-$ conda develop .
+$ conda config --append channels pytorch
+$ conda config --append channels conda-forge
+$ conda env create -f environment.yml
 ```
 
-To check that everything is working correctly, you can install `tox`,
-leabra7's test runner, and run all the tests:
+This will create a new conda environment, named `leabra7`, and install the
+dependencies necessary for package development. Once it is created, activate it
+with
 
 ```
-$ pip install tox
-$ tox
+$ source activate leabra7
+```
+
+Install the leabra7 package in development mode:
+
+```
+$ conda-develop .
+```
+
+Now, run static analysis and tests to check that everything is working:
+
+```
+$ make
 ```
 
 ### Roadmap
 See the "Projects" tab for more info.
 
 ## For developers
-
-### Setting up your environment (Linux/MacOS only)
-Running tests with tox works (and is cross-platform), but tox is slow. To
-speed up the development process there is a Makefile that runs common tasks.
-
-First, install the prerequisites. I recommend examining `dev_bootstrap.sh` to
-see exactly what will happen:
-
-    $ source dev_bootstrap.sh
-
-A virtual environment will be installed in `~/.virtualenvs/leabra7`. After
-activating it, you can use the Makefile to run common tasks.
 
 ### Style
 * "I hate code, and I want as little of it as possible in our product."

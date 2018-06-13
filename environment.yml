@@ -1,0 +1,21 @@
+name: leabra7
+
+channels:
+  - default
+  - pytorch
+  - conda-forge
+
+dependencies:
+  - conda-build>=3.10
+  - hypothesis>=3.57
+  - mypy>=0.6
+  - numpy>=1.14
+  - pandas>=0.23
+  - pylint>=1.9
+  - pytest-cov>=2.5
+  - pytest-mock>=1.10
+  - pytest>=3.6
+  - python>=3.6
+  - pytorch>=0.4
+  - scipy>=1.1
+  - yapf>=0.22
