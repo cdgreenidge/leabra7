@@ -6,5 +6,5 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda install conda-build
 
-build:
+build_script:
   - conda-build .
