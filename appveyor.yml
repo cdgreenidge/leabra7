@@ -5,6 +5,8 @@ environment:
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda install conda-build -y
+  - conda config --append channels pytorch
+  - conda config --append channels conda-forge
 
 build_script:
   - conda-build .
