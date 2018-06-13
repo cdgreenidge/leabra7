@@ -6,5 +6,5 @@ setup(
     version="0.1.dev1",
     packages=find_packages(exclude=["docs", "tests"]),
     install_requires=[
-        "numpy>=1.14", "pandas>=0.23", "scipy>=1.1", "torch>=0.4"
+        "numpy>=1.14", "pandas>=0.23", "scipy>=1.1", "pytorch>=0.4"
     ])
