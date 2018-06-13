@@ -71,6 +71,11 @@ Now, run static analysis and tests to check that everything is working:
 $ make
 ```
 
+At this point, you can use `leabra7` like a normal Python
+package. Changes made to the files will be reflected in the Python
+interpreter, as long as the package is reloaded or the interpreter is
+restarted.
+
 ### Roadmap
 See the "Projects" tab for more info.
 
