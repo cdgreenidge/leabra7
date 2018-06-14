@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 If ($env:APPVEYOR_REPO_BRANCH -ne "master")  {
   echo "Not on master branch, canceling deployment to Anaconda Cloud."
   Exit 0

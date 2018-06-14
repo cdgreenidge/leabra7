@@ -30,6 +30,6 @@ script: conda-build .
 deploy:
   provider: script
   skip_cleanup: true
-  script: bash deploy_conda.sh
+  script: bash ./scripts/deploy_conda.sh
   on:
     branch: master
