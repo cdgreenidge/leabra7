@@ -2,12 +2,16 @@
 set -e
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ $BRANCH = "master" ]
+if [ "$BRANCH" != "master" ]
 then
-    echo "Deploying to Anaconda Cloud..."
-else
     echo "Not on master branch, canceling deployment to Anaconda Cloud."
     exit 0
+elif [ "${TRAVIS_PULL_REQUEST}" = "true" ]
+then
+    echo "This is a pull request, canceling deployment to Anaconda Cloud."
+    exit 0
+else
+    echo "Deploying to Anaconda Cloud..."
 fi
 
 echo "Finding package path..."

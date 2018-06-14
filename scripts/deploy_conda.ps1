@@ -1,10 +1,13 @@
 $ErrorActionPreference = "Stop"
 
-If ($env:APPVEYOR_REPO_BRANCH -eq "master")  {
-    echo "Deploying to Anaconda Cloud..."
+If ($env:APPVEYOR_REPO_BRANCH -ne "master")  {
+  echo "Not on master branch, canceling deployment to Anaconda Cloud."
+  Exit 0
+} ElseIf (Test-Path env:APPVEYOR_PULL_REQUEST_NUMBER) {
+  echo "This is a pull request, canceling deployment to Anaconda Cloud."
+  Exit 0
 } else {
-    echo "Not on master branch, canceling deployment to Anaconda Cloud."
-    Exit 0
+  echo "Deploying to Anaconda Cloud..."
 }
 
 echo "Finding package path..."
