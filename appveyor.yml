@@ -12,4 +12,4 @@ build_script:
   - conda-build .
 
 deploy_script:
-  - ./scripts/deploy_conda.ps1
+  - .\scripts\deploy_conda.ps1
