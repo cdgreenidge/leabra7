@@ -1,7 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$branch = git rev-parse --abbrev-ref HEAD
-If ($branch -eq "master")  {
+If ($env:APPVEYOR_REPO_BRANCH -eq "master")  {
     echo "Deploying to Anaconda Cloud..."
 } else {
     echo "Not on master branch, canceling deployment to Anaconda Cloud."
@@ -9,7 +8,7 @@ If ($branch -eq "master")  {
 }
 
 echo "Finding package path..."
-$packagePath = conda build scripts/meta.yaml --output
+$packagePath = (conda build scripts/meta.yaml --output)
 
 echo "Uploading package..."
-anaconda --token $CONDA_TOKEN upload $packagePath
+anaconda --token $env:CONDA_TOKEN upload $packagePath
