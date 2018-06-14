@@ -8,7 +8,7 @@ If ($env:APPVEYOR_REPO_BRANCH -eq "master")  {
 }
 
 echo "Finding package path..."
-$packagePath = (conda build scripts/meta.yaml --output)
+$packagePath = (conda build ./scripts/meta.yaml --output)
 
 echo "Uploading package..."
 anaconda --token $env:CONDA_TOKEN upload $packagePath
