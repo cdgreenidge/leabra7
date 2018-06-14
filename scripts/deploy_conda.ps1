@@ -9,7 +9,7 @@ If ($branch -eq "master")  {
 }
 
 echo "Finding package path..."
-$packagePath = conda build . --output
+$packagePath = conda build scripts/meta.yaml --output
 
 echo "Uploading package..."
 anaconda --token $CONDA_TOKEN upload $packagePath
