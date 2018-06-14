@@ -10,3 +10,6 @@ install:
 
 build_script:
   - conda-build .
+
+deploy_script:
+  - deploy_conda.ps1
