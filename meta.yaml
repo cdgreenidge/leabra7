@@ -1,0 +1,41 @@
+package:
+  name: leabra7
+  version: 0.0.1
+
+source:
+  path: .
+
+requirements:
+  host:
+    - python
+
+  run:
+    - python
+    - numpy
+    - pandas
+    - scipy
+    - pytorch
+
+test:
+  requires:
+    - codecov
+    - hypothesis
+    - mypy
+    - pylint
+    - pytest
+    - pytest-cov
+    - pytest-mock
+    - yapf
+
+  source_files:
+    - .git
+    - .pylintrc
+    - leabra7
+    - setup.cfg
+    - tests
+
+  script_env:
+    - TOXENV
+    - CI
+    - TRAVIS
+    - TRAVIS_*
