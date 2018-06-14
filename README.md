@@ -26,13 +26,29 @@ targeted in roughly 1 month).
 - Python 3. See the [Hitchhiker's Guide to
   Python](http://python-guide-pt-br.readthedocs.io/en/latest/starting/installation/)
   for installation instructions.
+- The [conda](https://www.anaconda.com/distribution/) package manager.
 
 *Note:* If you have Python 2 and Python 3 installed side-by-side, use the
 commands `python3` and `pip3` instead of `pip` and `python`.
 
 ### Installation
 
-### For development
+### For users
+
+Run the following commands to add the necessary conda channels:
+
+```
+$ conda config --append channels pytorch
+$ conda config --append channels conda-forge
+```
+
+Now, you can install leabra7 with
+
+```
+$ conda install -c cdg4 leabra7
+```
+
+### For developers
 
 First, clone the repository. It can go anywhere, as long as you do not delete
 it after installation:
@@ -41,14 +57,13 @@ it after installation:
 $ git clone https://github.com/cdgreenidge/leabra7.git
 ```
 
-Leabra7 requires Python 3.6 or higher, as well as the
-[conda](https://www.anaconda.com/distribution/) package
-manager. Run the following commands:
+Run the following commands to add the necessary conda channels and
+create a virtual environment for development:
 
 ```
 $ conda config --append channels pytorch
 $ conda config --append channels conda-forge
-$ conda env create -f environment.yml
+$ conda env create -f scripts/environment.yml
 ```
 
 This will create a new conda environment, named `leabra7`, and install the

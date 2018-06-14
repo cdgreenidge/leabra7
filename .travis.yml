@@ -1,18 +1,35 @@
 language: python
-python:
-  - 3.6
+
+os:
+  - linux
+  - osx
+
+language:
+  - bashb
+
 install:
-  - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh;
+    fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o miniconda.sh;
+    fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION conda-build
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION conda-build anaconda-client
   - source activate test-environment
   - conda config --append channels pytorch
   - conda config --append channels conda-forge
-script:
-  - conda-build .
+
+script: conda-build .
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: bash deploy_conda.sh
+  on:
+    branch: master
