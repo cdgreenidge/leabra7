@@ -50,8 +50,6 @@ def test_dataframebuffer_can_record_observations() -> None:
         "act": [0.5, 0.3, 0.6, 0.7],
         "time": [0, 0, 1, 1]
     })
-    print(expected)
-    print(dfb.to_df())
     assert dfb.to_df().equals(expected)
 
 
@@ -60,9 +58,11 @@ class ObjToLog(log.ObservableMixin):
     _whole_attrs = ["avg_act"]
     _parts_attrs = ["unit0_act", "unit1_act"]
 
+    @property
     def whole_attrs(self) -> List[str]:
         return self._whole_attrs
 
+    @property
     def parts_attrs(self) -> List[str]:
         return self._parts_attrs
 
@@ -81,12 +81,20 @@ class ObjToLog(log.ObservableMixin):
 # Test log.ObservableMixin
 def test_observable_has_whole_attrs() -> None:
     obj = ObjToLog("obj")
-    assert obj.whole_attrs() == obj._whole_attrs
+    assert obj.whole_attrs == obj._whole_attrs
 
 
 def test_observable_has_parts_attrs() -> None:
     obj = ObjToLog("obj")
-    assert obj.parts_attrs() == obj._parts_attrs
+    assert obj.parts_attrs == obj._parts_attrs
+
+
+def test_observable_can_validate_attributes() -> None:
+    obj = ObjToLog("obj")
+    obj.validate_attr("unit0_act")
+    obj.validate_attr("avg_act")
+    with pytest.raises(ValueError):
+        obj.validate_attr("whales")
 
 
 # Test log.Logger

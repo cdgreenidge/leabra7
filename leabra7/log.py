@@ -122,6 +122,19 @@ class ObservableMixin(metaclass=abc.ABCMeta):
     def parts_attrs(self) -> List[str]:
         """The attributes one can log on the object's parts."""
 
+    def validate_attr(self, attr: str) -> None:
+        """Checks if an attr is valid to log.
+
+        Args:
+          attr: The attribute to check
+
+        Raises:
+          ValueError: if the attr is not a valid attribute to observe.
+
+        """
+        if attr not in self.whole_attrs and attr not in self.parts_attrs:
+            raise ValueError("{0} is not a valid observable attribute.")
+
     @abc.abstractmethod
     def observe(self, attr: str) -> List[Obs]:
         """Observes an attribute on this object.
