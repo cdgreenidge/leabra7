@@ -50,7 +50,7 @@ Here is an example:
 """
 
 
-def convert_whole_observations(observations: List[WholeObs]) -> Dict[str, Any]:
+def whole_observations_to_dict(observations: List[WholeObs]) -> Dict[str, Any]:
     """ Converts a list of whole observations into dictionary.
 
     Args:
@@ -64,9 +64,6 @@ def convert_whole_observations(observations: List[WholeObs]) -> Dict[str, Any]:
     observation_keys = [obs[0] for obs in observations]
 
     assert len(observation_keys) == len(set(observation_keys))
-
-    if not observation_keys:
-        return dict()
 
     return dict(observations)
 

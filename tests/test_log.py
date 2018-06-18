@@ -3,13 +3,15 @@ from typing import Any
 from typing import List
 from typing import Dict
 
+import pytest
+
 import pandas as pd  # type: ignore
 
 from leabra7 import log
 
 
-# Test log.merge_whole_observations
-def test_convert_whole_observations() -> None:
+# Test log.whole_observations_to_dict
+def test_whole_observations_to_dict() -> None:
     empty_list = []
     empty_expect = dict()
 
@@ -18,18 +20,16 @@ def test_convert_whole_observations() -> None:
 
     repeat_list = [("a", 1), ("b", 2), ("a", 2), ("b", 3), ("c", 4)]
 
-    empty_result = log.convert_whole_observations(empty_list)
-    standard_result = log.convert_whole_observations(standard_list)
+    empty_result = log.whole_observations_to_dict(empty_list)
+    standard_result = log.whole_observations_to_dict(standard_list)
 
     assert empty_expect == empty_result
     assert standard_expect == standard_result
 
-    try:
-        log.convert_whole_observations(repeat_list)
-    except AssertionError:
-        pass
-    else:
-        raise AssertionError('Failed to Raise Asssertion for Repeated Key')
+    with pytest.raises(
+            AssertionError,
+            message='Failed to Raise Asssertion for Repeated Key'):
+        log.whole_observations_to_dict(repeat_list)
 
 
 # Test log.DataFrameBuffer
