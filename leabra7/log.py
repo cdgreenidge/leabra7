@@ -6,6 +6,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Iterable
+from typing import Tuple
 
 import pandas as pd  # type: ignore
 
@@ -21,6 +22,53 @@ Here are some examples:
   could look like this: {"avg_act": 0.333}.
 
 """
+
+## TODO: Review comments for the WholeObs and PartsObs
+
+WholeObs = Tuple[str, Any]
+""" An observation of whole attributes is a tuple.
+
+It stores the observations for an entire layer.
+
+Here is an example:
+
+- An observation of the average activation for a layer could
+  look like this: ("avg_act", 0.333)
+
+"""
+
+PartsObs = Dict[str, List[Any]]
+""" An observation of partial attributes is a dict.
+
+It stores observations for units of a layer.
+
+Here is an example:
+
+- An observation of the activation in one unit of a layer
+  could look like this: {"unit": [0, 1, 2], "act": [0.2, 0.3, 0.5]}
+
+"""
+
+
+def convert_whole_observations(observations: List[WholeObs]) -> Dict[str, Any]:
+    """ Converts a list of whole observations into dictionary.
+
+    Args:
+        observations: The list of whole observations.
+
+    Returns:
+        A dictionary containing the keys and values for the whole observations.
+
+    """
+
+    observation_keys = [obs[0] for obs in observations]
+
+    assert len(observation_keys) == len(set(observation_keys))
+
+    if not observation_keys:
+        return dict()
+
+    return dict(observations)
 
 
 class DataFrameBuffer:

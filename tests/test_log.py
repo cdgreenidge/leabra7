@@ -8,6 +8,30 @@ import pandas as pd  # type: ignore
 from leabra7 import log
 
 
+# Test log.merge_whole_observations
+def test_convert_whole_observations() -> None:
+    empty_list = []
+    empty_expect = dict()
+
+    standard_list = [("a", 1), ("b", 2), ("c", 4)]
+    standard_expect = {"a": 1, "b": 2, "c": 4}
+
+    repeat_list = [("a", 1), ("b", 2), ("a", 2), ("b", 3), ("c", 4)]
+
+    empty_result = log.convert_whole_observations(empty_list)
+    standard_result = log.convert_whole_observations(standard_list)
+
+    assert empty_expect == empty_result
+    assert standard_expect == standard_result
+
+    try:
+        log.convert_whole_observations(repeat_list)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError('Failed to Raise Asssertion for Repeated Key')
+
+
 # Test log.DataFrameBuffer
 def test_dataframebuffer_can_record_observations() -> None:
     dfb = log.DataFrameBuffer()
