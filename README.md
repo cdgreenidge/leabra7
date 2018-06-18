@@ -52,6 +52,8 @@ $ conda install -c cdg4 leabra7
 
 ### For developers
 
+**Gitter chat is [here](https://gitter.im/leabra7/Lobby).**
+
 First, clone the repository. It can go anywhere, as long as you do not delete
 it after installation:
 
