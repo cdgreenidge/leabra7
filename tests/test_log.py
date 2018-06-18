@@ -47,9 +47,16 @@ def test_dataframebuffer_can_record_observations() -> None:
     assert dfb.to_df().equals(expected)
 
 
-# Test log.Logger
 class ObjToLog(log.ObservableMixin):
     """A dummy class with which to test logging."""
+    _whole_attrs = ["avg_act"]
+    _parts_attrs = ["unit0_act", "unit1_act"]
+
+    def whole_attrs(self) -> List[str]:
+        return self._whole_attrs
+
+    def parts_attrs(self) -> List[str]:
+        return self._parts_attrs
 
     def observe(self, attr: str) -> List[Dict[str, Any]]:
         """Observes an attribute."""
@@ -63,6 +70,18 @@ class ObjToLog(log.ObservableMixin):
             raise ValueError("Unknown attribute.")
 
 
+# Test log.ObservableMixin
+def test_observable_has_whole_attrs() -> None:
+    obj = ObjToLog("obj")
+    assert obj.whole_attrs() == obj._whole_attrs
+
+
+def test_observable_has_parts_attrs() -> None:
+    obj = ObjToLog("obj")
+    assert obj.parts_attrs() == obj._parts_attrs
+
+
+# Test log.Logger
 def test_logger_can_record_attributes_from_an_object() -> None:
     obj = ObjToLog("obj")
     logger = log.Logger(obj, ["unit0_act", "unit1_act", "avg_act"])

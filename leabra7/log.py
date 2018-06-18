@@ -112,6 +112,16 @@ class ObservableMixin(metaclass=abc.ABCMeta):
         # noinspection PyArgumentList
         super().__init__(*args, **kwargs)  # type: ignore
 
+    @property
+    @abc.abstractmethod
+    def whole_attrs(self) -> List[str]:
+        """The attributes one can log on the whole object."""
+
+    @property
+    @abc.abstractmethod
+    def parts_attrs(self) -> List[str]:
+        """The attributes one can log on the object's parts."""
+
     @abc.abstractmethod
     def observe(self, attr: str) -> List[Obs]:
         """Observes an attribute on this object.
