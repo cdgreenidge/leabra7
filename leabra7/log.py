@@ -4,8 +4,9 @@ import functools
 import itertools
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import Iterable
+from typing import List
+from typing import NamedTuple
 from typing import Tuple
 
 import pandas as pd  # type: ignore
@@ -226,6 +227,22 @@ def merge_observations(observations: Iterable[Obs]) -> pd.DataFrame:
         return pd.merge(df, df2, how="outer", copy=False)
 
     return functools.reduce(merge, observations, pd.DataFrame())
+
+
+class Logs(NamedTuple):
+    """A container for the logs collected on an object.
+
+    Attributes:
+      whole (pd.DataFrame): A DataFrame containing the logs for attributes
+        logged on the whole object. Examples of these attributes for the layer
+        object are "avg_act" or "fbi".
+      parts (pd.DataFrame): A DataFrame containing the logs for attributes
+        logged on parts of the object. Examples of these attributes for the
+        layer object are "unit_act" or "unit_net".
+
+    """
+    whole: pd.DataFrame
+    parts: pd.DataFrame
 
 
 class Logger:
