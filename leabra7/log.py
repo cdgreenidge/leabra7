@@ -102,25 +102,42 @@ class DataFrameBuffer:
 class ObservableMixin(metaclass=abc.ABCMeta):
     """Defines the interface required by `Logger` to record attributes.
 
+    Classes that use this mixin should inject `name`, `whole_attrs`, and
+    `parts_attrs`into into `super().__init__()`. For example:
+
+        class ObjToLog(log.ObservableMixin):
+
+        def __init__(self, name, *args: Any, **kwargs: Any) -> None:
+            super().__init__(
+                name=name,
+                whole_attrs=["avg_act"],
+                parts_attrs=["unit0_act", "unit1_act"],
+                *args,
+                **kwargs)
+
+    This way, we can instantiate `ObjToLog` with
+    `ObjToLog(name="obj1"), but it will have `whole_attrs` and
+    `parts_attrs` attributes.
+
+    Args:
+      name: The name of the object.
+      whole_attrs: The whole attributes that we can log on the object.
+      parts_attrs: The parts attributes that we can log on the object.
+
     Attributes:
-        name (str): The name of the object.
+      name (str): The name of the object.
+      whole_attrs (Set[str]): The valid whole attributes to log.
+      parts_attrs (Set[str]): The valid parts attributes to log.
 
     """
 
-    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, name: str, whole_attrs: List[str],
+                 parts_attrs: List[str], *args: Any, **kwargs: Any) -> None:
         self.name = name
+        self.whole_attrs = set(whole_attrs)
+        self.parts_attrs = set(parts_attrs)
         # noinspection PyArgumentList
         super().__init__(*args, **kwargs)  # type: ignore
-
-    @property
-    @abc.abstractmethod
-    def whole_attrs(self) -> List[str]:
-        """The attributes one can log on the whole object."""
-
-    @property
-    @abc.abstractmethod
-    def parts_attrs(self) -> List[str]:
-        """The attributes one can log on the object's parts."""
 
     def validate_attr(self, attr: str) -> None:
         """Checks if an attr is valid to log.
@@ -129,11 +146,45 @@ class ObservableMixin(metaclass=abc.ABCMeta):
           attr: The attribute to check
 
         Raises:
-          ValueError: if the attr is not a valid attribute to observe.
+          ValueError: If the attr is not a valid attribute to observe.
 
         """
         if attr not in self.whole_attrs and attr not in self.parts_attrs:
             raise ValueError("{0} is not a valid observable attribute.")
+
+    def observe_whole_attr(self, attr: str) -> WholeObs:
+        """Observes a whole attribute.
+
+        Args:
+          attr: The attribute to observe.
+
+        Returns:
+          A WholeObs (`Tuple[str, Any]`) containing the attribute name and the
+          value of the attribute.
+
+        Raises:
+          ValueError: If the attr is not a whole attr.
+
+        """
+        if attr not in self.whole_attrs:
+            raise ValueError("{0} is not a whole attr.".format(attr))
+        return (attr, getattr(self, attr))
+
+    @abc.abstractmethod
+    def observe_parts_attr(self, attr: str) -> PartsObs:
+        """Observes a parts attribute.
+
+        Args:
+          attr: The attribute to observe.
+
+        Returns:
+          A PartsObs (`Dict[str, List[any]]`) containing the attribute name and
+          the values of the attribute for each part.
+
+        Raises:
+          ValueError: If the attr is not a parts attribute.
+
+        """
 
     @abc.abstractmethod
     def observe(self, attr: str) -> List[Obs]:

@@ -217,10 +217,10 @@ class Unit:
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
 
-    def observe(self, attr: str) -> log.Obs:
-        """Observes an attribute.
+    def observe(self, attr: str) -> log.PartsObs:
+        """Observes an attribute of the UnitGroup.
 
-        This is not quite the same as log.ObservableMixin.observe(), because
+        This is not quite the same as log.ObservableMixin.observe_pa(), because
         we don't want to give every unit a name. This lets us return a dict
         instead of a list containing one dict.
 
@@ -410,7 +410,8 @@ class UnitGroup:
         _, indices = torch.topk(self.net, k, largest=True, sorted=True)
         return indices
 
-    def observe(self, attr: str) -> List[log.Obs]:
+    # TODO: Deprecated. delete once new logging system is up.
+    def observe_old(self, attr: str) -> List[log.Obs]:
         """Observes an attribute.
 
         This is not quite the same as log.ObservableMixin.observe(), because
@@ -431,3 +432,29 @@ class UnitGroup:
             } for i in range(self.size)]
         else:
             raise ValueError("{0} is not a loggable attr.".format(attr))
+
+    def observe(self, attr: str) -> log.PartsObs:
+        """Observes an attribute.
+
+        This is not quite the same as log.ObservableMixin.observe_parts_attr(),
+        since this is a helper method for Layer.observe_parts_attr(), meant to
+        isolate Layer from changes in the internal storage of UnitGorup.
+
+        Args:
+          attr: The attr to observe. Can be any specified in
+            Layer.parts_attributes.
+
+        Returns:
+          A PartsObs containing the attribute observation for the UnitGroup.
+
+        Raises:
+          ValueError: if the attribute is unobservable.
+
+        """
+        if attr not in self.loggable_attrs:
+            raise ValueError(
+                "{0} is not an observable attribute.".format(attr))
+        return {
+            "unit": list(range(self.size)),
+            attr: getattr(self, attr).numpy().tolist()
+        }

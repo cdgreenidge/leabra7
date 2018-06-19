@@ -64,13 +64,12 @@ class Layer(log.ObservableMixin):
         # When adding any loggable attribute or property to these lists, update
         # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
-        self._whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
-        self._parts_attrs: List[str] = [
+        whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
+        parts_attrs: List[str] = [
             "unit_net", "unit_gc_i", "unit_act", "unit_i_net", "unit_i_net_r",
             "unit_v_m", "unit_v_m_eq", "unit_adapt", "unit_spike"
         ]
-
-        super().__init__(name)
+        super().__init__(name, whole_attrs, parts_attrs)
 
     @property
     def avg_act(self) -> float:
@@ -145,22 +144,12 @@ class Layer(log.ObservableMixin):
         for i, act in zip(range(self.size), itertools.cycle(acts)):
             self.units.act[i] = act
 
-    @property
-    def whole_attrs(self) -> List[str]:
-        """Overrides `log.ObservableMixin.whole_attrs`."""
-        return self._whole_attrs
-
-    @property
-    def parts_attrs(self) -> List[str]:
-        """Overrides `log.ObservableMixin.parts_attrs`."""
-        return self._parts_attrs
-
     def observe(self, attr: str) -> List[log.Obs]:
         """Overrides `log.ObservableMixin.observe`."""
         # TODO: fix the logging system, which is kinda broken
         try:
             parsed = _parse_unit_attr(attr)
-            return self.units.observe(parsed)
+            return self.units.observe_old(parsed)
         except ValueError:
             pass
 
@@ -170,3 +159,9 @@ class Layer(log.ObservableMixin):
                 "{0} is not a valid layer attribute.".format(attr))
 
         return [{attr: getattr(self, attr)}]
+
+    def observe_parts_attr(self, attr: str) -> log.PartsObs:
+        if attr not in self.parts_attrs:
+            raise ValueError("{0} is not a valid parts attr.".format(attr))
+        parsed = _parse_unit_attr(attr)
+        return self.units.observe(parsed)

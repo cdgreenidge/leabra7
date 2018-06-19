@@ -55,16 +55,16 @@ def test_dataframebuffer_can_record_observations() -> None:
 
 class ObjToLog(log.ObservableMixin):
     """A dummy class with which to test logging."""
-    _whole_attrs = ["avg_act"]
-    _parts_attrs = ["unit0_act", "unit1_act"]
 
-    @property
-    def whole_attrs(self) -> List[str]:
-        return self._whole_attrs
-
-    @property
-    def parts_attrs(self) -> List[str]:
-        return self._parts_attrs
+    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
+        self.unit = [0, 1]
+        self.acts = [0.3, 0.5]
+        super().__init__(
+            name=name,
+            whole_attrs=["avg_act"],
+            parts_attrs=["unit_act"],
+            *args,
+            **kwargs)
 
     def observe(self, attr: str) -> List[Dict[str, Any]]:
         """Observes an attribute."""
@@ -77,24 +77,60 @@ class ObjToLog(log.ObservableMixin):
         else:
             raise ValueError("Unknown attribute.")
 
+    def observe_parts_attr(self, attr: str) -> log.PartsObs:
+        if attr not in self.parts_attrs:
+            raise ValueError("{0} is not a parts attr.".format(attr))
+        if attr == "unit_act":
+            return {"unit": self.unit, "act": self.acts}
+
 
 # Test log.ObservableMixin
 def test_observable_has_whole_attrs() -> None:
     obj = ObjToLog("obj")
-    assert obj.whole_attrs == obj._whole_attrs
+    assert obj.whole_attrs == {"avg_act"}
 
 
 def test_observable_has_parts_attrs() -> None:
     obj = ObjToLog("obj")
-    assert obj.parts_attrs == obj._parts_attrs
+    assert obj.parts_attrs == {"unit_act"}
 
 
 def test_observable_can_validate_attributes() -> None:
     obj = ObjToLog("obj")
-    obj.validate_attr("unit0_act")
+    obj.validate_attr("unit_act")
     obj.validate_attr("avg_act")
     with pytest.raises(ValueError):
         obj.validate_attr("whales")
+
+
+def test_observing_whole_attrs_raises_error_if_invalid_attr() -> None:
+    obj = ObjToLog("obj")
+    with pytest.raises(ValueError):
+        obj.observe_whole_attr("whales")
+    with pytest.raises(ValueError):
+        obj.observe_whole_attr("unit_act")
+
+
+def test_you_can_observe_whole_attributes() -> None:
+    obj = ObjToLog("obj")
+    obj.avg_act = 0.3
+    assert obj.observe_whole_attr("avg_act") == ("avg_act", 0.3)
+
+
+def test_observing_parts_attrs_raises_error_if_invalid_attr() -> None:
+    obj = ObjToLog("obj")
+    with pytest.raises(ValueError):
+        obj.observe_parts_attr("whales")
+    with pytest.raises(ValueError):
+        obj.observe_parts_attr("avg_act")
+
+
+def test_you_can_observe_parts_attributes() -> None:
+    obj = ObjToLog("obj")
+    assert obj.observe_parts_attr("unit_act") == {
+        "unit": [0, 1],
+        "act": [0.3, 0.5]
+    }
 
 
 # Test log.Logger

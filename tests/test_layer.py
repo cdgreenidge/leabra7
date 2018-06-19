@@ -65,18 +65,17 @@ def test_layer_should_be_able_to_do_an_activation_cycle() -> None:
     layer.activation_cycle()
 
 
-def test_layer_should_be_able_to_observe_simple_attributes() -> None:
+def test_layer_should_be_able_to_observe_whole_attributes() -> None:
     layer = lr.Layer(name="in", size=3)
-    assert layer.observe("avg_act") == [{"avg_act": 0.0}]
+    assert layer.observe_whole_attr("avg_act") == ("avg_act", 0.0)
 
 
-def test_layer_shuld_be_able_to_observe_unit_attributes() -> None:
+def test_layer_shuld_be_able_to_observe_parts_attributes() -> None:
     layer = lr.Layer(name="in", size=3)
-    # yapf: disable
-    assert layer.observe("unit_act") == [{"unit": 0, "act": 0.0},
-                                         {"unit": 1, "act": 0.0},
-                                         {"unit": 2, "act": 0.0}]
-    # yapf: enable
+    assert layer.observe_parts_attr("unit_act") == {
+        "unit": [0, 1, 2],
+        "act": [0.0, 0.0, 0.0]
+    }
 
 
 def test_layer_forcing_should_change_the_unit_activations() -> None:
