@@ -26,6 +26,6 @@ def test_kwta_suppresses_all_but_k_units() -> None:
     for i in range(100):
         n.cycle()
 
-    logs = n.logs("cycle", "lr2")
+    logs = n.logs("cycle", "lr2").parts
     acts = logs[logs.time == 99]["act"]
     assert (acts > 0.8).sum() == 2

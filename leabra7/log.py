@@ -1,7 +1,7 @@
 """Tools to log data from the network."""
 import abc
+import collections
 import functools
-import itertools
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -187,23 +187,39 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
         """
 
-    @abc.abstractmethod
-    def observe(self, attr: str) -> List[Obs]:
-        """Observes an attribute on this object.
 
-        Args:
-            attr: The attribute to observe. The name "attribute" is a bit of a
-                misnomer, because it could be something computed on-the-fly.
+def merge_parts_observations(observations: Iterable[PartsObs]) -> pd.DataFrame:
+    """Merges parts observations together into a dataframe.
 
-        Returns:
-            A list of observations from the attribute. We need a list because
-            some attributes produce more than one observation,
-            e.g. observing "unit_act" on a layer.
+    This dataframe can then be appended to the parts log dataframe. If
+    any of the observations have identical keys, then the later keys
+    in the sequence will override the earlier keys in the merged
+    dataframe. This should be fine because the only identical keys
+    will be the parts indices (e.g. "unit": [0, 1])).
 
-        Raises:
-            ValueError: if attr is not a loggable attribute.
+    Args:
+      observations: The parts observations to merge.
 
-        """
+    Returns:
+      A dataframe containing the merged observations.
+
+    """
+    return pd.DataFrame(data=dict(collections.ChainMap(*observations)))
+
+
+def merge_whole_observations(observations: Iterable[WholeObs]) -> pd.DataFrame:
+    """Merges whole observations together into a dataframe.
+
+    This dataframe can then be appended to the whole log dataframe.
+
+    Args:
+      observations: The whole observations to merge.
+
+    Returns:
+      A dataframe containing the merged observations.
+
+    """
+    return pd.DataFrame(dict(observations), index=[0])
 
 
 def merge_observations(observations: Iterable[Obs]) -> pd.DataFrame:
@@ -246,7 +262,7 @@ class Logs(NamedTuple):
 
 
 class Logger:
-    """Records target attributes to an internal buffer.
+    """Records target attributes to internal buffers.
 
     Args:
         target: The object from which to record attributes. It must inherit
@@ -262,21 +278,29 @@ class Logger:
         self.target = target
         self.target_name = target.name
         self.attrs = attrs
+        self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
+        self.parts_attrs = [i for i in attrs if i in target.parts_attrs]
+        self.whole_buffer = DataFrameBuffer()
+        self.parts_buffer = DataFrameBuffer()
         self.buffer = DataFrameBuffer()
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        observations = itertools.chain.from_iterable(
-            self.target.observe(a) for a in self.attrs)
-        self.buffer.append(merge_observations(observations))
+        whole_observations = [
+            self.target.observe_whole_attr(a) for a in self.whole_attrs
+        ]
+        parts_observations = [
+            self.target.observe_parts_attr(a) for a in self.parts_attrs
+        ]
+        self.whole_buffer.append(merge_whole_observations(whole_observations))
+        self.parts_buffer.append(merge_parts_observations(parts_observations))
 
-    def to_df(self) -> pd.DataFrame:
-        """Converts the internal buffer to a dataframe.
+    def to_logs(self) -> Logs:
+        """Converts the internal buffer to a Logs object.
 
         Returns:
-            A dataframe containing the contents of the internal buffer. The
-            columns names are the attribute names, and each row contains the
-            observations for one call of the record() method.
+          A Logs object containing the contents of the internal buffers.
 
         """
-        return self.buffer.to_df()
+        return Logs(
+            whole=self.whole_buffer.to_df(), parts=self.parts_buffer.to_df())

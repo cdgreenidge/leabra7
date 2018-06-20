@@ -59,6 +59,7 @@ class ObjToLog(log.ObservableMixin):
     def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
         self.unit = [0, 1]
         self.acts = [0.3, 0.5]
+        self.avg_act = 0.4
         super().__init__(
             name=name,
             whole_attrs=["avg_act"],
@@ -66,21 +67,10 @@ class ObjToLog(log.ObservableMixin):
             *args,
             **kwargs)
 
-    def observe(self, attr: str) -> List[Dict[str, Any]]:
-        """Observes an attribute."""
-        if attr == "unit0_act":
-            return [{"unit": 0, "act": 0.3}]
-        elif attr == "unit1_act":
-            return [{"unit": 1, "act": 0.5}]
-        elif attr == "avg_act":
-            return [{"avg_act": 0.4}]
-        else:
-            raise ValueError("Unknown attribute.")
-
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
-        if attr not in self.parts_attrs:
+        if attr != "unit_act":
             raise ValueError("{0} is not a parts attr.".format(attr))
-        if attr == "unit_act":
+        else:
             return {"unit": self.unit, "act": self.acts}
 
 
@@ -133,18 +123,41 @@ def test_you_can_observe_parts_attributes() -> None:
     }
 
 
+# Test log.merge_parts_observations()
+def test_you_can_merge_parts_observations() -> None:
+    obs1 = {"unit": [0, 1], "act": [0.2, 0.3]}
+    obs2 = {"unit": [0, 1], "net": [0.5, 0.5]}
+    merged_dict = {"unit": [0, 1], "act": [0.2, 0.3], "net": [0.5, 0.5]}
+    pd.util.testing.assert_frame_equal(
+        pd.DataFrame(merged_dict),
+        log.merge_parts_observations([obs1, obs2]),
+        check_like=True)
+
+
+# Test log.merge_whole_observations()
+def test_you_can_merge_whole_observations() -> None:
+    observations = [("avg_act", 0.3), ("fbi", 0.5)]
+    expected = pd.DataFrame({"avg_act": [0.3], "fbi": [0.5]})
+    pd.util.testing.assert_frame_equal(
+        expected, log.merge_whole_observations(observations))
+
+
 # Test log.Logger
 def test_logger_can_record_attributes_from_an_object() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["unit0_act", "unit1_act", "avg_act"])
+    logger = log.Logger(obj, ["unit_act", "avg_act"])
     logger.record()
-    expected = pd.DataFrame.from_dict({
-        "act": [0.3, 0.5, None],
-        "avg_act": [None, None, 0.4],
-        "unit": [0, 1, None]
+    expected_parts = pd.DataFrame.from_dict({
+        "time": [0, 0],
+        "act": [0.3, 0.5],
+        "unit": [0, 1]
     })
-    expected["time"] = 0
-    assert logger.to_df().equals(expected)
+    expected_whole = pd.DataFrame({"avg_act": [0.4], "time": [0]})
+    actual = logger.to_logs()
+    pd.util.testing.assert_frame_equal(
+        expected_parts, actual.parts, check_like=True)
+    pd.util.testing.assert_frame_equal(
+        expected_whole, actual.whole, check_like=True)
 
 
 def test_logger_has_a_name_property() -> None:
