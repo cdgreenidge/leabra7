@@ -78,6 +78,12 @@ def test_layer_shuld_be_able_to_observe_parts_attributes() -> None:
     }
 
 
+def test_observing_invalid_parts_attribute_should_raise_error() -> None:
+    layer = lr.Layer(name="in", size=3)
+    with pytest.raises(ValueError):
+        layer.observe_parts_attr("whales")
+
+
 def test_layer_forcing_should_change_the_unit_activations() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.force([0, 1])

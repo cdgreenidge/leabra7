@@ -219,8 +219,9 @@ class Unit:
     def observe(self, attr: str) -> log.PartsObs:
         """Observes an attribute of the UnitGroup.
 
-        This is not quite the same as log.ObservableMixin.observe_pa(), because
-        we don't want to give every unit a name. This lets us return a dict
+        This is not quite the same as
+        `log.ObservableMixin.observe_parts_attr()`, because we don't
+        want to give every unit a name. This lets us return a dict
         instead of a list containing one dict.
 
         Args:
