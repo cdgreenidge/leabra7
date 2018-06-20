@@ -54,9 +54,6 @@ class Layer(log.ObservableMixin):
 
         self.units = unit.UnitGroup(size=size, spec=self.spec.unit_spec)
 
-        # When adding any attribute or property to this class, update
-        # layer.LayerSpec._valid_log_on_cycle
-
         # Feedback inhibition
         self.fbi = 0.0
         # Global inhibition
@@ -64,7 +61,16 @@ class Layer(log.ObservableMixin):
         # Is the layer activation forced?
         self.forced = False
 
-        super().__init__(name)
+        # When adding any loggable attribute or property to these lists, update
+        # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
+        # avoid a circular dependency)
+        whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
+        parts_attrs: List[str] = [
+            "unit_net", "unit_net_raw", "unit_gc_i", "unit_act", "unit_i_net",
+            "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
+            "unit_spike"
+        ]
+        super().__init__(name, whole_attrs, parts_attrs)
 
     @property
     def avg_act(self) -> float:
@@ -139,18 +145,8 @@ class Layer(log.ObservableMixin):
         for i, act in zip(range(self.size), itertools.cycle(acts)):
             self.units.act[i] = act
 
-    def observe(self, attr: str) -> List[log.Obs]:
-        """Overrides `log.ObservableMixin.observe`."""
-        # TODO: fix the logging system, which is kinda broken
-        try:
-            parsed = _parse_unit_attr(attr)
-            return self.units.observe(parsed)
-        except ValueError:
-            pass
-
-        valid = ("avg_act", "avg_net", "fbi")
-        if attr not in valid:
-            raise ValueError(
-                "{0} is not a valid layer attribute.".format(attr))
-
-        return [{attr: getattr(self, attr)}]
+    def observe_parts_attr(self, attr: str) -> log.PartsObs:
+        if attr not in self.parts_attrs:
+            raise ValueError("{0} is not a valid parts attr.".format(attr))
+        parsed = _parse_unit_attr(attr)
+        return self.units.observe(parsed)

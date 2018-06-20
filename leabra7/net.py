@@ -4,8 +4,6 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 
-import pandas as pd  # type: ignore
-
 from leabra7 import layer
 from leabra7 import log
 from leabra7 import projn
@@ -138,7 +136,7 @@ class Net:
         for pr in self.projns:
             pr.flush()
 
-    def logs(self, freq: str, name: str) -> pd.DataFrame:
+    def logs(self, freq: str, name: str) -> log.Logs:
         """Retrieves logs for an object in the network.
 
         Args:
@@ -165,4 +163,4 @@ class Net:
                 "No logs recorded for object {0}, frequency {1}.".format(
                     name, freq))
 
-        return logger.to_df()
+        return logger.to_logs()

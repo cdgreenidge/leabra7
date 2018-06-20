@@ -98,4 +98,4 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n = net.Net()
     n.new_layer("layer1", 3, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
     n.cycle()
-    assert "avg_act" in n.logs("cycle", "layer1").columns
+    assert "avg_act" in n.logs("cycle", "layer1").whole.columns

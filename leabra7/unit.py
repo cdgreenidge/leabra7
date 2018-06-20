@@ -6,7 +6,6 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
-from typing import List
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -217,11 +216,12 @@ class Unit:
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
 
-    def observe(self, attr: str) -> log.Obs:
-        """Observes an attribute.
+    def observe(self, attr: str) -> log.PartsObs:
+        """Observes an attribute of the UnitGroup.
 
-        This is not quite the same as log.ObservableMixin.observe(), because
-        we don't want to give every unit a name. This lets us return a dict
+        This is not quite the same as
+        `log.ObservableMixin.observe_parts_attr()`, because we don't
+        want to give every unit a name. This lets us return a dict
         instead of a list containing one dict.
 
         Args:
@@ -410,24 +410,28 @@ class UnitGroup:
         _, indices = torch.topk(self.net, k, largest=True, sorted=True)
         return indices
 
-    def observe(self, attr: str) -> List[log.Obs]:
+    def observe(self, attr: str) -> log.PartsObs:
         """Observes an attribute.
 
-        This is not quite the same as log.ObservableMixin.observe(), because
-        we don't want to give every unit a name. This lets us return a dict
-        instead of a list containing one dict.
+        This is not quite the same as log.ObservableMixin.observe_parts_attr(),
+        since this is a helper method for Layer.observe_parts_attr(), meant to
+        isolate Layer from changes in the internal storage of UnitGorup.
 
         Args:
-            attr: The attribute to observe.
+          attr: The attr to observe. Can be any specified in
+            Layer.parts_attributes.
 
         Returns:
-            A dict: {attr: val} where val is the value of the attribute.
+          A PartsObs containing the attribute observation for the UnitGroup.
+
+        Raises:
+          ValueError: if the attribute is unobservable.
 
         """
-        if attr in self.loggable_attrs:
-            return [{
-                "unit": i,
-                attr: getattr(self, attr)[i]
-            } for i in range(self.size)]
-        else:
-            raise ValueError("{0} is not a loggable attr.".format(attr))
+        if attr not in self.loggable_attrs:
+            raise ValueError(
+                "{0} is not an observable attribute.".format(attr))
+        return {
+            "unit": list(range(self.size)),
+            attr: getattr(self, attr).numpy().tolist()
+        }

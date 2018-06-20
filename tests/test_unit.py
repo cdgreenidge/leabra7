@@ -143,19 +143,18 @@ def test_unitgroup_update_inhibition_checks_input_dimensions() -> None:
         ug.update_inhibition(torch.Tensor([1, 2]))
 
 
-def test_you_can_observe_attrs_from_the_unit_group() -> None:
+def test_you_can_observe_parts_attrs_from_the_unit_group() -> None:
     n = 2
     ug = un.UnitGroup(size=n)
     for attr in ug.loggable_attrs:
         logs = ug.observe(attr)
-        assert logs[0] == {"unit": 0, attr: getattr(ug, attr)[0]}
-        assert logs[1] == {"unit": 1, attr: getattr(ug, attr)[1]}
+        logs == {"unit": [0, 1], attr: getattr(ug, attr).numpy().tolist()}
 
 
-def test_it_checks_for_unobservable_attrs() -> None:
-    ug = un.UnitGroup(3)
+def test_observing_an_invalid_attr_raises_an_error() -> None:
+    ug = un.UnitGroup(size=3)
     with pytest.raises(ValueError):
-        ug.observe("rabbit cm")
+        ug.observe("whales")
 
 
 def test_unitgroup_can_calculate_the_threshold_inhibition() -> None:

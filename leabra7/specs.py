@@ -162,7 +162,11 @@ class LayerSpec(Spec):
 
     # Attrs to log every cycle.
     log_on_cycle: Iterable[str] = ()
+
     # Valid attributes to log on every cycle
+    # When adding any loggable attribute or property to this list,
+    # update layer._whole_attrs or layer._parts_attrs as appropriate
+    # (we represent in two places to avoid a circular dependency)
     _valid_log_on_cycle = ("avg_act", "avg_net", "fbi", "unit_net_raw",
                            "unit_net", "unit_gc_i", "unit_act", "unit_i_net",
                            "unit_i_net_r", "unit_v_m", "unit_v_m_eq",
