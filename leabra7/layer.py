@@ -66,8 +66,9 @@ class Layer(log.ObservableMixin):
         # avoid a circular dependency)
         whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
         parts_attrs: List[str] = [
-            "unit_net", "unit_gc_i", "unit_act", "unit_i_net", "unit_i_net_r",
-            "unit_v_m", "unit_v_m_eq", "unit_adapt", "unit_spike"
+            "unit_net", "unit_net_raw", "unit_gc_i", "unit_act", "unit_i_net",
+            "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
+            "unit_spike"
         ]
         super().__init__(name, whole_attrs, parts_attrs)
 
@@ -143,22 +144,6 @@ class Layer(log.ObservableMixin):
         self.forced = True
         for i, act in zip(range(self.size), itertools.cycle(acts)):
             self.units.act[i] = act
-
-    def observe(self, attr: str) -> List[log.Obs]:
-        """Overrides `log.ObservableMixin.observe`."""
-        # TODO: fix the logging system, which is kinda broken
-        try:
-            parsed = _parse_unit_attr(attr)
-            return self.units.observe_old(parsed)
-        except ValueError:
-            pass
-
-        valid = ("avg_act", "avg_net", "fbi")
-        if attr not in valid:
-            raise ValueError(
-                "{0} is not a valid layer attribute.".format(attr))
-
-        return [{attr: getattr(self, attr)}]
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr not in self.parts_attrs:

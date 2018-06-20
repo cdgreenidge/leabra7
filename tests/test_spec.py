@@ -212,7 +212,7 @@ def test_every_valid_log_on_cycle_attribute_can_be_logged() -> None:
     valid_attrs = sp.LayerSpec()._valid_log_on_cycle
     lr1 = lr.Layer("lr1", 3)
     for attr in valid_attrs:
-        lr1.observe(attr)
+        lr1.validate_attr(attr)
 
 
 def test_it_should_check_for_invalid_log_on_cycle_attrs() -> None:

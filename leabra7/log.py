@@ -1,7 +1,6 @@
 """Tools to log data from the network."""
 import abc
 import collections
-import functools
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -11,27 +10,10 @@ from typing import Tuple
 
 import pandas as pd  # type: ignore
 
-Obs = Dict[str, Any]
-"""An observation is a specially-formatted dict.
-
-Here are some examples:
-
-- An observation of 'unit0_act' for a layer could look
-  like this: {"unit": 0, "act": 0.5}.
-
-- An observation of 'avg_act' for a layer
-  could look like this: {"avg_act": 0.333}.
-
-"""
-
-## TODO: Review comments for the WholeObs and PartsObs
-
 WholeObs = Tuple[str, Any]
-""" An observation of whole attributes is a tuple.
+"""The observation of an entire object.
 
-It stores the observations for an entire layer.
-
-Here is an example:
+Example:
 
 - An observation of the average activation for a layer could
   look like this: ("avg_act", 0.333)
@@ -39,34 +21,14 @@ Here is an example:
 """
 
 PartsObs = Dict[str, List[Any]]
-""" An observation of partial attributes is a dict.
+"""An observation of the parts of an object, e.g. the units of a layer.
 
-It stores observations for units of a layer.
-
-Here is an example:
+Example:
 
 - An observation of the activation in one unit of a layer
   could look like this: {"unit": [0, 1, 2], "act": [0.2, 0.3, 0.5]}
 
 """
-
-
-def whole_observations_to_dict(observations: List[WholeObs]) -> Dict[str, Any]:
-    """ Converts a list of whole observations into dictionary.
-
-    Args:
-        observations: The list of whole observations.
-
-    Returns:
-        A dictionary containing the keys and values for the whole observations.
-
-    """
-
-    observation_keys = [obs[0] for obs in observations]
-
-    assert len(observation_keys) == len(set(observation_keys))
-
-    return dict(observations)
 
 
 class DataFrameBuffer:
@@ -151,7 +113,8 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
         """
         if attr not in self.whole_attrs and attr not in self.parts_attrs:
-            raise ValueError("{0} is not a valid observable attribute.")
+            raise ValueError(
+                "{0} is not a valid observable attribute.".format(attr))
 
     def observe_whole_attr(self, attr: str) -> WholeObs:
         """Observes a whole attribute.
@@ -222,29 +185,6 @@ def merge_whole_observations(observations: Iterable[WholeObs]) -> pd.DataFrame:
     return pd.DataFrame(dict(observations), index=[0])
 
 
-def merge_observations(observations: Iterable[Obs]) -> pd.DataFrame:
-    """Merges a list of observations together.
-
-    This is done using full outer joins.
-
-    Args:
-        observations: The list of observations.
-
-    Returns:
-        A DataFrame containing the merged observations.
-
-    """
-
-    def merge(df: pd.DataFrame, obs: Obs) -> pd.DataFrame:
-        """Merges two observations."""
-        df2 = pd.DataFrame(obs, index=[0])
-        if df.columns.intersection(df2.columns).empty:
-            return pd.concat((df, df2), sort=True)
-        return pd.merge(df, df2, how="outer", copy=False)
-
-    return functools.reduce(merge, observations, pd.DataFrame())
-
-
 class Logs(NamedTuple):
     """A container for the logs collected on an object.
 
@@ -277,12 +217,10 @@ class Logger:
     def __init__(self, target: ObservableMixin, attrs: Iterable[str]) -> None:
         self.target = target
         self.target_name = target.name
-        self.attrs = attrs
         self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
         self.parts_attrs = [i for i in attrs if i in target.parts_attrs]
         self.whole_buffer = DataFrameBuffer()
         self.parts_buffer = DataFrameBuffer()
-        self.buffer = DataFrameBuffer()
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""

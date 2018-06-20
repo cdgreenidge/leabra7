@@ -6,7 +6,6 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
-from typing import List
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -409,29 +408,6 @@ class UnitGroup:
         """
         _, indices = torch.topk(self.net, k, largest=True, sorted=True)
         return indices
-
-    # TODO: Deprecated. delete once new logging system is up.
-    def observe_old(self, attr: str) -> List[log.Obs]:
-        """Observes an attribute.
-
-        This is not quite the same as log.ObservableMixin.observe(), because
-        we don't want to give every unit a name. This lets us return a dict
-        instead of a list containing one dict.
-
-        Args:
-            attr: The attribute to observe.
-
-        Returns:
-            A dict: {attr: val} where val is the value of the attribute.
-
-        """
-        if attr in self.loggable_attrs:
-            return [{
-                "unit": i,
-                attr: getattr(self, attr)[i]
-            } for i in range(self.size)]
-        else:
-            raise ValueError("{0} is not a loggable attr.".format(attr))
 
     def observe(self, attr: str) -> log.PartsObs:
         """Observes an attribute.

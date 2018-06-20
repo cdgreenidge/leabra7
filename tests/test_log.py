@@ -1,43 +1,10 @@
 """Test log.py"""
 from typing import Any
-from typing import List
-from typing import Dict
-
-import pytest
 
 import pandas as pd  # type: ignore
+import pytest
 
 from leabra7 import log
-
-
-# Test log.whole_observations_to_dict on an emtpy list
-def test_whole_observations_to_dict_on_empty_list() -> None:
-    empty_list = []
-    empty_expect = dict()
-
-    empty_result = log.whole_observations_to_dict(empty_list)
-
-    assert empty_expect == empty_result
-
-
-# Test log.whole_observations_to_dict on a unique keyed list
-def test_whole_observations_to_dict_on_unique_key_list() -> None:
-    standard_list = [("a", 1), ("b", 2), ("c", 4)]
-    standard_expect = {"a": 1, "b": 2, "c": 4}
-
-    standard_result = log.whole_observations_to_dict(standard_list)
-
-    assert standard_expect == standard_result
-
-
-# Test log.whole_observations_to_dict on a repeat keyed list
-def test_whole_observations_to_dict_on_repeat_key_list() -> None:
-    repeat_list = [("a", 1), ("b", 2), ("a", 2), ("b", 3), ("c", 4)]
-
-    with pytest.raises(
-            AssertionError,
-            message='Failed to Raise Asssertion for Repeated Key'):
-        log.whole_observations_to_dict(repeat_list)
 
 
 # Test log.DataFrameBuffer
