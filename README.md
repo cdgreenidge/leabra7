@@ -25,8 +25,7 @@ targeted in roughly 1 month).
 ## Getting started
 
 ### Prerequisites
-- Python 3. See the [Hitchhiker's Guide to
-  Python](http://docs.python-guide.org/en/latest/starting/installation/)
+- Anaconda Distribution of Python 3. See the [Anaconda Installation Guide](https://conda.io/docs/user-guide/install/download.html)
   for installation instructions.
 - The [conda](https://www.anaconda.com/distribution/) package manager.
 
