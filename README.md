@@ -26,7 +26,7 @@ targeted in roughly 1 month).
 
 ### Prerequisites
 - Python 3. See the [Hitchhiker's Guide to
-  Python](http://python-guide-pt-br.readthedocs.io/en/latest/starting/installation/)
+  Python](http://docs.python-guide.org/en/latest/starting/installation/)
   for installation instructions.
 - The [conda](https://www.anaconda.com/distribution/) package manager.
 
