@@ -8,7 +8,8 @@
 **leabra7** is an implementation of the "Local, Error-driven and Associative,
 Biologically Realistic Algorithm" in Python. It targets quantitative
 equivalence with the long-term support `emergent71` branch of the [Emergent
-project](https://grey.colorado.edu/emergent/index.php/Main_Page).
+project](https://grey.colorado.edu/emergent/index.php/Main_Page) (note this is not
+the current version of emergent).
 
 Why is this interesting? Current neural network technology struggles with
 recurrence and focuses on global learning algorithms. The leabra algorithm
