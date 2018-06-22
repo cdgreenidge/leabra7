@@ -6,10 +6,9 @@
 | [![Build Status](https://travis-ci.org/cdgreenidge/leabra7.svg?branch=windows-ci)](https://travis-ci.org/cdgreenidge/leabra7) | [![Build status](https://ci.appveyor.com/api/projects/status/pu47got47lql75j2/branch/master?svg=true)](https://ci.appveyor.com/project/cdgreenidge/leabra7/branch/master) | [![codecov](https://codecov.io/gh/cdgreenidge/leabra7/branch/master/graph/badge.svg)](https://codecov.io/gh/cdgreenidge/leabra7) |
 
 **leabra7** is an implementation of the "Local, Error-driven and Associative,
-Biologically Realistic Algorithm" in Python. It targets quantitative
-equivalence with the long-term support `emergent71` branch of the [Emergent
-project](https://grey.colorado.edu/emergent/index.php/Main_Page) (note this is not
-the current version of emergent).
+Biologically Realistic Algorithm" ([LEABRA](https://grey.colorado.edu/emergent/index.php/Leabra))
+in Python. It targets quantitative equivalence with the long-term support `emergent71` branch of the [Emergent project](https://grey.colorado.edu/emergent/index.php/Main_Page)
+(note: this is not the current version of emergent).
 
 Why is this interesting? Current neural network technology struggles with
 recurrence and focuses on global learning algorithms. The leabra algorithm
@@ -19,7 +18,7 @@ between the hippocampus and neocortex during memory recall (see the
 [Princeton Computational Memory Lab](https://compmem.princeton.edu/) for more
 details).
 
-To see it in action, look at the IPython notebook in `docs`. It's not very
+To see it in action, look at the IPython notebooks in `docs`. They're not very
 verbose but the docs will be fully written once the API stabilizes (0.1 release
 targeted in roughly 1 month).
 
