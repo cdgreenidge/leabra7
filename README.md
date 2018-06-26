@@ -115,4 +115,4 @@ See the "Projects" tab for more info.
 
 ## Contributors
 Special thanks to Fabien Benureau for providing parts of the NXX1
-implementation.
+implementation and net input scaling.
