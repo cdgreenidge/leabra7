@@ -103,6 +103,13 @@ class Projn:
         self.pre = pre
         self.post = post
 
+        # Number of existing connections
+        self.n_links = 0
+        # Netinput activation scaling factor
+        self.wt_scale_act = 1.0
+        # Netinput relative scaling factor
+        self.wt_scale_rel_eff = None
+
         if spec is None:
             self.spec = specs.ProjnSpec()
         else:
@@ -122,12 +129,40 @@ class Projn:
 
         # Enforce sparsity
         # TODO: Make this a separate method
-        mask, num_nonzero = sparsify(self.spec.sparsity, mask)
+        mask, self.n_links = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
-        rand_nums = torch.Tensor(num_nonzero)
+        rand_nums = torch.Tensor(self.n_links)
         self.spec.dist.fill(rand_nums)
         self.wts[mask] = rand_nums
+
+    @property
+    def wt_scale(self) -> float:
+        if isinstance(self.wt_scale_rel_eff, float):
+            return self.wt_scale_act * self.wt_scale_rel_eff
+        else:
+            raise TypeError('Error: did you run the network.build() method?')
+
+    def compute_netin_scaling(self) -> None:
+        """Compute Netin Scaling
+        See Leabra Netin Scaling for details.
+        """
+        pre_act_avg = self.pre.avg_act
+        pre_size = self.pre.units.size
+
+        # constant
+        sem_extra = 2.0
+
+        # estimated number of active units
+        pre_act_n = max(1, int(pre_act_avg * pre_size + 0.5))
+
+        if self.n_links == pre_size:
+            self.wt_scale_act = 1.0 / pre_act_n
+        else:
+            post_act_n_max = min(self.n_links, pre_act_n)
+            post_act_n_avg = max(1, pre_act_avg * self.n_links + 0.5)
+            post_act_n_exp = min(post_act_n_max, post_act_n_avg + sem_extra)
+            self.wt_scale_act = 1.0 / post_act_n_exp
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
@@ -136,6 +171,7 @@ class Projn:
         layer makes it easier to compute the net input scaling factor.
 
         """
-        scale_eff = 1.0
+
         # TODO: stop violating law of Demeter here
-        self.post.units.add_input(scale_eff * self.wts @ self.pre.units.act)
+        self.post.units.add_input(self.wt_scale * self.spec.wt_scale_abs *
+                                  self.wts @ self.pre.units.act)

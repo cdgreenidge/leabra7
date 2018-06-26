@@ -2,6 +2,7 @@
 import itertools
 from typing import List
 from typing import Iterable
+from typing import Any
 
 import torch  # type: ignore
 
@@ -60,6 +61,13 @@ class Layer(log.ObservableMixin):
         self.gc_i = 0.0
         # Is the layer activation forced?
         self.forced = False
+
+        # Keep track of layer connections
+        # Left as 'Any' to avoid type errors
+        # Really should be a list of projections
+        # TODO: resolve circular dependency that prevents precise typing
+        self.input_projns: List[Any] = []
+        self.output_projns: List[Any] = []
 
         # When adding any loggable attribute or property to these lists, update
         # layer.LayerSpec._valid_log_on_cycle (we represent in two places to

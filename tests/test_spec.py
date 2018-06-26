@@ -221,6 +221,7 @@ def test_it_should_check_for_invalid_log_on_cycle_attrs() -> None:
 
 
 # Test ProjnSpec validation
+# TODO: Delete this or something. It doesn't seem used.
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f) -> None:
     with pytest.raises(sp.ValidationError):
@@ -236,3 +237,15 @@ def test_projn_spec_validates_the_distribution() -> None:
 def test_projn_spec_validates_sparsity(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(sparsity=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_wt_scale_abs(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(wt_scale_abs=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_wt_scale_rel(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(wt_scale_rel=f).validate()
