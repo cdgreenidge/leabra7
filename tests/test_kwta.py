@@ -23,6 +23,7 @@ def test_kwta_suppresses_all_but_k_units() -> None:
     n.new_projn("proj2", "lr1", "lr2", pr2_spec)
 
     n.force_layer("lr1", [1])
+    n.build()
     for i in range(100):
         n.cycle()
 

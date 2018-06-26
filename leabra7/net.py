@@ -17,7 +17,6 @@ class Net:
         self.objs: Dict[str, Any] = {}
         self.layers: List[layer.Layer] = []
         self.projns: List[projn.Projn] = []
-
         self.cycle_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:
@@ -124,6 +123,27 @@ class Net:
         pr = projn.Projn(name, pre_lr, post_lr, spec)
         self.projns.append(pr)
         self.objs[pr.name] = pr
+
+        # Keeps track of network architecture to build netinput scaling
+        pre_lr.output_projns.append(pr)
+        post_lr.input_projns.append(pr)
+
+        self.build()
+
+    def build(self) -> None:
+        """Build and normalize projection weights among layers.
+
+        This needs to be run every time a layer or projection is added or
+        removed from the network, or if the value of a projection's
+        `wt_scale_rel` is changed.
+
+        """
+
+        for lr in self.layers:
+            rel_sum = sum(
+                project.spec.wt_scale_rel for project in lr.input_projns)
+            for project in lr.input_projns:
+                project.wt_scale_rel_eff = project.spec.wt_scale_rel / rel_sum
 
     def cycle(self) -> None:
         """Cycles the network."""

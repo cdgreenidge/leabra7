@@ -1,5 +1,6 @@
 """Test projn.py"""
 import torch
+import pytest
 
 from leabra7 import layer as lr
 from leabra7 import projn as pr
@@ -28,6 +29,14 @@ def test_projn_has_a_receiving_layer() -> None:
     assert projn.post == post
 
 
+def test_projn_needs_built_network_before_wt_scale_exists() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+    with pytest.raises(TypeError):
+        projn.wt_scale
+
+
 def test_projn_can_specify_its_weight_distribution() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
@@ -35,11 +44,30 @@ def test_projn_can_specify_its_weight_distribution() -> None:
     assert (projn.wts == 7).all()
 
 
-def test_projn_can_flush() -> None:
+def test_projn_can_compute_netin_scaling() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
     projn = pr.Projn("proj", pre, post)
-    projn.flush()
+    projn.compute_netin_scaling()
+
+
+def test_projn_can_compute_netin_scaling_with_mask() -> None:
+    pre = lr.Layer("lr1", size=10)
+    post = lr.Layer("lr2", size=100)
+    proj_spec = sp.ProjnSpec(
+        pre_mask=[True, False],
+        post_mask=[True, False, False, False],
+        sparsity=0.2)
+    projn = pr.Projn("proj", pre, post, proj_spec)
+    projn.compute_netin_scaling()
+
+
+def test_projn_cant_flush_by_itself() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+    with pytest.raises(TypeError):
+        projn.flush()
 
 
 def test_projn_can_mask_pre_layer_units() -> None:
