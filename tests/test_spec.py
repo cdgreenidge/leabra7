@@ -221,7 +221,6 @@ def test_it_should_check_for_invalid_log_on_cycle_attrs() -> None:
 
 
 # Test ProjnSpec validation
-# TODO: Delete this or something. It doesn't seem used.
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f) -> None:
     with pytest.raises(sp.ValidationError):

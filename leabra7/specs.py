@@ -214,10 +214,11 @@ class ProjnSpec(Spec):
     post_mask: Iterable[bool] = (True, )
     # Sparsity of the connection (i.e. the percentage of active connections.)
     sparsity: float = 1.0
-    # Absolute scaling weight
-    wt_scale_abs = 1.0
-    # Relative scaling weight, relative to other connections.
-    wt_scale_rel = 1.0
+    # Absolute net input scaling weight
+    wt_scale_abs: float = 1.0
+    # Relative net input scaling weight (relative to other projections
+    # terminating in the same layer)
+    wt_scale_rel: float = 1.0
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
