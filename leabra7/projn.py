@@ -166,5 +166,5 @@ class Projn:
         """
         wt_scale_act = self.netin_scale()
         self.post.add_input(
-            self.wt_scale_abs * wt_scale_act * (self.wts @ self.pre.units.act),
-            self.spec.wt_scale_rel)
+            self.spec.wt_scale_abs * wt_scale_act *
+            (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
