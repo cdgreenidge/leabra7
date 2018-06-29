@@ -1,6 +1,5 @@
 """Test net.py"""
 import pytest
-import math
 
 from leabra7 import net
 from leabra7 import specs
@@ -77,37 +76,6 @@ def test_projn_checks_if_the_receiving_layer_name_is_valid() -> None:
     n.new_layer("layer1", 3)
     with pytest.raises(ValueError):
         n.new_projn("projn1", "layer1", "layer2")
-
-
-def test_net_can_build() -> None:
-    n = net.Net()
-    n.new_layer("layer1", 3)
-    n.new_layer("layer2", 3)
-    n.new_projn("projn1", "layer1", "layer2")
-    n.build()
-
-
-def test_net_build_defines_wt_scale() -> None:
-    n = net.Net()
-    n.new_layer("layer1", 3)
-    n.new_layer("layer2", 3)
-    n.new_projn("projn1", "layer1", "layer2")
-    n.build()
-    n.objs["projn1"].wt_scale
-
-
-def test_net_build_defines_wt_scale_correctly() -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    n.new_layer("layer2", 2)
-    n.new_layer("layer3", 3)
-    n.new_projn(
-        "projn1", "layer1", "layer3", specs.ProjnSpec(wt_scale_rel=0.8))
-    n.new_projn(
-        "projn2", "layer2", "layer3", specs.ProjnSpec(wt_scale_rel=0.6))
-    n.build()
-    assert math.isclose(n.objs["projn1"].wt_scale, 0.8 / 1.4, abs_tol=1e-6)
-    assert math.isclose(n.objs["projn2"].wt_scale, 0.6 / 1.4, abs_tol=1e-6)
 
 
 # Right now, it's difficult to test net.cycle(), because it's the core of the

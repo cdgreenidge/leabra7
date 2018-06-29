@@ -3,7 +3,6 @@ import pytest
 
 from leabra7 import layer as lr
 from leabra7 import specs as sp
-from leabra7 import unit as un
 
 
 def test_parse_unit_attribute_strips_the_unit_prefix() -> None:

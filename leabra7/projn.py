@@ -103,13 +103,6 @@ class Projn:
         self.pre = pre
         self.post = post
 
-        # Number of existing connections
-        self.n_links = 0
-        # Netinput activation scaling factor
-        self.wt_scale_act = 1.0
-        # Netinput relative scaling factor
-        self.wt_scale_rel_eff = None
-
         if spec is None:
             self.spec = specs.ProjnSpec()
         else:
@@ -122,47 +115,47 @@ class Projn:
 
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
-        # TODO: Refactor mask expansion and creation into new methods + test
         tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
         tiled_post_mask = tile(self.post.size, self.spec.post_mask)
         mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
         # Enforce sparsity
-        # TODO: Make this a separate method
-        mask, self.n_links = sparsify(self.spec.sparsity, mask)
+        mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
-        rand_nums = torch.Tensor(self.n_links)
+        rand_nums = torch.Tensor(num_nonzero)
         self.spec.dist.fill(rand_nums)
         self.wts[mask] = rand_nums
 
-    @property
-    def wt_scale(self) -> float:
-        if isinstance(self.wt_scale_rel_eff, float):
-            return self.wt_scale_act * self.wt_scale_rel_eff
-        else:
-            raise TypeError('Error: did you run the network.build() method?')
+        # Record the number of incoming connections for each unit
+        self.num_recv_conns = torch.sum(mask, dim=1).float()
 
-    def compute_netin_scaling(self) -> None:
-        """Compute Netin Scaling
-        See Leabra Netin Scaling for details.
+    def netin_scale(self) -> torch.Tensor:
+        """Computes the net input scaling factor for each receiving unit.
+
+        See https://grey.colorado.edu/emergent/index.php/Leabra_Netin_Scaling
+        for details.
+
+        Returns:
+          A tensor of size self.post.size containing in each element the netin
+          scaling factor for that unit.
+
         """
-        pre_act_avg = self.pre.avg_act
-        pre_size = self.pre.units.size
-
-        # constant
         sem_extra = 2.0
 
-        # estimated number of active units
-        pre_act_n = max(1, int(pre_act_avg * pre_size + 0.5))
+        pre_act_avg = self.pre.avg_act
+        pre_act_n = max(1, round(pre_act_avg * self.pre.units.size))
+        post_act_n_avg = torch.max(
+            torch.Tensor([1]), (pre_act_avg * self.num_recv_conns).round())
+        post_act_n_max = torch.min(self.num_recv_conns,
+                                   torch.Tensor([pre_act_n]))
+        post_act_n_exp = torch.min(post_act_n_max, post_act_n_avg + sem_extra)
 
-        if self.n_links == pre_size:
-            self.wt_scale_act = 1.0 / pre_act_n
-        else:
-            post_act_n_max = min(self.n_links, pre_act_n)
-            post_act_n_avg = max(1, pre_act_avg * self.n_links + 0.5)
-            post_act_n_exp = min(post_act_n_max, post_act_n_avg + sem_extra)
-            self.wt_scale_act = 1.0 / post_act_n_exp
+        scaling_factors = 1.0 / post_act_n_exp
+        full_connectivity = pre_act_n == post_act_n_avg
+        scaling_factors[full_connectivity] = 1.0 / pre_act_n
+
+        return scaling_factors
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
@@ -171,7 +164,6 @@ class Projn:
         layer makes it easier to compute the net input scaling factor.
 
         """
-
-        # TODO: stop violating law of Demeter here
-        self.post.units.add_input(self.wt_scale * self.spec.wt_scale_abs *
-                                  self.wts @ self.pre.units.act)
+        wt_scale_act = self.netin_scale()
+        self.post.add_input(wt_scale_act * (self.wts @ self.pre.units.act),
+                            self.spec.wt_scale_rel)
