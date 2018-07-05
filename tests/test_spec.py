@@ -159,18 +159,24 @@ def test_it_should_validate_adapt_dt(f) -> None:
 # Test LayerSpec validation
 @given(st.text())
 @example("kwta")
+@example("kwta_avg")
 @example("fffb")
 def test_layer_spec_validates_inhibition_type(f) -> None:
-    if f not in ["kwta", "fffb"]:
+    if f not in ["kwta", "kwta_avg", "fffb"]:
         with pytest.raises(sp.ValidationError):
             sp.LayerSpec(inhibition_type=f).validate()
 
 
-@given(st.integers())
-def test_layer_spec_validates_k(f) -> None:
-    if f < 1:
-        with pytest.raises(sp.ValidationError):
-            sp.LayerSpec(inhibition_type="kwta", k=f).validate()
+@given(float_outside_range(0, 1.0))
+def test_layer_spec_validates_kwta_pct(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(kwta_pct=f).validate()
+
+
+@given(float_outside_range(0, 1.0))
+def test_layer_spec_validates_kwta_pt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(kwta_pt=f).validate()
 
 
 @given(float_outside_range(0, float("Inf")))
