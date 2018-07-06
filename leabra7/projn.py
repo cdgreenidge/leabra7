@@ -18,8 +18,8 @@ def tile(length: int, xs: Iterable[T]) -> List[T]:
     """Tiles an iterable.
 
     Args:
-        length: The length to tile the iterable to.
-        xs: The iterable to tile.
+        * length: The length to tile the iterable to.
+        * xs: The iterable to tile.
 
     Returns:
         An iterable of size `length`, containing elements from xs, tiled.
@@ -34,18 +34,17 @@ def expand_layer_mask_full(pre_mask: List[bool],
     """Expands layer masks into a weight matrix mask with full connectivity.
 
     Args:
-        pre_mask: The mask for the pre layer specifying which pre layer
+        * pre_mask: The mask for the pre layer specifying which pre layer
             units are included in the projection. Note that this mask will not
             be tiled, so it has as many elements as pre layer units.
-
-        post_mask: The mask for the post layer specifying which post layer
+        * post_mask: The mask for the post layer specifying which post layer
             units are included in the projection. Has as many elements as post
             layer units.
 
     Returns:
         A mask for the full projection weight matrix indicating
-        which elements of the matrix correspond to active connections
-        in the full connectivity pattern.
+            which elements of the matrix correspond to active connections
+            in the full connectivity pattern.
 
     """
     # In the full connectivity case, it can be concisely calculated with an
@@ -59,15 +58,15 @@ def sparsify(sparsity: float,
     Makes a boolean tensor sparse, by randomly setting True values to False.
 
     Args:
-        sparsity: The percentage of `True` values from the original
+        * sparsity: The percentage of `True` values from the original
             matrix to keep.
-        tensor: The ByteTensor to sparsify.
+        * tensor: The ByteTensor to sparsify.
 
     Returns:
         A tuple. The first element is a ByteTensor of the same shape
-        as the original tensor, but with floor(1 - sparsity)% of its
-        true values set to `False`. The second element is the number of True
-        values in the sparsified Tensor.
+            as the original tensor, but with floor(1 - sparsity)% of its
+            true values set to `False`. The second element is the number
+            of True values in the sparsified Tensor.
     """
     assert 0 <= sparsity <= 1
     nonzero = tensor.nonzero()
@@ -86,10 +85,10 @@ class Projn:
     """A projection links two layers. It is a bundle of connections.
 
     Args:
-        name: The name of the projection.
-        pre: The sending layer.
-        post: The receiving layer.
-        spec: The projection specification. If none is provided, the default
+        * name: The name of the projection.
+        * pre: The sending layer.
+        * post: The receiving layer.
+        * spec: The projection specification. If none is provided, the default
             spec will be used.
 
     """
@@ -138,7 +137,7 @@ class Projn:
 
         Returns:
           A tensor of size self.post.size containing in each element the netin
-          scaling factor for that unit.
+            scaling factor for that unit.
 
         """
         sem_extra = 2.0

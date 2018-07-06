@@ -17,18 +17,20 @@ def partition(n: int, iterable: List[T], key: Callable[[T], Any] = lambda x: x
     the averaging version of kWTA inhibition, so I'm leaving it in.
 
     Args:
-      n: The number of elements in the first partition.
-      iterable: The iterable to partition.
-      key: A function of one argument that extracts a comparison key
-        from each element in the iterable. The keys must be comparable
-        with each other, unfortunately MyPy can't check for this at the moment.
+        * n: The number of elements in the first partition.
+        * iterable: The iterable to partition.
+        * key: A function of one argument that extracts a comparison key
+            from each element in the iterable. The keys must be comparable
+            with each other, unfortunately MyPy can't check for this at
+            the moment.
 
-    Returns: A tuple of two lists. The first list contains the n
-      largest items in the iterable. The second list contains the rest
-      of the items.
+    Returns:
+        A tuple of two lists. The first list contains the n
+            largest items in the iterable. The second list contains the rest
+            of the items.
 
     Raises:
-      ValueError: if n is <= len(iterable).
+        ValueError: if n is <= len(iterable).
 
     """
     if n > len(iterable):

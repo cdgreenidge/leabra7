@@ -37,8 +37,8 @@ class Uniform(Distribution):
     """A uniform distribution.
 
     Args:
-        low: The lower bound of the distribution.
-        high: The upper bound of the distribution.
+        * low: The lower bound of the distribution.
+        * high: The upper bound of the distribution.
 
     Raises:
         ValueError: If low >= high.
@@ -61,8 +61,8 @@ class Gaussian(Distribution):
     """A gaussian distribution.
 
     Args:
-        mean: The mean of the distribution (first moment).
-        var: The variance of the distribution (second moment).
+        * mean: The mean of the distribution (first moment).
+        * var: The variance of the distribution (second moment).
 
     Raises:
         ValueError: If var is negative.
@@ -84,8 +84,8 @@ class LogNormal(Distribution):
     """A log normal distribution.
 
     Args:
-        mean: The mean of the distribution's natural logarithm.
-        var: The variance of the distribution's natural logarithm.
+        * mean: The mean of the distribution's natural logarithm.
+        * var: The variance of the distribution's natural logarithm.
 
     Raises:
         ValueError: If var is negative.

@@ -36,9 +36,9 @@ class Layer(log.ObservableMixin):
     """A layer of units (neurons).
 
     Args:
-        name: The name of the layer.
-        size: The number of units in the layer.
-        spec: The layer specification. If it is `None`, the default spec will
+        * name: The name of the layer.
+        * size: The number of units in the layer.
+        * spec: The layer specification. If it is `None`, the default spec will
             be used.
 
     """
@@ -99,10 +99,10 @@ class Layer(log.ObservableMixin):
         """Adds an input to the layer.
 
         Args:
-          inpt: The vector of inputs to add to each unit in the layer. These
-            should NOT be scaled by wt_scale_rel.
-          wt_scale_rel: The wt_scale_rel parameter of the projection sending
-            the inputs.
+            * inpt: The vector of inputs to add to each unit in the layer.
+                These should NOT be scaled by wt_scale_rel.
+            * wt_scale_rel: The wt_scale_rel parameter of the projection
+                sending the inputs.
 
         """
         self.input_buffer += inpt * wt_scale_rel

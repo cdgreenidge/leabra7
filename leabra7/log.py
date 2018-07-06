@@ -83,14 +83,14 @@ class ObservableMixin(metaclass=abc.ABCMeta):
     `parts_attrs` attributes.
 
     Args:
-      name: The name of the object.
-      whole_attrs: The whole attributes that we can log on the object.
-      parts_attrs: The parts attributes that we can log on the object.
+        * name: The name of the object.
+        * whole_attrs: The whole attributes that we can log on the object.
+        * parts_attrs: The parts attributes that we can log on the object.
 
     Attributes:
-      name (str): The name of the object.
-      whole_attrs (Set[str]): The valid whole attributes to log.
-      parts_attrs (Set[str]): The valid parts attributes to log.
+        * name (str): The name of the object.
+        * whole_attrs (Set[str]): The valid whole attributes to log.
+        * parts_attrs (Set[str]): The valid parts attributes to log.
 
     """
 
@@ -189,12 +189,12 @@ class Logs(NamedTuple):
     """A container for the logs collected on an object.
 
     Attributes:
-      whole (pd.DataFrame): A DataFrame containing the logs for attributes
-        logged on the whole object. Examples of these attributes for the layer
-        object are "avg_act" or "fbi".
-      parts (pd.DataFrame): A DataFrame containing the logs for attributes
-        logged on parts of the object. Examples of these attributes for the
-        layer object are "unit_act" or "unit_net".
+        * whole (pd.DataFrame): A DataFrame containing the logs for attributes
+            logged on the whole object. Examples of these attributes for the
+            layer object are "avg_act" or "fbi".
+        * parts (pd.DataFrame): A DataFrame containing the logs for attributes
+            logged on parts of the object. Examples of these attributes for the
+            layer object are "unit_act" or "unit_net".
 
     """
     whole: pd.DataFrame
@@ -205,12 +205,12 @@ class Logger:
     """Records target attributes to internal buffers.
 
     Args:
-        target: The object from which to record attributes. It must inherit
+        * target: The object from which to record attributes. It must inherit
             from `ObservableMixin`.
-        attrs: A list of attribute names to log.
+        * attrs: A list of attribute names to log.
 
     Attrs:
-        name (str): The name of the target object.
+        * name (str): The name of the target object.
 
     """
 

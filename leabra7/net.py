@@ -56,9 +56,9 @@ class Net:
         """Adds a new layer to the network.
 
         Args:
-            name: The name of the layer.
-            size: How many units the layer should have.
-            spec: The layer specification.
+            * name: The name of the layer.
+            * size: How many units the layer should have.
+            * spec: The layer specification.
 
         Raises:
             spec.ValidationError: If the spec contains an invalid parameter
@@ -81,8 +81,8 @@ class Net:
         contained in `acts` and will not change from cycle to cycle.
 
         Args:
-            name: The name of the layer.
-            acts: An iterable containing the activations that the layer's
+            * name: The name of the layer.
+            * acts: An iterable containing the activations that the layer's
                 units will be forced to. If its length is less than the number
                 of units in the layer, it will be tiled. If its length is
                 greater, the extra values will be ignored.
@@ -101,15 +101,15 @@ class Net:
         """Adds a new projection to the network.
 
         Args:
-            name: The name of the projection.
-            pre: The name of the sending layer.
-            post: The name of the receiving layer.
-            spec: The projection specification.
+            * name: The name of the projection.
+            * pre: The name of the sending layer.
+            * post: The name of the receiving layer.
+            * spec: The projection specification.
 
         Raises:
-            ValueError: If `pre` or `post` do not match any existing layer
+            * ValueError: If `pre` or `post` do not match any existing layer
                 name.
-            spec.ValidationError: If the spec contains an invalid parameter
+            * spec.ValidationError: If the spec contains an invalid parameter
                 value.
 
         """
@@ -139,9 +139,9 @@ class Net:
         """Retrieves logs for an object in the network.
 
         Args:
-            freq: The frequency at which the desired logs were recorded. One
+            * freq: The frequency at which the desired logs were recorded. One
                 of `["cycle"]`.
-            name: The name of the object for which the logs were recorded.
+            * name: The name of the object for which the logs were recorded.
 
         Raises:
             ValueError: If the frequency name is invalid, or if no logs were
