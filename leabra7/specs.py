@@ -144,14 +144,12 @@ class UnitSpec(Spec):
 
 class LayerSpec(Spec):
     """Spec for Layer objects."""
-    # Toggle inhibition
-    inhibition = True
     # Can be either "fffb" for feedforward-feedback inhibition, or
     # "kwta" for k-winner-take-all inhibition
     inhibition_type = "fffb"
     # Proportion of winners for k-winner-take-all inhibition
     kwta_pct = 0.1
-    # Proportion of kWTA between high and low
+    # Proportion of kWTA step (scalar for update step size)
     kwta_pt = 0.5
     # Feedforward inhibition multiplier
     ff = 1.0
@@ -183,13 +181,12 @@ class LayerSpec(Spec):
         """Extends `Spec.validate`."""
         super().validate()
 
-        valid_inhibition_types = ["fffb", "kwta", "kwta_avg"]
+        valid_inhibition_types = ["fffb", "kwta", "kwta_avg", "none"]
         if self.inhibition_type not in valid_inhibition_types:
             raise ValidationError(
                 "Inhibition type {0} not one of [\"fffb\", \"kwta\", \
-                \"kwta_avg\"]".format(self.inhibition_type))
+                \"kwta_avg\", \"none\"]".format(self.inhibition_type))
 
-        assert isinstance(self.inhibition, bool)
         self.assert_in_range("kwta_pct", 0.0, 1.0)
         self.assert_in_range("kwta_pt", 0.0, 1.0)
         self.assert_sane_float("ff")

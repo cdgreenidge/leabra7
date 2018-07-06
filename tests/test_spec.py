@@ -161,10 +161,14 @@ def test_it_should_validate_adapt_dt(f) -> None:
 @example("kwta")
 @example("kwta_avg")
 @example("fffb")
+@example("none")
 def test_layer_spec_validates_inhibition_type(f) -> None:
-    if f not in ["kwta", "kwta_avg", "fffb"]:
+    if f not in ["kwta", "kwta_avg", "fffb", "none"]:
         with pytest.raises(sp.ValidationError):
             sp.LayerSpec(inhibition_type=f).validate()
+    else:
+        sp.LayerSpec(inhibition_type=f).validate()
+
 
 
 @given(float_outside_range(0, 1.0))
