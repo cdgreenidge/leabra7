@@ -170,7 +170,6 @@ def test_layer_spec_validates_inhibition_type(f) -> None:
         sp.LayerSpec(inhibition_type=f).validate()
 
 
-
 @given(float_outside_range(0, 1.0))
 def test_layer_spec_validates_kwta_pct(f) -> None:
     with pytest.raises(sp.ValidationError):
