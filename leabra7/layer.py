@@ -36,7 +36,6 @@ class Layer(log.ObservableMixin):
     """A layer of units (neurons).
 
     Args:
-    
         name: The name of the layer.
         size: The number of units in the layer.
         spec: The layer specification. If it is `None`, the default spec will

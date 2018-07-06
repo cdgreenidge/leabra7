@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/anaconda3/envs leabra7
 # -*- coding: utf-8 -*-
 #
 # leabra7 documentation build configuration file, created by
@@ -17,10 +17,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, '/home/noam/Documents/GitHub/leabra7/leabra7')
-
+import os
+import sys
+sys.path.append(os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -188,5 +187,3 @@ epub_copyright = copyright
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
-
-
