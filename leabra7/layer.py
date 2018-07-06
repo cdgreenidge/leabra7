@@ -123,7 +123,7 @@ class Layer(log.ObservableMixin):
             self.calc_fffb_inhibition()
         elif self.spec.inhibition_type == "kwta":
             self.calc_kwta_inhibition()
-        else:
+        elif self.spec.inhibition_type == "kwta_avg":
             self.calc_kwta_avg_inhibition()
 
         self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
@@ -141,8 +141,7 @@ class Layer(log.ObservableMixin):
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
         self.update_net()
-        if self.spec.inhibition:
-            self.update_inhibition()
+        self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
 
