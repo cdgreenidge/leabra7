@@ -43,6 +43,14 @@ def test_you_can_clamp_a_layer() -> None:
     assert list(n.objs["layer1"].units.act) == [0, 1, 0, 1]
 
 
+def test_you_can_unclamp_a_layer() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 4)
+    n.clamp_layer("layer1", [0, 1])
+    n.cycle()
+    n.unclamp_layer("layer1")
+
+
 def test_forcing_a_layer_validates_its_name() -> None:
     with pytest.raises(ValueError):
         net.Net().clamp_layer("abcd", [0])

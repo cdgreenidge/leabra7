@@ -94,6 +94,16 @@ class Net:
         self._validate_layer_name(name)
         self.objs[name].clamp(acts)
 
+    def unclamp_layer(self, name: str) -> None:
+        """Unclamps the layer's activations.
+
+        After unclamping, the layer's activations will be
+        updated each cycle.
+
+        """
+        self._validate_layer_name(name)
+        self.objs[name].unclamp()
+
     def new_projn(self,
                   name: str,
                   pre: str,
