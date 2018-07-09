@@ -70,7 +70,7 @@ def test_layer_should_be_able_to_observe_whole_attributes() -> None:
     assert layer.observe_whole_attr("avg_act") == ("avg_act", 0.0)
 
 
-def test_layer_shuld_be_able_to_observe_parts_attributes() -> None:
+def test_layer_should_be_able_to_observe_parts_attributes() -> None:
     layer = lr.Layer(name="in", size=3)
     assert layer.observe_parts_attr("unit_act") == {
         "unit": [0, 1, 2],
@@ -84,14 +84,19 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
         layer.observe_parts_attr("whales")
 
 
-def test_layer_forcing_should_change_the_unit_activations() -> None:
+def test_layer_clamping_should_change_the_unit_activations() -> None:
     layer = lr.Layer(name="in", size=4)
-    layer.force([0, 1])
+    layer.clamp([0, 1])
     assert list(layer.units.act) == [0, 1, 0, 1]
 
-
-def test_layer_forcing_should_not_change_after_cycles() -> None:
+def test_layer_can_unclamp() -> None:
     layer = lr.Layer(name="in", size=4)
-    layer.force([0, 1])
+    layer.clamp([0, 1])
+    layer.unclamp()
+
+
+def test_layer_clamping_should_not_change_after_cycles() -> None:
+    layer = lr.Layer(name="in", size=4)
+    layer.clamp([0, 1])
     layer.activation_cycle()
     assert list(layer.units.act) == [0, 1, 0, 1]

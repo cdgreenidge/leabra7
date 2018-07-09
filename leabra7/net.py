@@ -75,8 +75,8 @@ class Net:
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
 
-    def force_layer(self, name: str, acts: Iterable[float]) -> None:
-        """Forces the layer's activations.
+    def clamp_layer(self, name: str, acts: Iterable[float]) -> None:
+        """Clamps the layer's activations.
 
         After forcing, the layer's activations will be set to the values
         contained in `acts` and will not change from cycle to cycle.
@@ -84,7 +84,7 @@ class Net:
         Args:
             name: The name of the layer.
             acts: An iterable containing the activations that the layer's
-                units will be forced to. If its length is less than the number
+                units will be clamped to. If its length is less than the number
                 of units in the layer, it will be tiled. If its length is
                 greater, the extra values will be ignored.
 
@@ -92,7 +92,7 @@ class Net:
 
         """
         self._validate_layer_name(name)
-        self.objs[name].force(acts)
+        self.objs[name].clamp(acts)
 
     def new_projn(self,
                   name: str,

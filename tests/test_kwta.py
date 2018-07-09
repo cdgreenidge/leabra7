@@ -22,7 +22,7 @@ def test_kwta_suppresses_all_but_k_units() -> None:
     pr2_spec = sp.ProjnSpec(dist=rn.Scalar(0.5), post_mask=[0, 1, 1])
     n.new_projn("proj2", "lr1", "lr2", pr2_spec)
 
-    n.force_layer("lr1", [1])
+    n.clamp_layer("lr1", [1])
     for i in range(100):
         n.cycle()
 

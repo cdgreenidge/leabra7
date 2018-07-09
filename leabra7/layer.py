@@ -58,8 +58,8 @@ class Layer(log.ObservableMixin):
         self.fbi = 0.0
         # Global inhibition
         self.gc_i = 0.0
-        # Is the layer activation forced?
-        self.forced = False
+        # Is the layer activation clamped?
+        self.clamped = False
 
         # When adding any loggable attribute or property to these lists, update
         # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
@@ -117,7 +117,7 @@ class Layer(log.ObservableMixin):
 
     def update_activation(self) -> None:
         """Updates the activation of the layer's units."""
-        if self.forced:
+        if self.clamped:
             return
         self.units.update_activation()
 
@@ -128,22 +128,26 @@ class Layer(log.ObservableMixin):
         self.update_membrane_potential()
         self.update_activation()
 
-    def force(self, acts: Iterable[float]) -> None:
-        """Forces the layer's activations.
+    def clamp(self, acts: Iterable[float]) -> None:
+        """Clamps the layer's activations.
 
-        After forcing, the layer's activations will be set to the values
+        After clamping, the layer's activations will be set to the values
         contained in `acts` and will not change from cycle to cycle.
 
         Args:
             acts: An iterable containing the activations that the layer's
-                units will be forced to. If its length is less than the number
+                units will be clamped to. If its length is less than the number
                 of units in the layer, it will be tiled. If its length is
                 greater, the extra values will be ignored.
 
         """
-        self.forced = True
+        self.clamped = True
         for i, act in zip(range(self.size), itertools.cycle(acts)):
             self.units.act[i] = act
+
+    def unclamp(self) -> None:
+        """Unclamps units."""
+        self.clamped = False
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr not in self.parts_attrs:
