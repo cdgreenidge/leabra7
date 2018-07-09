@@ -113,16 +113,24 @@ class Projn:
         # presynaptic units
         self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
 
-        # Only create the projection between the units selected by the masks
-        # Currently, only full connections are supported
-        # TODO: Refactor mask expansion and creation into new methods + test
-        tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
-        tiled_post_mask = tile(self.post.size, self.spec.post_mask)
-        mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
+        if self.spec.projn_type == "one_to_one":
+            assert self.post.size == self.pre.size
+            num_nonzero = self.post.size
+            mask = torch.eye(num_nonzero).byte()
 
-        # Enforce sparsity
-        # TODO: Make this a separate method
-        mask, num_nonzero = sparsify(self.spec.sparsity, mask)
+        elif self.spec.projn_type == "none":
+            # Only create the projection between the units
+            # selected by the masks
+            # Currently, only full connections are supported
+            # TODO: Refactor mask expansion and creation into
+            # new methods + test
+            tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
+            tiled_post_mask = tile(self.post.size, self.spec.post_mask)
+            mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
+
+            # Enforce sparsity
+            # TODO: Make this a separate method
+            mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
         rand_nums = torch.Tensor(num_nonzero)

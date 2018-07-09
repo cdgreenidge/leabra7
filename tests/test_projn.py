@@ -1,5 +1,7 @@
 """Test projn.py"""
 import torch
+import pytest
+import math
 
 from leabra7 import layer as lr
 from leabra7 import projn as pr
@@ -40,6 +42,26 @@ def test_projn_can_flush() -> None:
     post = lr.Layer("lr2", size=1)
     projn = pr.Projn("proj", pre, post)
     projn.flush()
+
+
+def test_projn_validate_one_to_one() -> None:
+    pre = lr.Layer("lr1", size=3)
+    post = lr.Layer("lr2", size=3)
+    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
+
+    expected = torch.eye(3)
+
+    for i in range(3):
+        for j in range(3):
+            assert math.isclose(projn.wts[i, j], expected[i, j], abs_tol=1e-6)
+
+
+def test_projn_validate_one_to_one_dimension() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=4)
+    with pytest.raises(AssertionError):
+        projn = pr.Projn(
+            "proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
 
 
 def test_projn_can_mask_pre_layer_units() -> None:
