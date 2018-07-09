@@ -178,9 +178,33 @@ class Layer(log.ObservableMixin):
         self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
-
+        self.units.update_cycle_learning_averages()
         self.input_buffer.zero_()
         self.wt_scale_rel_sum = 0
+
+    def update_trial_learning_averages(self) -> None:
+        """Updates the learning averages computed at the end of each trial."""
+        self.units.update_trial_learning_averages(self.avg_act)
+
+    @property
+    def avg_ss(self) -> torch.Tensor:
+        """The supershort learning average for each unit."""
+        return self.units.avg_ss
+
+    @property
+    def avg_s(self) -> torch.Tensor:
+        """The short learning average for each unit."""
+        return self.units.avg_s
+
+    @property
+    def avg_m(self) -> torch.Tensor:
+        """The medium learning average for each unit."""
+        return self.units.avg_m
+
+    @property
+    def avg_l(self) -> torch.Tensor:
+        """The long learning average for each unit."""
+        return self.units.avg_l
 
     def force(self, acts: Iterable[float]) -> None:
         """Forces the layer's activations.
