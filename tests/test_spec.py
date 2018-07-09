@@ -236,3 +236,14 @@ def test_projn_spec_validates_the_distribution() -> None:
 def test_projn_spec_validates_sparsity(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(sparsity=f).validate()
+
+
+@given(st.text())
+@example("one_to_one")
+@example("none")
+def test_projn_spec_validates_projn_type(f) -> None:
+    if f not in ["one_to_one", "none"]:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(projn_type=f).validate()
+    else:
+        sp.ProjnSpec(projn_type=f).validate()
