@@ -67,8 +67,22 @@ def test_layer_should_be_able_to_update_its_units_net_input(mocker) -> None:
     layer.units.update_net.assert_called_once()
 
 
-def test_layer_should_be_able_to_update_its_units_inhibition() -> None:
-    layer = lr.Layer(name="in", size=3)
+def test_layer_should_be_able_to_update_its_units_fffb_inhibition() -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="fffb")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
+    layer.update_inhibition()
+
+
+def test_layer_should_be_able_to_update_its_units_kwta_inhibition() -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="kwta")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
+    layer.update_inhibition()
+
+
+def test_layer_should_be_able_to_update_its_units_kwta_avg_inhibition(
+) -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="kwta_avg")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
     layer.update_inhibition()
 
 

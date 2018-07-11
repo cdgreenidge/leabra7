@@ -60,6 +60,8 @@ class Layer(log.ObservableMixin):
         self.gc_i = 0.0
         # Is the layer activation forced?
         self.forced = False
+        # Set k units for inhibition
+        self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
@@ -131,17 +133,32 @@ class Layer(log.ObservableMixin):
 
     def calc_kwta_inhibition(self) -> None:
         """Calculates k-winner-take-all inhibition for the layer."""
-        top_m_units = self.units.top_k_net_indices(self.spec.k + 1)
+        if self.k == self.size:
+            self.gc_i = 0
+            return
+        top_m_units = self.units.top_k_net_indices(self.k + 1)
         g_i_thr_m = self.units.g_i_thr(top_m_units[-1])
         g_i_thr_k = self.units.g_i_thr(top_m_units[-2])
-        self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
+        self.gc_i = g_i_thr_m + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_m)
+
+    def calc_kwta_avg_inhibition(self) -> None:
+        """Calculates k-winner-take-all average inhibition for the layer."""
+        if self.k == self.size:
+            self.gc_i = 0
+            return
+        g_i_thr, _ = torch.sort(self.units.group_g_i_thr(), descending=True)
+        g_i_thr_k = torch.mean(g_i_thr[0:self.k])
+        g_i_thr_n_k = torch.mean(g_i_thr[self.k:])
+        self.gc_i = g_i_thr_n_k + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_n_k)
 
     def update_inhibition(self) -> None:
         """Updates the inhibition for the layer's units."""
         if self.spec.inhibition_type == "fffb":
             self.calc_fffb_inhibition()
-        else:
+        elif self.spec.inhibition_type == "kwta":
             self.calc_kwta_inhibition()
+        elif self.spec.inhibition_type == "kwta_avg":
+            self.calc_kwta_avg_inhibition()
 
         self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
 
