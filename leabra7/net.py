@@ -1,22 +1,23 @@
 """A network."""
-from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 
 from leabra7 import layer
 from leabra7 import log
+from leabra7 import program
 from leabra7 import projn
 from leabra7 import specs
 
 
-class Net:
+class Net(program.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
     def __init__(self) -> None:
-        self.objs: Dict[str, Any] = {}
-        self.layers: List[layer.Layer] = []
-        self.projns: List[projn.Projn] = []
+        # Each of the following dicts is keyed by the name of the object
+        self.objs: Dict[str, program.EventListenerMixin] = {}
+        self.layers: Dict[str, layer.Layer] = {}
+        self.projns: Dict[str, projn.Projn] = {}
         self.cycle_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:
@@ -34,11 +35,11 @@ class Net:
         if name not in self.objs:
             raise ValueError("No object found with name {0}".format(name))
 
-    def _validate_layer_name(self, name: str) -> None:
-        """Checks if a name refers to a layer
+    def _get_layer(self, name: str) -> layer.Layer:
+        """Gets a layer by name.
 
         Args:
-            name: The name to check.
+            name: The name of the layer
 
         Raises:
             ValueError: If the name does not refer to a layer.
@@ -46,8 +47,9 @@ class Net:
                 within user-facing methods.
 
         """
-        self._validate_obj_name(name)
-        if not isinstance(self.objs[name], layer.Layer):
+        try:
+            return self.layers[name]
+        except KeyError:
             raise ValueError(
                 "Name {0} does not refer to a layer.".format(name))
 
@@ -68,8 +70,8 @@ class Net:
         if spec is not None:
             spec.validate()
         lr = layer.Layer(name, size, spec)
-        self.layers.append(lr)
-        self.objs[lr.name] = lr
+        self.layers[name] = lr
+        self.objs[name] = lr
 
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
@@ -90,8 +92,7 @@ class Net:
         ValueError: If `name` does not match any existing layer name.
 
         """
-        self._validate_layer_name(name)
-        self.objs[name].force(acts)
+        self._get_layer(name).force(acts)
 
     def new_projn(self,
                   name: str,
@@ -115,24 +116,22 @@ class Net:
         """
         if spec is not None:
             spec.validate()
-        self._validate_layer_name(pre)
-        self._validate_layer_name(post)
 
-        pre_lr = self.objs[pre]
-        post_lr = self.objs[post]
+        pre_lr = self._get_layer(pre)
+        post_lr = self._get_layer(post)
         pr = projn.Projn(name, pre_lr, post_lr, spec)
-        self.projns.append(pr)
-        self.objs[pr.name] = pr
+        self.projns[name] = pr
+        self.objs[name] = pr
 
     def cycle(self) -> None:
         """Cycles the network."""
         for lg in self.cycle_loggers:
             lg.record()
 
-        for lr in self.layers:
+        for _, lr in self.layers.items():
             lr.activation_cycle()
 
-        for pr in self.projns:
+        for _, pr in self.projns.items():
             pr.flush()
 
     def logs(self, freq: str, name: str) -> log.Logs:
@@ -163,3 +162,11 @@ class Net:
                     name, freq))
 
         return logger.to_logs()
+
+    def handle(self, event: program.AtomicEvent) -> None:
+        """Overrides events.EventListnerMixin.handle()"""
+        if isinstance(event, program.Cycle):
+            self.cycle()
+        else:
+            for _, obj in self.objs.items():
+                obj.handle(event)

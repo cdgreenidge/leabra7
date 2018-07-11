@@ -7,6 +7,7 @@ import torch  # type: ignore
 
 from leabra7 import log
 from leabra7 import specs
+from leabra7 import program
 from leabra7 import unit
 
 
@@ -32,7 +33,7 @@ def _parse_unit_attr(attr: str) -> str:
     return parts[1]
 
 
-class Layer(log.ObservableMixin):
+class Layer(log.ObservableMixin, program.EventListenerMixin):
     """A layer of units (neurons).
 
     Args:
@@ -228,3 +229,6 @@ class Layer(log.ObservableMixin):
             raise ValueError("{0} is not a valid parts attr.".format(attr))
         parsed = _parse_unit_attr(attr)
         return self.units.observe(parsed)
+
+    def handle(self, event: program.AtomicEvent) -> None:
+        pass
