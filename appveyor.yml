@@ -11,10 +11,5 @@ install:
 build_script:
   - conda-build .
 
--
-  branches:
-    only:
-      - master
-
-  deploy_script:
-    - ps: .\scripts\deploy_conda.ps1
+deploy_script:
+  - ps: .\scripts\deploy_conda.ps1
