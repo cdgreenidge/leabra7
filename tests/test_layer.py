@@ -1,12 +1,10 @@
 """Test layer.py"""
-import pytest
-import torch
-import math
-
-import numpy as np
-
 from hypothesis import given
 import hypothesis.strategies as st
+import math
+import numpy as np
+import pytest
+import torch  # type: ignore
 
 from leabra7 import layer as lr
 from leabra7 import specs as sp

@@ -4,7 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-import torch
+import torch  # type: ignore
 
 from leabra7 import specs as sp
 from leabra7 import unit as un

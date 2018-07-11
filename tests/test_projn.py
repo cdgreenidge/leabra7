@@ -1,9 +1,7 @@
 """Test projn.py"""
-import torch
-
 from hypothesis import given
-
 import hypothesis.strategies as st
+import torch  # type: ignore
 
 from leabra7 import layer as lr
 from leabra7 import projn as pr
