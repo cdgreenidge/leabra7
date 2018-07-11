@@ -17,7 +17,6 @@ class Net:
         self.objs: Dict[str, Any] = {}
         self.layers: List[layer.Layer] = []
         self.projns: List[projn.Projn] = []
-
         self.cycle_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:

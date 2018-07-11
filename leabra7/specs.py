@@ -216,6 +216,11 @@ class ProjnSpec(Spec):
     post_mask: Iterable[bool] = (True, )
     # Sparsity of the connection (i.e. the percentage of active connections.)
     sparsity: float = 1.0
+    # Absolute net input scaling weight
+    wt_scale_abs: float = 1.0
+    # Relative net input scaling weight (relative to other projections
+    # terminating in the same layer)
+    wt_scale_rel: float = 1.0
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
@@ -223,4 +228,6 @@ class ProjnSpec(Spec):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
         self.assert_in_range("sparsity", low=0.0, high=1.0)
+        self.assert_in_range("wt_scale_abs", 0, float("Inf"))
+        self.assert_in_range("wt_scale_rel", 0, float("Inf"))
         super().validate()
