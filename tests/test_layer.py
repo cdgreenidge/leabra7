@@ -1,7 +1,8 @@
 """Test layer.py"""
+import math
+
 from hypothesis import given
 import hypothesis.strategies as st
-import math
 import numpy as np
 import pytest
 import torch  # type: ignore
