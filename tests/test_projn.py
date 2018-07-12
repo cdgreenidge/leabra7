@@ -1,5 +1,7 @@
 """Test projn.py"""
-import torch
+from hypothesis import given
+import hypothesis.strategies as st
+import torch  # type: ignore
 
 from leabra7 import layer as lr
 from leabra7 import projn as pr
@@ -142,6 +144,63 @@ def test_projn_post_mask_truncates_if_it_is_too_long() -> None:
     projn = pr.Projn("proj", pre, post, spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
+
+
+@given(
+    x=st.integers(min_value=1, max_value=10),
+    y=st.integers(min_value=1, max_value=10),
+    z=st.integers(min_value=1, max_value=10),
+    f=st.floats(min_value=0.0, max_value=1.0))
+def test_projn_can_calculate_netin_scale_with_full_connectivity(x, y, z,
+                                                                f) -> None:
+    pre_a = lr.Layer("lr1", size=x)
+    pre_b = lr.Layer("lr2", size=y)
+    post = lr.Layer("lr3", size=z)
+
+    pre_a.clamp(torch.ones(x) * f)
+    pre_b.clamp(torch.ones(y) * f)
+
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post)
+
+    projn_a_scale = projn_a.netin_scale()
+    projn_b_scale = projn_b.netin_scale()
+
+    if x > y:
+        compare_tensor = projn_a_scale > projn_b_scale
+    elif x < y:
+        compare_tensor = projn_a_scale < projn_b_scale
+    else:
+        compare_tensor = projn_a_scale != projn_b_scale
+
+    assert torch.sum(compare_tensor) == 0
+
+
+@given(
+    x=st.integers(min_value=1, max_value=10),
+    z=st.integers(min_value=1, max_value=10),
+    m=st.integers(min_value=1, max_value=3),
+    n=st.integers(min_value=1, max_value=3),
+    f=st.floats(min_value=0.0, max_value=1.0))
+def test_projn_can_calculate_netin_scale_with_partial_connectivity(
+        x, z, m, n, f) -> None:
+
+    pre_a = lr.Layer("lr1", size=x)
+    pre_b = lr.Layer("lr2", size=x)
+    post = lr.Layer("lr3", size=z)
+
+    spec = sp.ProjnSpec(post_mask=(True, ) * m + (False, ) * n)
+
+    pre_a.clamp(torch.ones(x) * f)
+    pre_b.clamp(torch.ones(x) * f)
+
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post, spec)
+
+    projn_a_scale = projn_a.netin_scale()
+    projn_b_scale = projn_b.netin_scale()
+
+    assert torch.sum(projn_a_scale > projn_b_scale) == 0
 
 
 def test_projns_can_be_sparse() -> None:

@@ -63,6 +63,19 @@ class Layer(log.ObservableMixin):
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
+        # The following two buffers are filled every time self.add_input() is
+        # called, and reset at the end of self.activation_cycle()
+
+        # Net input (excitation) input buffer. For every cycle, we
+        # store the layer inputs here. Once we have all the inputs, we
+        # normalize by wt_scale_rel_sum and send to the unit group.
+        self.input_buffer = torch.Tensor(self.size).zero_()
+
+        # Sum of the wt_scale_rel parameters for each projection terminating in
+        # this layer. We use this to normalize the inputs before propagating to
+        # unit group
+        self.wt_scale_rel_sum = 0.0
+
         # When adding any loggable attribute or property to these lists, update
         # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
@@ -77,15 +90,36 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return torch.mean(self.units.act)
+        return float(torch.mean(self.units.act))
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
 
+    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float) -> None:
+        """Adds an input to the layer.
+
+        Args:
+          inpt: The vector of inputs to add to each unit in the layer. These
+            should NOT be scaled by wt_scale_rel.
+          wt_scale_rel: The wt_scale_rel parameter of the projection sending
+            the inputs.
+
+        """
+        self.input_buffer += inpt * wt_scale_rel
+        self.wt_scale_rel_sum += wt_scale_rel
+
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""
+        # self.wt_scale_rel_sum could be zero if there are no inbound
+        # projections, or if the projections have not been flushed yet
+        if self.wt_scale_rel_sum == 0:
+            assert (self.input_buffer == 0).all()
+        else:
+            self.input_buffer /= self.wt_scale_rel_sum
+
+        self.units.add_input(self.input_buffer)
         self.units.update_net()
 
     def calc_fffb_inhibition(self) -> None:
@@ -145,9 +179,11 @@ class Layer(log.ObservableMixin):
         self.update_membrane_potential()
         self.update_activation()
 
+        self.input_buffer.zero_()
+        self.wt_scale_rel_sum = 0
+
     def clamp(self, acts: Iterable[float]) -> None:
         """Clamps the layer's activations.
-
         After clamping, the layer's activations will be set to the values
         contained in `acts` and will not change from cycle to cycle.
 
