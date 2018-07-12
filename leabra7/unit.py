@@ -6,7 +6,6 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
-from typing import Iterable
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -87,6 +86,12 @@ def nxx1_table() -> Any:
     conv = conv[np.searchsorted(xs, xs_valid[0]):
                 np.searchsorted(xs, xs_valid[-1]) + 1]
     return xs_valid, conv
+
+
+def clip(vals: torch.Tensor, minimum: float, maximum: float) -> torch.Tensor:
+    """Clips values to fit within range."""
+    clipped = torch.max(vals, minimum * torch.ones(vals.shape))
+    return torch.min(clipped, maximum * torch.ones(vals.shape))
 
 
 class Unit:
@@ -413,11 +418,12 @@ class UnitGroup:
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
 
-    def hard_clamp(self, act_ext: Iterable[float] = [0.0]) -> None:
-        self.act_nd = act_ext
-        self.act = act_ext
+    def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
+        act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
+        self.act_nd = act_clip
+        self.act = act_clip
 
-    def soft_clamp(self, act_ext: Iterable[float] = [0.0]) -> None:
+    def soft_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
         # TODO: define this
         pass
 

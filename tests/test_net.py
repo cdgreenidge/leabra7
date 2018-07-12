@@ -1,4 +1,6 @@
 """Test net.py"""
+import math
+
 import pytest
 
 from leabra7 import net
@@ -40,7 +42,10 @@ def test_you_can_clamp_a_layer() -> None:
     n.new_layer("layer1", 4)
     n.clamp_layer("layer1", [0, 1])
     n.cycle()
-    assert list(n.objs["layer1"].units.act) == [0, 1, 0, 1]
+    expected = [0, 1, 0, 1]
+    for i in range(4):
+        assert math.isclose(
+            n.objs["layer1"].units.act[i], expected[i], abs_tol=1e-6)
 
 
 def test_you_can_unclamp_a_layer() -> None:

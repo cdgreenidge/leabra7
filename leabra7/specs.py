@@ -125,7 +125,7 @@ class UnitSpec(Spec):
     syn_tr = 1.0
     # Clamping activation limits
     act_min = 0.0
-    act_max = 0.95
+    act_max = 1.0
     # Clamping potential limits
     vm_min = 0.0
     vm_max = 2.0
