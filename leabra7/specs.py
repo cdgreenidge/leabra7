@@ -239,4 +239,5 @@ class ProjnSpec(Spec):
 
         self.assert_in_range("wt_scale_abs", 0, float("Inf"))
         self.assert_in_range("wt_scale_rel", 0, float("Inf"))
+
         super().validate()
