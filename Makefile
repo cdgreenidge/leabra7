@@ -19,4 +19,4 @@ format:
 	@yapf --parallel --recursive --in-place $(PROJECT) tests
 
 test:
-	@pytest --cov=$(PROJECT)
+	@pytest --cov-report term-missing --cov=$(PROJECT) tests
