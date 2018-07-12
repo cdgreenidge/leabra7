@@ -65,6 +65,9 @@ class Layer(log.ObservableMixin):
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
+        # Desired clamping values
+        self.act_ext = torch.Tensor(self.size).zero_()
+
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
 
@@ -170,47 +173,55 @@ class Layer(log.ObservableMixin):
 
     def update_activation(self) -> None:
         """Updates the activation of the layer's units."""
-        if self.clamped:
-            return
         self.units.update_activation()
 
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
-        self.update_net()
-        self.update_inhibition()
-        self.update_membrane_potential()
-        self.update_activation()
+        if self.clamped:
+            self.update_clamp()
+        else:
+            self.update_net()
+            self.update_inhibition()
+            self.update_membrane_potential()
+            self.update_activation()
 
         self.input_buffer.zero_()
         self.wt_scale_rel_sum = 0
 
-    def clamp(self, acts: Iterable[float]) -> None:
+    def clamp(self, act_ext: Iterable[float], hard: bool = True) -> None:
         """Clamps the layer's activations.
         After clamping, the layer's activations will be set to the values
         contained in `acts` and will not change from cycle to cycle.
 
         Args:
-            acts: An iterable containing the activations that the layer's
+            act_ext: An iterable containing the activations that the layer's
                 units will be clamped to. If its length is less than the number
                 of units in the layer, it will be tiled. If its length is
                 greater, the extra values will be ignored.
 
         """
         self.clamped = True
-        if self.hard:
-            for i, act in zip(range(self.size), itertools.cycle(acts)):
-                self.units.act[i] = act
-        else:
-            # TODO: define soft clamping
-            pass
-
-    def set_clamp(self, hard: bool) -> None:
-        """ Sets clamp to hard or soft. """
         self.hard = hard
+        self.act_ext = torch.Tensor(
+            list(itertools.islice(itertools.cycle(act_ext), self.size)))
+
+        if self.hard:
+            self.units.hard_clamp(self.act_ext)
+        else:
+            self.units.soft_clamp(self.act_ext)
 
     def unclamp(self) -> None:
         """Unclamps units."""
         self.clamped = False
+
+    def update_clamp(self) -> None:
+        """Updates clamping of layer."""
+        if self.hard:
+            # Pointless to update hard clamped
+            # self.units.hard_clamp(self, self.act_ext)
+            pass
+        else:
+            self.units.soft_clamp(self.act_ext)
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr not in self.parts_attrs:

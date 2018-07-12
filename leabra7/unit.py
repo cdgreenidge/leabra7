@@ -6,6 +6,7 @@ Wiki Book, 1st Edition. URL: http://ccnbook.colorado.edu
 
 """
 from typing import Any
+from typing import Iterable
 
 import numpy as np  # type: ignore
 import scipy.interpolate  # type: ignore
@@ -411,6 +412,14 @@ class UnitGroup:
             self.spec.adapt_dt * (self.spec.vm_gain *
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
+
+    def hard_clamp(self, act_ext: Iterable[float] = [0.0]) -> None:
+        self.act_nd = act_ext
+        self.act = act_ext
+
+    def soft_clamp(self, act_ext: Iterable[float] = [0.0]) -> None:
+        # TODO: define this
+        pass
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.

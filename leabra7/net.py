@@ -92,8 +92,7 @@ class Net:
 
         """
         self._validate_layer_name(name)
-        self.objs[name].set_clamp(hard)
-        self.objs[name].clamp(acts)
+        self.objs[name].clamp(acts, hard=hard)
 
     def unclamp_layer(self, name: str) -> None:
         """Unclamps the layer's activations.
