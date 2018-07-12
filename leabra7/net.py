@@ -74,7 +74,8 @@ class Net:
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
 
-    def clamp_layer(self, name: str, acts: Iterable[float]) -> None:
+    def clamp_layer(self, name: str, acts: Iterable[float],
+                    hard: bool = True) -> None:
         """Clamps the layer's activations.
 
         After forcing, the layer's activations will be set to the values
@@ -91,6 +92,7 @@ class Net:
 
         """
         self._validate_layer_name(name)
+        self.objs[name].set_clamp(hard)
         self.objs[name].clamp(acts)
 
     def unclamp_layer(self, name: str) -> None:

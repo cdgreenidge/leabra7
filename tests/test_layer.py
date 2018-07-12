@@ -121,6 +121,19 @@ def test_layer_clamping_should_change_the_unit_activations() -> None:
     assert list(layer.units.act) == [0, 1, 0, 1]
 
 
+def test_layer_set_hard_clamp() -> None:
+    layer = lr.Layer(name="in", size=3)
+    layer.set_clamp(True)
+    layer.clamp([0, 1])
+    assert list(layer.units.act) == [0, 1, 0]
+
+def test_layer_set_soft_clamp() -> None:
+    layer = lr.Layer(name="in", size=3)
+    layer.set_clamp(False)
+    layer.clamp([0, 1])
+    # TODO: define soft clamping
+    # assert list(layer.units.act) == [0, 1, 0]
+
 def test_layer_can_unclamp() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.clamp([0, 1])

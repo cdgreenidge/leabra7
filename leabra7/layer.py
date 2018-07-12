@@ -60,6 +60,8 @@ class Layer(log.ObservableMixin):
         self.gc_i = 0.0
         # Is the layer activation clamped?
         self.clamped = False
+        # Hard or soft clamping
+        self.hard = True
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
@@ -195,8 +197,16 @@ class Layer(log.ObservableMixin):
 
         """
         self.clamped = True
-        for i, act in zip(range(self.size), itertools.cycle(acts)):
-            self.units.act[i] = act
+        if self.hard:
+            for i, act in zip(range(self.size), itertools.cycle(acts)):
+                self.units.act[i] = act
+        else:
+            # TODO: define soft clamping
+            pass
+
+    def set_clamp(self, hard: bool) -> None:
+        """ Sets clamp to hard or soft. """
+        self.hard = hard
 
     def unclamp(self) -> None:
         """Unclamps units."""
