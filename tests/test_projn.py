@@ -44,26 +44,6 @@ def test_projn_can_flush() -> None:
     projn.flush()
 
 
-def test_projn_validate_one_to_one() -> None:
-    pre = lr.Layer("lr1", size=3)
-    post = lr.Layer("lr2", size=3)
-    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
-
-    expected = torch.eye(3)
-
-    for i in range(3):
-        for j in range(3):
-            assert math.isclose(projn.wts[i, j], expected[i, j], abs_tol=1e-6)
-
-
-def test_projn_validate_one_to_one_dimension() -> None:
-    pre = lr.Layer("lr1", size=2)
-    post = lr.Layer("lr2", size=4)
-    with pytest.raises(AssertionError):
-        projn = pr.Projn(
-            "proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
-
-
 def test_projn_can_mask_pre_layer_units() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
@@ -132,6 +112,42 @@ def test_expand_layer_mask_full_has_the_correct_connectivity_pattern() -> None:
     )
     # yapf: enable
     assert (pr.expand_layer_mask_full(pre_mask, post_mask) == expected).all()
+
+
+def test_expand_layer_mask_one_to_one_tests_unit_count() -> None:
+    pre_mask = [True, False, True, True]
+    post_mask = [False, False, True, True]
+
+    with pytest.raises(ValueError):
+        pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+
+
+def test_expand_layer_mask_one_to_one_has_the_correct_connectivity_pattern(
+) -> None:
+    pre_mask = [True, False, False, True]
+    post_mask = [False, True, True, False]
+    # yapf: disable
+    expected = torch.ByteTensor(
+        [[False, True, False, False],
+         [False, False, False, False],
+         [False, False, False, False],
+         [False, False, True, False]]
+    )
+    # yapf: enable
+    assert (pr.expand_layer_mask_one_to_one(pre_mask,
+                                            post_mask) == expected).all()
+
+
+def test_projn_validate_one_to_one() -> None:
+    pre = lr.Layer("lr1", size=3)
+    post = lr.Layer("lr2", size=3)
+    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
+
+    expected = torch.eye(3)
+
+    for i in range(3):
+        for j in range(3):
+            assert math.isclose(projn.wts[i, j], expected[i, j], abs_tol=1e-6)
 
 
 # TODO: turn this into a Hypothesis test
