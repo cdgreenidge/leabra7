@@ -279,6 +279,8 @@ class UnitGroup:
         self.net = torch.Tensor(self.size).zero_()
         # Total (feedback + feedforward) inhibition
         self.gc_i = torch.Tensor(self.size).zero_()
+        # Non depressed activation
+        self.act_nd = torch.Tensor(self.size).zero_()
         # Activation
         self.act = torch.Tensor(self.size).zero_()
         # Net current
@@ -400,8 +402,10 @@ class UnitGroup:
         post_spike = 1 - pre_spike
         act_driver = pre_spike * (self.v_m_eq - self.spec.spk_thr
                                   ) + post_spike * (self.net - g_e_thr)
-        self.act += (self.spec.integ * self.spec.vm_dt *
-                     (self.nxx1(act_driver) - self.act))
+        self.act_nd += (self.spec.integ * self.spec.vm_dt *
+                        (self.nxx1(act_driver) - self.act_nd))
+
+        self.act = self.act_nd * self.spec.syn_tr
 
         self.adapt += self.spec.integ * (
             self.spec.adapt_dt * (self.spec.vm_gain *

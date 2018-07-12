@@ -121,6 +121,16 @@ class UnitSpec(Spec):
     vm_dt = 1 / 3.3
     # Adaption current integration time constant
     adapt_dt = 1 / 144
+    # Short term plasticity
+    syn_tr = 1.0
+    # Clamping activation limits
+    act_min = 0.0
+    act_max = 0.95
+    # Clamping potential limits
+    vm_min = 0.0
+    vm_max = 2.0
+    # Clamping gain
+    act_gain = 100.0
 
     def validate(self) -> None:
         """Extends `Spec.validate`."""
@@ -135,11 +145,33 @@ class UnitSpec(Spec):
         self.assert_in_range("net_dt", 0, float("Inf"))
         self.assert_in_range("vm_dt", 0, float("Inf"))
         self.assert_in_range("adapt_dt", 0, float("Inf"))
+        self.assert_in_range("syn_tr", 0, 1.0)
+        self.assert_in_range("act_min", 0, 1.0)
+        self.assert_in_range("act_max", 0, 1.0)
+        self.assert_sane_float("vm_min")
+        self.assert_sane_float("vm_max")
+        self.assert_in_range("act_gain", 0, float("Inf"))
 
         if self.v_m_r >= self.spk_thr:
             raise ValidationError(
                 "v_m_r ({0}) cannot be >= spk_thr ({1}).".format(
                     self.v_m_r, self.spk_thr))
+
+        if self.act_min >= self.act_max:
+            raise ValidationError(
+                "act_min ({0}) cannot be >= act_max ({1}).".format(
+                    self.act_min, self.act_max))
+
+        if self.vm_min >= self.vm_max:
+            raise ValidationError(
+                "vm_min ({0}) cannot be >= vm_max ({1}).".format(
+                    self.vm_min, self.vm_max))
+
+        if self.vm_min > self.v_m_r or self.vm_max < self.v_m_r:
+            raise ValidationError(
+                """v_m_r ({0}) must be in range from vm_min ({1})
+                to vm_max ({2}).""".format(self.v_m_r, self.vm_min,
+                                           self.vm_max))
 
 
 class LayerSpec(Spec):

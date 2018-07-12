@@ -127,12 +127,14 @@ def test_layer_set_hard_clamp() -> None:
     layer.clamp([0, 1])
     assert list(layer.units.act) == [0, 1, 0]
 
+
 def test_layer_set_soft_clamp() -> None:
     layer = lr.Layer(name="in", size=3)
     layer.set_clamp(False)
     layer.clamp([0, 1])
     # TODO: define soft clamping
     # assert list(layer.units.act) == [0, 1, 0]
+
 
 def test_layer_can_unclamp() -> None:
     layer = lr.Layer(name="in", size=4)
