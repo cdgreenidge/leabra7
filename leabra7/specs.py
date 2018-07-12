@@ -218,6 +218,11 @@ class ProjnSpec(Spec):
     sparsity: float = 1.0
     # Set special type of projection
     projn_type = "none"
+    # Absolute net input scaling weight
+    wt_scale_abs: float = 1.0
+    # Relative net input scaling weight (relative to other projections
+    # terminating in the same layer)
+    wt_scale_rel: float = 1.0
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
@@ -232,4 +237,6 @@ class ProjnSpec(Spec):
                 "Projn type {0} not one of [\"one_to_one\", \"none\"]".format(
                     self.projn_type))
 
+        self.assert_in_range("wt_scale_abs", 0, float("Inf"))
+        self.assert_in_range("wt_scale_rel", 0, float("Inf"))
         super().validate()
