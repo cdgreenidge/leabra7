@@ -32,7 +32,7 @@ sys.path.append(os.path.abspath('..'))
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
-    'sphinx.ext.viewcode']
+    'sphinx.ext.viewcode',]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -187,3 +187,7 @@ epub_copyright = copyright
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+# Autodoc mock imports
+## TODO: figure a better way around torch mock input
+autodoc_mock_imports = ["torch"]
