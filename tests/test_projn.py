@@ -1,6 +1,9 @@
 """Test projn.py"""
+import math
+
 from hypothesis import given
 import hypothesis.strategies as st
+import pytest
 import torch  # type: ignore
 
 from leabra7 import layer as lr
@@ -112,6 +115,39 @@ def test_expand_layer_mask_full_has_the_correct_connectivity_pattern() -> None:
     )
     # yapf: enable
     assert (pr.expand_layer_mask_full(pre_mask, post_mask) == expected).all()
+
+
+def test_expand_layer_mask_one_to_one_tests_unit_count() -> None:
+    pre_mask = [True, False, True, True]
+    post_mask = [False, False, True, True]
+
+    with pytest.raises(ValueError):
+        pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+
+
+def test_expand_layer_mask_one_to_one_has_the_correct_connectivity_pattern(
+) -> None:
+    pre_mask = [True, False, False, True]
+    post_mask = [False, True, True, False]
+    # yapf: disable
+    expected = torch.ByteTensor(
+        [[False, True, False, False],
+         [False, False, False, False],
+         [False, False, False, False],
+         [False, False, True, False]]
+    )
+    # yapf: enable
+    actual = pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+    assert (actual == expected).all()
+
+
+def test_projn_one_to_one_connectivity_pattern_is_correct() -> None:
+    pre = lr.Layer("lr1", size=3)
+    post = lr.Layer("lr2", size=3)
+    projn = pr.Projn(
+        "proj", pre, post,
+        sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
+    assert (projn.wts == torch.eye(3)).all()
 
 
 # TODO: turn this into a Hypothesis test

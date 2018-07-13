@@ -248,6 +248,8 @@ class ProjnSpec(Spec):
     post_mask: Iterable[bool] = (True, )
     # Sparsity of the connection (i.e. the percentage of active connections.)
     sparsity: float = 1.0
+    # Set special type of projection
+    projn_type = "full"
     # Absolute net input scaling weight
     wt_scale_abs: float = 1.0
     # Relative net input scaling weight (relative to other projections
@@ -260,6 +262,14 @@ class ProjnSpec(Spec):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
         self.assert_in_range("sparsity", low=0.0, high=1.0)
+
+        valid_projn_types = ["one_to_one", "full"]
+        if self.projn_type not in valid_projn_types:
+            raise ValidationError(
+                "Projn type {0} not one of [\"one_to_one\", \"full\"]".format(
+                    self.projn_type))
+
         self.assert_in_range("wt_scale_abs", 0, float("Inf"))
         self.assert_in_range("wt_scale_rel", 0, float("Inf"))
+
         super().validate()
