@@ -163,7 +163,7 @@ def test_it_should_validate_ss_dt(f) -> None:
 
 
 @given(float_outside_range(0, float("Inf")))
-def test_it_should_validate_ss_dt(f) -> None:
+def test_it_should_validate_s_dt(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.UnitSpec(s_dt=f).validate()
 
