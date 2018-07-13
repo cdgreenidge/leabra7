@@ -80,7 +80,8 @@ def expand_layer_mask_one_to_one(pre_mask: List[bool],
             Post_mask units: {1}.""".format(sum(pre_mask), sum(post_mask)))
 
     mask = torch.zeros(len(pre_mask), len(post_mask)).byte()
-    i = j = 0
+    i = 0
+    j = 0
     while i < len(pre_mask):
         if pre_mask[i]:
             if post_mask[j]:
@@ -162,8 +163,7 @@ class Projn:
         if self.spec.projn_type == "one_to_one":
             mask = expand_layer_mask_one_to_one(tiled_pre_mask,
                                                 tiled_post_mask)
-
-        elif self.spec.projn_type == "none":
+        elif self.spec.projn_type == "full":
             mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
         # Enforce sparsity

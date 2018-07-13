@@ -47,18 +47,6 @@ def test_projn_can_flush() -> None:
     projn.flush()
 
 
-def test_projn_validate_one_to_one() -> None:
-    pre = lr.Layer("lr1", size=3)
-    post = lr.Layer("lr2", size=3)
-    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
-
-    expected = torch.eye(3)
-
-    for i in range(3):
-        for j in range(3):
-            assert math.isclose(projn.wts[i, j], expected[i, j], abs_tol=1e-6)
-
-
 def test_projn_can_mask_pre_layer_units() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
@@ -149,20 +137,17 @@ def test_expand_layer_mask_one_to_one_has_the_correct_connectivity_pattern(
          [False, False, True, False]]
     )
     # yapf: enable
-    assert (pr.expand_layer_mask_one_to_one(pre_mask,
-                                            post_mask) == expected).all()
+    actual = pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+    assert (actual == expected).all()
 
 
-def test_projn_validate_one_to_one() -> None:
+def test_projn_one_to_one_connectivity_pattern_is_correct() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
-    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(projn_type="one_to_one"))
-
-    expected = torch.eye(3)
-
-    for i in range(3):
-        for j in range(3):
-            assert math.isclose(projn.wts[i, j], expected[i, j], abs_tol=1e-6)
+    projn = pr.Projn(
+        "proj", pre, post,
+        sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
+    assert (projn.wts == torch.eye(3)).all()
 
 
 # TODO: turn this into a Hypothesis test

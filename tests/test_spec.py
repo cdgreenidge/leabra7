@@ -251,7 +251,7 @@ def test_projn_spec_validates_sparsity(f) -> None:
 @example("one_to_one")
 @example("none")
 def test_projn_spec_validates_projn_type(f) -> None:
-    if f not in ["one_to_one", "none"]:
+    if f not in ["one_to_one", "full"]:
         with pytest.raises(sp.ValidationError):
             sp.ProjnSpec(projn_type=f).validate()
     else:
