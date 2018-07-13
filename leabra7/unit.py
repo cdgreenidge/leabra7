@@ -423,6 +423,14 @@ class UnitGroup:
         self.act_nd = act_clip
         self.act = act_clip
 
+        for i in range(self.size):
+            if -1e-6 < act_clip[i] < 1e-6:
+                self.v_m[i] = self.spec.e_rev_l
+            else:
+                self.v_m[i] = (
+                    self.spec.spk_thr + act_clip[i] / self.spec.act_gain)
+        # TODO: there might be more here
+
     def soft_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
         # TODO: define this
         pass
