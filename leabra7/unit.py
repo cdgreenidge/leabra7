@@ -419,6 +419,7 @@ class UnitGroup:
             + self.spike * self.spec.spike_gain)
 
     def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
+        """Implementation of hard clamping at unit level."""
         act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
         self.act_nd = act_clip
         self.act = act_clip
@@ -432,6 +433,7 @@ class UnitGroup:
         # TODO: there might be more here
 
     def soft_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
+        """Implementation of soft clamping at unit level."""
         # TODO: define this
         pass
 
