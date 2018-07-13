@@ -7,7 +7,7 @@ source:
 
 requirements:
   host:
-    - python
+    - python=3.6.*
 
   run:
     - python
