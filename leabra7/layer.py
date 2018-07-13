@@ -7,6 +7,7 @@ import torch  # type: ignore
 
 from leabra7 import log
 from leabra7 import specs
+from leabra7 import program
 from leabra7 import unit
 
 
@@ -32,7 +33,7 @@ def _parse_unit_attr(attr: str) -> str:
     return parts[1]
 
 
-class Layer(log.ObservableMixin):
+class Layer(log.ObservableMixin, program.EventListenerMixin):
     """A layer of units (neurons).
 
     Args:
@@ -97,7 +98,7 @@ class Layer(log.ObservableMixin):
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
 
-    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float) -> None:
+    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float = 1.0) -> None:
         """Adds an input to the layer.
 
         Args:
@@ -178,9 +179,33 @@ class Layer(log.ObservableMixin):
         self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
-
+        self.units.update_cycle_learning_averages()
         self.input_buffer.zero_()
         self.wt_scale_rel_sum = 0
+
+    def update_trial_learning_averages(self) -> None:
+        """Updates the learning averages computed at the end of each trial."""
+        self.units.update_trial_learning_averages(self.avg_act)
+
+    @property
+    def avg_ss(self) -> torch.Tensor:
+        """The supershort learning average for each unit."""
+        return self.units.avg_ss
+
+    @property
+    def avg_s(self) -> torch.Tensor:
+        """The short learning average for each unit."""
+        return self.units.avg_s
+
+    @property
+    def avg_m(self) -> torch.Tensor:
+        """The medium learning average for each unit."""
+        return self.units.avg_m
+
+    @property
+    def avg_l(self) -> torch.Tensor:
+        """The long learning average for each unit."""
+        return self.units.avg_l
 
     def force(self, acts: Iterable[float]) -> None:
         """Forces the layer's activations.
@@ -204,3 +229,8 @@ class Layer(log.ObservableMixin):
             raise ValueError("{0} is not a valid parts attr.".format(attr))
         parsed = _parse_unit_attr(attr)
         return self.units.observe(parsed)
+
+    def handle(self, event: program.AtomicEvent) -> None:
+        if isinstance(event, program.HardClamp):
+            if event.layer_name == self.name:
+                self.force(event.acts)
