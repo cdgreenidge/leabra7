@@ -102,7 +102,7 @@ def test_layer_should_be_able_to_observe_whole_attributes() -> None:
     assert layer.observe_whole_attr("avg_act") == ("avg_act", 0.0)
 
 
-def test_layer_shuld_be_able_to_observe_parts_attributes() -> None:
+def test_layer_should_be_able_to_observe_parts_attributes() -> None:
     layer = lr.Layer(name="in", size=3)
     assert layer.observe_parts_attr("unit_act") == {
         "unit": [0, 1, 2],
@@ -114,6 +114,19 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
     layer = lr.Layer(name="in", size=3)
     with pytest.raises(ValueError):
         layer.observe_parts_attr("whales")
+
+
+# TODO: Better test
+def test_layer_can_update_learning_averages() -> None:
+    layer = lr.Layer(name="layer1", size=3)
+    layer.force([1.0])
+    layer.activation_cycle()
+    layer.update_trial_learning_averages()
+
+    assert (layer.avg_ss != torch.zeros(3)).all()
+    assert (layer.avg_s != torch.zeros(3)).all()
+    assert (layer.avg_m != torch.zeros(3)).all()
+    assert (layer.avg_l != torch.zeros(3)).all()
 
 
 def test_layer_forcing_should_change_the_unit_activations() -> None:

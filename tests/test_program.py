@@ -1,4 +1,6 @@
 """Tests program.py"""
+from hypothesis import given
+import hypothesis.strategies as st
 import pytest
 
 from leabra7 import program as pr
@@ -44,6 +46,12 @@ def test_nodes_can_stream_their_atomic_event_children() -> None:
             children=(pr.BeginPlusPhase(name="D"), pr.Cycle(name="E"))),
                   pr.Node(name="C", children=(pr.EndPlusPhase(name="F"), ))))
     assert list(u.name for u in root.atomic_stream()) == ["D", "E", "F"]
+
+
+@given(n=st.integers(max_value=0))
+def test_loop_checks_num_iter(n) -> None:
+    with pytest.raises(ValueError):
+        loop = pr.Loop(num_iter=n)
 
 
 def test_the_loop_node_loops_its_children() -> None:

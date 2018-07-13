@@ -98,7 +98,7 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
 
-    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float) -> None:
+    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float = 1.0) -> None:
         """Adds an input to the layer.
 
         Args:
