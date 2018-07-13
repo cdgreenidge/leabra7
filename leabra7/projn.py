@@ -53,6 +53,48 @@ def expand_layer_mask_full(pre_mask: List[bool],
     return torch.ger(torch.ByteTensor(post_mask), torch.ByteTensor(pre_mask))
 
 
+def expand_layer_mask_one_to_one(pre_mask: List[bool],
+                                 post_mask: List[bool]) -> torch.ByteTensor:
+    """
+    Expands layer masks into a weight matrix mask
+    with one-to-one connectivity.
+
+    Args:
+        pre_mask: The mask for the pre layer specifying which pre layer
+            units are included in the projection. Note that this mask will not
+            be tiled, so it has as many elements as pre layer units.
+
+        post_mask: The mask for the post layer specifying which post layer
+            units are included in the projection. Has as many elements as post
+            layer units.
+
+    Returns:
+        A mask for the one-to-one projection weight matrix indicating
+        which elements of the matrix correspond to active connections
+        in the full connectivity pattern.
+
+    """
+    if sum(pre_mask) != sum(post_mask):
+        raise ValueError(
+            """Mismatched one-to-one projection. Pre_mask units: {0}.
+            Post_mask units: {1}.""".format(sum(pre_mask), sum(post_mask)))
+
+    mask = torch.zeros(len(pre_mask), len(post_mask)).byte()
+    i = 0
+    j = 0
+    while i < len(pre_mask):
+        if pre_mask[i]:
+            if post_mask[j]:
+                mask[i, j] = 1
+                i += 1
+                j += 1
+            else:
+                j += 1
+        else:
+            i += 1
+    return mask
+
+
 def sparsify(sparsity: float,
              tensor: torch.ByteTensor) -> Tuple[torch.ByteTensor, int]:
     """
@@ -117,7 +159,12 @@ class Projn:
         # Currently, only full connections are supported
         tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
         tiled_post_mask = tile(self.post.size, self.spec.post_mask)
-        mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
+
+        if self.spec.projn_type == "one_to_one":
+            mask = expand_layer_mask_one_to_one(tiled_pre_mask,
+                                                tiled_post_mask)
+        elif self.spec.projn_type == "full":
+            mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
         # Enforce sparsity
         mask, num_nonzero = sparsify(self.spec.sparsity, mask)
