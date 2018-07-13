@@ -1,6 +1,7 @@
 """Test net.py"""
 import pytest
 
+from leabra7 import program
 from leabra7 import net
 from leabra7 import specs
 
@@ -107,3 +108,25 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n.new_layer("layer1", 3, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
     n.cycle()
     assert "avg_act" in n.logs("cycle", "layer1").whole.columns
+
+
+def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "cycle")
+    n.handle(program.Cycle())
+    assert n.cycle.call_count == 1
+
+
+def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
+    n = net.Net()
+    n.new_layer("layer1", 3)
+    n.new_layer("layer2", 3)
+    n.new_projn("projn1", "layer1", "layer2")
+
+    for _, obj in n.objs.items():
+        mocker.spy(obj, "handle")
+
+    n.handle(program.BeginPlusPhase)
+
+    for _, obj in n.objs.items():
+        assert obj.handle.call_count == 1
