@@ -53,6 +53,48 @@ def expand_layer_mask_full(pre_mask: List[bool],
     return torch.ger(torch.ByteTensor(post_mask), torch.ByteTensor(pre_mask))
 
 
+def expand_layer_mask_one_to_one(pre_mask: List[bool],
+                                 post_mask: List[bool]) -> torch.ByteTensor:
+    """
+    Expands layer masks into a weight matrix mask
+    with one-to-one connectivity.
+
+    Args:
+        pre_mask: The mask for the pre layer specifying which pre layer
+            units are included in the projection. Note that this mask will not
+            be tiled, so it has as many elements as pre layer units.
+
+        post_mask: The mask for the post layer specifying which post layer
+            units are included in the projection. Has as many elements as post
+            layer units.
+
+    Returns:
+        A mask for the one-to-one projection weight matrix indicating
+        which elements of the matrix correspond to active connections
+        in the full connectivity pattern.
+
+    """
+    if sum(pre_mask) != sum(post_mask):
+        raise ValueError(
+            """Mismatched one-to-one projection. Pre_mask units: {0}.
+            Post_mask units: {1}.""".format(sum(pre_mask), sum(post_mask)))
+
+    mask = torch.zeros(len(pre_mask), len(post_mask)).byte()
+    i = 0
+    j = 0
+    while i < len(pre_mask):
+        if pre_mask[i]:
+            if post_mask[j]:
+                mask[i, j] = 1
+                i += 1
+                j += 1
+            else:
+                j += 1
+        else:
+            i += 1
+    return mask
+
+
 def sparsify(sparsity: float,
              tensor: torch.ByteTensor) -> Tuple[torch.ByteTensor, int]:
     """
@@ -115,19 +157,52 @@ class Projn:
 
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
-        # TODO: Refactor mask expansion and creation into new methods + test
         tiled_pre_mask = tile(self.pre.size, self.spec.pre_mask)
         tiled_post_mask = tile(self.post.size, self.spec.post_mask)
-        mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
+
+        if self.spec.projn_type == "one_to_one":
+            mask = expand_layer_mask_one_to_one(tiled_pre_mask,
+                                                tiled_post_mask)
+        elif self.spec.projn_type == "full":
+            mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
         # Enforce sparsity
-        # TODO: Make this a separate method
         mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
         rand_nums = torch.Tensor(num_nonzero)
         self.spec.dist.fill(rand_nums)
         self.wts[mask] = rand_nums
+
+        # Record the number of incoming connections for each unit
+        self.num_recv_conns = torch.sum(mask, dim=1).float()
+
+    def netin_scale(self) -> torch.Tensor:
+        """Computes the net input scaling factor for each receiving unit.
+
+        See https://grey.colorado.edu/emergent/index.php/Leabra_Netin_Scaling
+        for details.
+
+        Returns:
+          A tensor of size self.post.size containing in each element the netin
+          scaling factor for that unit.
+
+        """
+        sem_extra = 2.0
+
+        pre_act_avg = self.pre.avg_act
+        pre_act_n = max(1, round(pre_act_avg * self.pre.units.size))
+        post_act_n_avg = torch.max(
+            torch.Tensor([1]), (pre_act_avg * self.num_recv_conns).round())
+        post_act_n_max = torch.min(self.num_recv_conns,
+                                   torch.Tensor([pre_act_n]))
+        post_act_n_exp = torch.min(post_act_n_max, post_act_n_avg + sem_extra)
+
+        scaling_factors = 1.0 / post_act_n_exp
+        full_connectivity = pre_act_n == post_act_n_avg
+        scaling_factors[full_connectivity] = 1.0 / pre_act_n
+
+        return scaling_factors
 
     def flush(self) -> None:
         """Propagates sending layer activation to the recieving layer.
@@ -136,6 +211,7 @@ class Projn:
         layer makes it easier to compute the net input scaling factor.
 
         """
-        scale_eff = 1.0
-        # TODO: stop violating law of Demeter here
-        self.post.units.add_input(scale_eff * self.wts @ self.pre.units.act)
+        wt_scale_act = self.netin_scale()
+        self.post.add_input(
+            self.spec.wt_scale_abs * wt_scale_act *
+            (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)

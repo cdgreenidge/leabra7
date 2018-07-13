@@ -302,11 +302,23 @@ class UnitGroup:
             unit_idx: The index of the unit.
 
         Returns:
-            The inhibbition that will place the unit denoted by
+            The inhibition that will place the unit denoted by
             unit_idx at its spike threshold.
 
         """
         return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net[unit_idx] +
+                 (self.spec.e_rev_l - self.spec.spk_thr) * self.spec.gc_l) /
+                (self.spec.spk_thr - self.spec.e_rev_i))
+
+    def group_g_i_thr(self) -> torch.Tensor:
+        """The inhibition that will place each unit at its spike threshold.
+
+        Returns:
+            The inhibition that will place each unit denoted by
+            unit_idx at its spike threshold.
+
+        """
+        return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net +
                  (self.spec.e_rev_l - self.spec.spk_thr) * self.spec.gc_l) /
                 (self.spec.spk_thr - self.spec.e_rev_i))
 

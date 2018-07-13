@@ -147,8 +147,10 @@ class LayerSpec(Spec):
     # Can be either "fffb" for feedforward-feedback inhibition, or
     # "kwta" for k-winner-take-all inhibition
     inhibition_type = "fffb"
-    # Number of winners for k-winner-take-all inhibition
-    k = 1
+    # Proportion of winners for k-winner-take-all inhibition
+    kwta_pct = 0.1
+    # Proportion of kWTA step (scalar for update step size)
+    kwta_pt = 0.5
     # Feedforward inhibition multiplier
     ff = 1.0
     # Feedforward inhibition offset
@@ -179,14 +181,14 @@ class LayerSpec(Spec):
         """Extends `Spec.validate`."""
         super().validate()
 
-        valid_inhibition_types = ["fffb", "kwta"]
+        valid_inhibition_types = ["fffb", "kwta", "kwta_avg", "none"]
         if self.inhibition_type not in valid_inhibition_types:
-            raise ValidationError("Inhibition type {0} not one of [\"fffb\", "
-                                  "\"kwta\"]".format(self.inhibition_type))
+            raise ValidationError(
+                "Inhibition type {0} not one of [\"fffb\", \"kwta\", \
+                \"kwta_avg\", \"none\"]".format(self.inhibition_type))
 
-        if self.k < 1:
-            raise ValidationError("k must be >= 1.")
-
+        self.assert_in_range("kwta_pct", 0.0, 1.0)
+        self.assert_in_range("kwta_pt", 0.0, 1.0)
         self.assert_sane_float("ff")
         self.assert_sane_float("fb")
         self.assert_in_range("fb_dt", 0, float("Inf"))
@@ -214,6 +216,13 @@ class ProjnSpec(Spec):
     post_mask: Iterable[bool] = (True, )
     # Sparsity of the connection (i.e. the percentage of active connections.)
     sparsity: float = 1.0
+    # Set special type of projection
+    projn_type = "full"
+    # Absolute net input scaling weight
+    wt_scale_abs: float = 1.0
+    # Relative net input scaling weight (relative to other projections
+    # terminating in the same layer)
+    wt_scale_rel: float = 1.0
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
@@ -221,4 +230,14 @@ class ProjnSpec(Spec):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
         self.assert_in_range("sparsity", low=0.0, high=1.0)
+
+        valid_projn_types = ["one_to_one", "full"]
+        if self.projn_type not in valid_projn_types:
+            raise ValidationError(
+                "Projn type {0} not one of [\"one_to_one\", \"full\"]".format(
+                    self.projn_type))
+
+        self.assert_in_range("wt_scale_abs", 0, float("Inf"))
+        self.assert_in_range("wt_scale_rel", 0, float("Inf"))
+
         super().validate()

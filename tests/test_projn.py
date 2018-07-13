@@ -1,5 +1,10 @@
 """Test projn.py"""
-import torch
+import math
+
+from hypothesis import given
+import hypothesis.strategies as st
+import pytest
+import torch  # type: ignore
 
 from leabra7 import layer as lr
 from leabra7 import projn as pr
@@ -112,6 +117,39 @@ def test_expand_layer_mask_full_has_the_correct_connectivity_pattern() -> None:
     assert (pr.expand_layer_mask_full(pre_mask, post_mask) == expected).all()
 
 
+def test_expand_layer_mask_one_to_one_tests_unit_count() -> None:
+    pre_mask = [True, False, True, True]
+    post_mask = [False, False, True, True]
+
+    with pytest.raises(ValueError):
+        pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+
+
+def test_expand_layer_mask_one_to_one_has_the_correct_connectivity_pattern(
+) -> None:
+    pre_mask = [True, False, False, True]
+    post_mask = [False, True, True, False]
+    # yapf: disable
+    expected = torch.ByteTensor(
+        [[False, True, False, False],
+         [False, False, False, False],
+         [False, False, False, False],
+         [False, False, True, False]]
+    )
+    # yapf: enable
+    actual = pr.expand_layer_mask_one_to_one(pre_mask, post_mask)
+    assert (actual == expected).all()
+
+
+def test_projn_one_to_one_connectivity_pattern_is_correct() -> None:
+    pre = lr.Layer("lr1", size=3)
+    post = lr.Layer("lr2", size=3)
+    projn = pr.Projn(
+        "proj", pre, post,
+        sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
+    assert (projn.wts == torch.eye(3)).all()
+
+
 # TODO: turn this into a Hypothesis test
 def test_sparsify_can_make_a_matrix_sparse() -> None:
     original = torch.ByteTensor([0, 1, 1, 0, 0, 0, 1, 0, 1])
@@ -142,6 +180,63 @@ def test_projn_post_mask_truncates_if_it_is_too_long() -> None:
     projn = pr.Projn("proj", pre, post, spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
+
+
+@given(
+    x=st.integers(min_value=1, max_value=10),
+    y=st.integers(min_value=1, max_value=10),
+    z=st.integers(min_value=1, max_value=10),
+    f=st.floats(min_value=0.0, max_value=1.0))
+def test_projn_can_calculate_netin_scale_with_full_connectivity(x, y, z,
+                                                                f) -> None:
+    pre_a = lr.Layer("lr1", size=x)
+    pre_b = lr.Layer("lr2", size=y)
+    post = lr.Layer("lr3", size=z)
+
+    pre_a.force(torch.ones(x) * f)
+    pre_b.force(torch.ones(y) * f)
+
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post)
+
+    projn_a_scale = projn_a.netin_scale()
+    projn_b_scale = projn_b.netin_scale()
+
+    if x > y:
+        compare_tensor = projn_a_scale > projn_b_scale
+    elif x < y:
+        compare_tensor = projn_a_scale < projn_b_scale
+    else:
+        compare_tensor = projn_a_scale != projn_b_scale
+
+    assert torch.sum(compare_tensor) == 0
+
+
+@given(
+    x=st.integers(min_value=1, max_value=10),
+    z=st.integers(min_value=1, max_value=10),
+    m=st.integers(min_value=1, max_value=3),
+    n=st.integers(min_value=1, max_value=3),
+    f=st.floats(min_value=0.0, max_value=1.0))
+def test_projn_can_calculate_netin_scale_with_partial_connectivity(
+        x, z, m, n, f) -> None:
+
+    pre_a = lr.Layer("lr1", size=x)
+    pre_b = lr.Layer("lr2", size=x)
+    post = lr.Layer("lr3", size=z)
+
+    spec = sp.ProjnSpec(post_mask=(True, ) * m + (False, ) * n)
+
+    pre_a.force(torch.ones(x) * f)
+    pre_b.force(torch.ones(x) * f)
+
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post, spec)
+
+    projn_a_scale = projn_a.netin_scale()
+    projn_b_scale = projn_b.netin_scale()
+
+    assert torch.sum(projn_a_scale > projn_b_scale) == 0
 
 
 def test_projns_can_be_sparse() -> None:

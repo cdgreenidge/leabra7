@@ -159,18 +159,27 @@ def test_it_should_validate_adapt_dt(f) -> None:
 # Test LayerSpec validation
 @given(st.text())
 @example("kwta")
+@example("kwta_avg")
 @example("fffb")
+@example("none")
 def test_layer_spec_validates_inhibition_type(f) -> None:
-    if f not in ["kwta", "fffb"]:
+    if f not in ["kwta", "kwta_avg", "fffb", "none"]:
         with pytest.raises(sp.ValidationError):
             sp.LayerSpec(inhibition_type=f).validate()
+    else:
+        sp.LayerSpec(inhibition_type=f).validate()
 
 
-@given(st.integers())
-def test_layer_spec_validates_k(f) -> None:
-    if f < 1:
-        with pytest.raises(sp.ValidationError):
-            sp.LayerSpec(inhibition_type="kwta", k=f).validate()
+@given(float_outside_range(0, 1.0))
+def test_layer_spec_validates_kwta_pct(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(kwta_pct=f).validate()
+
+
+@given(float_outside_range(0, 1.0))
+def test_layer_spec_validates_kwta_pt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(kwta_pt=f).validate()
 
 
 @given(float_outside_range(0, float("Inf")))
@@ -236,3 +245,26 @@ def test_projn_spec_validates_the_distribution() -> None:
 def test_projn_spec_validates_sparsity(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(sparsity=f).validate()
+
+
+@given(st.text())
+@example("one_to_one")
+@example("none")
+def test_projn_spec_validates_projn_type(f) -> None:
+    if f not in ["one_to_one", "full"]:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(projn_type=f).validate()
+    else:
+        sp.ProjnSpec(projn_type=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_wt_scale_abs(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(wt_scale_abs=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_wt_scale_rel(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(wt_scale_rel=f).validate()

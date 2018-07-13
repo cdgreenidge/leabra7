@@ -60,6 +60,21 @@ class Layer(log.ObservableMixin):
         self.gc_i = 0.0
         # Is the layer activation forced?
         self.forced = False
+        # Set k units for inhibition
+        self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
+
+        # The following two buffers are filled every time self.add_input() is
+        # called, and reset at the end of self.activation_cycle()
+
+        # Net input (excitation) input buffer. For every cycle, we
+        # store the layer inputs here. Once we have all the inputs, we
+        # normalize by wt_scale_rel_sum and send to the unit group.
+        self.input_buffer = torch.Tensor(self.size).zero_()
+
+        # Sum of the wt_scale_rel parameters for each projection terminating in
+        # this layer. We use this to normalize the inputs before propagating to
+        # unit group
+        self.wt_scale_rel_sum = 0.0
 
         # When adding any loggable attribute or property to these lists, update
         # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
@@ -75,15 +90,36 @@ class Layer(log.ObservableMixin):
     @property
     def avg_act(self) -> float:
         """Returns the average activation of the layer's units."""
-        return torch.mean(self.units.act)
+        return float(torch.mean(self.units.act))
 
     @property
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
 
+    def add_input(self, inpt: torch.Tensor, wt_scale_rel: float) -> None:
+        """Adds an input to the layer.
+
+        Args:
+          inpt: The vector of inputs to add to each unit in the layer. These
+            should NOT be scaled by wt_scale_rel.
+          wt_scale_rel: The wt_scale_rel parameter of the projection sending
+            the inputs.
+
+        """
+        self.input_buffer += inpt * wt_scale_rel
+        self.wt_scale_rel_sum += wt_scale_rel
+
     def update_net(self) -> None:
         """Updates the net input of the layer's units."""
+        # self.wt_scale_rel_sum could be zero if there are no inbound
+        # projections, or if the projections have not been flushed yet
+        if self.wt_scale_rel_sum == 0:
+            assert (self.input_buffer == 0).all()
+        else:
+            self.input_buffer /= self.wt_scale_rel_sum
+
+        self.units.add_input(self.input_buffer)
         self.units.update_net()
 
     def calc_fffb_inhibition(self) -> None:
@@ -97,17 +133,32 @@ class Layer(log.ObservableMixin):
 
     def calc_kwta_inhibition(self) -> None:
         """Calculates k-winner-take-all inhibition for the layer."""
-        top_m_units = self.units.top_k_net_indices(self.spec.k + 1)
+        if self.k == self.size:
+            self.gc_i = 0
+            return
+        top_m_units = self.units.top_k_net_indices(self.k + 1)
         g_i_thr_m = self.units.g_i_thr(top_m_units[-1])
         g_i_thr_k = self.units.g_i_thr(top_m_units[-2])
-        self.gc_i = g_i_thr_m + 0.5 * (g_i_thr_k - g_i_thr_m)
+        self.gc_i = g_i_thr_m + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_m)
+
+    def calc_kwta_avg_inhibition(self) -> None:
+        """Calculates k-winner-take-all average inhibition for the layer."""
+        if self.k == self.size:
+            self.gc_i = 0
+            return
+        g_i_thr, _ = torch.sort(self.units.group_g_i_thr(), descending=True)
+        g_i_thr_k = torch.mean(g_i_thr[0:self.k])
+        g_i_thr_n_k = torch.mean(g_i_thr[self.k:])
+        self.gc_i = g_i_thr_n_k + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_n_k)
 
     def update_inhibition(self) -> None:
         """Updates the inhibition for the layer's units."""
         if self.spec.inhibition_type == "fffb":
             self.calc_fffb_inhibition()
-        else:
+        elif self.spec.inhibition_type == "kwta":
             self.calc_kwta_inhibition()
+        elif self.spec.inhibition_type == "kwta_avg":
+            self.calc_kwta_avg_inhibition()
 
         self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
 
@@ -127,6 +178,9 @@ class Layer(log.ObservableMixin):
         self.update_inhibition()
         self.update_membrane_potential()
         self.update_activation()
+
+        self.input_buffer.zero_()
+        self.wt_scale_rel_sum = 0
 
     def force(self, acts: Iterable[float]) -> None:
         """Forces the layer's activations.

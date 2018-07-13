@@ -1,13 +1,13 @@
 package:
   name: leabra7
-  version: 0.0.6
+  version: 0.0.10
 
 source:
   path: ..
 
 requirements:
   host:
-    - python
+    - python=3.6.*
 
   run:
     - python

@@ -4,7 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-import torch
+import torch  # type: ignore
 
 from leabra7 import specs as sp
 from leabra7 import unit as un
@@ -168,6 +168,19 @@ def test_unitgroup_can_calculate_the_threshold_inhibition() -> None:
         group.update_membrane_potential()
 
     assert (torch.abs(group.v_m - group.spec.spk_thr) < 1e-6)[2]
+
+
+def test_unitgroup_can_calculate_each_units_threshold_inhibition() -> None:
+    group = un.UnitGroup(size=10)
+    group.add_input(torch.Tensor(np.linspace(0.3, 0.8, 10)))
+    group.update_net()
+    g_i_thr = group.group_g_i_thr()
+    group.update_inhibition(g_i_thr)
+
+    for i in range(200):
+        group.update_membrane_potential()
+
+    assert torch.sum(torch.abs(group.v_m - group.spec.spk_thr) > 1e-6) == 0
 
 
 def test_unitgroup_uses_the_default_spec_if_none_is_provided() -> None:

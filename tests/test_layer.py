@@ -1,9 +1,14 @@
 """Test layer.py"""
+import math
+
+from hypothesis import given
+import hypothesis.strategies as st
+import numpy as np
 import pytest
+import torch  # type: ignore
 
 from leabra7 import layer as lr
 from leabra7 import specs as sp
-from leabra7 import unit as un
 
 
 def test_parse_unit_attribute_strips_the_unit_prefix() -> None:
@@ -43,6 +48,18 @@ def test_layer_should_be_able_to_compute_its_average_net_input() -> None:
     assert layer.avg_net == 0.5
 
 
+@given(
+    n=st.integers(min_value=0, max_value=10),
+    d=st.integers(min_value=1, max_value=10))
+def test_layer_can_add_input(n, d) -> None:
+    layer = lr.Layer(name="in", size=d)
+    wt_scales = np.random.uniform(low=0.0, size=(n, ))
+    for i in range(n):
+        layer.add_input(torch.Tensor((d)), wt_scales[i])
+        assert math.isclose(
+            layer.wt_scale_rel_sum, sum(wt_scales[0:i + 1]), abs_tol=1e-6)
+
+
 def test_layer_should_be_able_to_update_its_units_net_input(mocker) -> None:
     layer = lr.Layer(name="in", size=3)
     layer.units = mocker.Mock()
@@ -50,8 +67,22 @@ def test_layer_should_be_able_to_update_its_units_net_input(mocker) -> None:
     layer.units.update_net.assert_called_once()
 
 
-def test_layer_should_be_able_to_update_its_units_inhibition() -> None:
-    layer = lr.Layer(name="in", size=3)
+def test_layer_should_be_able_to_update_its_units_fffb_inhibition() -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="fffb")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
+    layer.update_inhibition()
+
+
+def test_layer_should_be_able_to_update_its_units_kwta_inhibition() -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="kwta")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
+    layer.update_inhibition()
+
+
+def test_layer_should_be_able_to_update_its_units_kwta_avg_inhibition(
+) -> None:
+    layer_spec = sp.LayerSpec(inhibition_type="kwta_avg")
+    layer = lr.Layer(name="in", size=3, spec=layer_spec)
     layer.update_inhibition()
 
 
