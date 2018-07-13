@@ -46,6 +46,12 @@ def test_nodes_can_stream_their_atomic_event_children() -> None:
     assert list(u.name for u in root.atomic_stream()) == ["D", "E", "F"]
 
 
+def test_the_loop_node_loops_its_children() -> None:
+    a = pr.Node()
+    b = pr.Node()
+    assert list(pr.Loop((a, b), num_iter=2).children) == [a, b, a, b]
+
+
 def test_atomic_events_raise_valueerror_if_they_are_assigned_children(
 ) -> None:
     with pytest.raises(ValueError):

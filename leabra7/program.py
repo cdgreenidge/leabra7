@@ -3,6 +3,7 @@ import abc
 from typing import Any
 from typing import Iterable
 from typing import Sequence
+import itertools
 import uuid
 
 
@@ -54,6 +55,32 @@ class Node:
 class Program(Node):
     """A program is a tree of events that can be executed by the network."""
     pass
+
+
+class Loop(Node):
+    """A loop is simply a node that loops its children.
+
+    Args:
+      children: The node children.
+      num_iter: The number of iterations to loop for.
+      name: The name of the node.
+
+    Raises:
+      ValueError: if num_iter is less than 1.
+
+    """
+
+    def __init__(self,
+                 children: Sequence["Node"] = (),
+                 num_iter: int = 1,
+                 name: str = None) -> None:
+        if num_iter < 1:
+            raise ValueError("num_iter must be >= 1.")
+
+        looped = tuple(
+            itertools.islice(
+                itertools.cycle(children), num_iter * len(children)))
+        super().__init__(children=looped, name=name)
 
 
 class AtomicEvent(Node):
