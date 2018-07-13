@@ -431,6 +431,7 @@ class UnitGroup:
                 self.v_m[i] = (
                     self.spec.spk_thr + act_clip[i] / self.spec.act_gain)
         # TODO: there might be more here
+        self.i_net = torch.Tensor(self.size).zero_()
 
     def soft_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
         """Implementation of soft clamping at unit level."""
