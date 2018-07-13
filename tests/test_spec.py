@@ -277,6 +277,17 @@ def test_projn_spec_validates_sparsity(f) -> None:
         sp.ProjnSpec(sparsity=f).validate()
 
 
+@given(st.text())
+@example("one_to_one")
+@example("none")
+def test_projn_spec_validates_projn_type(f) -> None:
+    if f not in ["one_to_one", "full"]:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(projn_type=f).validate()
+    else:
+        sp.ProjnSpec(projn_type=f).validate()
+
+
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_wt_scale_abs(f) -> None:
     with pytest.raises(sp.ValidationError):
