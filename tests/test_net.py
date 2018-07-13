@@ -130,3 +130,15 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1
+
+
+def test_network_can_execute_a_program(mocker) -> None:
+    a = program.Cycle()
+    b = program.Cycle()
+    prg = program.Program((a, b))
+    n = net.Net()
+    mocker.spy(n, "handle")
+
+    n.execute(prg)
+
+    n.handle.assert_has_calls([mocker.call(a), mocker.call(b)])

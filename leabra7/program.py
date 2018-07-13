@@ -42,7 +42,7 @@ class Node:
             stack.extend(reversed(n.children))
             yield n
 
-    def atomic_stream(self) -> Iterable["Node"]:
+    def atomic_stream(self) -> Iterable["AtomicEvent"]:
         """Returns a stream of the node's children that are atomic events.
 
         The atomic events are ordered using a L-R DFS preodering.
