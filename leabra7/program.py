@@ -101,8 +101,30 @@ class EndMinusPhase(AtomicEvent):
 
 
 class HardClamp(AtomicEvent):
-    """The event that hard clamps a layer."""
-    pass
+    """The event that hard clamps a layer.
+
+    Args:
+      layer_name: The name of the layer to hard clamp.
+      acts: An iterable of the activations to clamp the layer to. If there are
+        fewer values than the number of units in the layer, it will be tiled.
+      name: The name of the node.
+
+    Raises:
+      ValueError: If any value of acts is outside the range [0, 1].
+
+    """
+
+    def __init__(self,
+                 layer_name: str,
+                 acts: Sequence[float],
+                 name: str = None) -> None:
+        self.layer_name = layer_name
+
+        if not all(0 <= i <= 1 for i in acts):
+            raise ValueError("All values of acts must be in [0, 1].")
+        self.acts = acts
+
+        super().__init__(name=name)
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):

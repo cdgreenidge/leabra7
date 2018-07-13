@@ -231,4 +231,6 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
         return self.units.observe(parsed)
 
     def handle(self, event: program.AtomicEvent) -> None:
-        pass
+        if isinstance(event, program.HardClamp):
+            if event.layer_name == self.name:
+                self.force(event.acts)

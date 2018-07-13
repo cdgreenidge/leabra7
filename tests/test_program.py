@@ -2,6 +2,7 @@
 import pytest
 
 from leabra7 import program as pr
+from leabra7 import layer as lr
 
 
 def test_node_checks_that_children_is_an_iterable() -> None:
@@ -51,3 +52,8 @@ def test_atomic_events_raise_valueerror_if_they_are_assigned_children(
         pr.Cycle(children=(pr.Node(), ))
     with pytest.raises(ValueError):
         pr.BeginPlusPhase(children=(pr.Node(), ))
+
+
+def test_hard_clamp_checks_if_acts_contains_values_outside_0_1() -> None:
+    with pytest.raises(ValueError):
+        pr.HardClamp(layer_name="lr1", acts=(1, 2))
