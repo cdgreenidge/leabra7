@@ -131,6 +131,16 @@ class UnitSpec(Spec):
     vm_max = 2.0
     # Clamping gain
     act_gain = 100.0
+    # Supershort learning average integration time constant
+    ss_dt = 0.5
+    # Short learning average integration time constant
+    s_dt = 0.5
+    # Medium learning average integration time constant
+    m_dt = 0.1
+    # Long learning average (decreasing) integration time constant
+    l_dn_dt = 2.5
+    # Long learning average (increasing) increment multiplier
+    l_up_inc = 0.2
 
     def validate(self) -> None:
         """Extends `Spec.validate`."""
@@ -151,6 +161,11 @@ class UnitSpec(Spec):
         self.assert_sane_float("vm_min")
         self.assert_sane_float("vm_max")
         self.assert_in_range("act_gain", 0, float("Inf"))
+        self.assert_in_range("ss_dt", 0, float("Inf"))
+        self.assert_in_range("s_dt", 0, float("Inf"))
+        self.assert_in_range("m_dt", 0, float("Inf"))
+        self.assert_in_range("l_dn_dt", 0, float("Inf"))
+        self.assert_in_range("l_up_inc", 0, float("Inf"))
 
         if self.v_m_r >= self.spk_thr:
             raise ValidationError(

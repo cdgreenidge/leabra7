@@ -8,6 +8,7 @@ import pytest
 import torch  # type: ignore
 
 from leabra7 import layer as lr
+from leabra7 import program as pr
 from leabra7 import specs as sp
 
 
@@ -86,11 +87,6 @@ def test_layer_should_be_able_to_update_its_units_kwta_avg_inhibition(
     layer.update_inhibition()
 
 
-def test_layer_should_be_able_to_update_its_units_activation() -> None:
-    layer = lr.Layer(name="in", size=3)
-    layer.update_activation()
-
-
 def test_layer_should_be_able_to_do_an_activation_cycle() -> None:
     layer = lr.Layer(name="in", size=3)
     layer.activation_cycle()
@@ -115,7 +111,20 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
         layer.observe_parts_attr("whales")
 
 
-def test_layer_clamping_should_change_the_unit_activations() -> None:
+# TODO: Better test
+def test_layer_can_update_learning_averages() -> None:
+    layer = lr.Layer(name="layer1", size=3)
+    layer.clamp([1.0])
+    layer.activation_cycle()
+    layer.update_trial_learning_averages()
+
+    assert (layer.avg_ss != torch.zeros(3)).all()
+    assert (layer.avg_s != torch.zeros(3)).all()
+    assert (layer.avg_m != torch.zeros(3)).all()
+    assert (layer.avg_l != torch.zeros(3)).all()
+
+
+def test_layer_forcing_should_change_the_unit_activations() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.clamp([0, 1])
     expected = [0, 1, 0, 1]
@@ -144,3 +153,19 @@ def test_layer_can_unclamp() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.clamp([0, 1])
     layer.unclamp()
+    assert list(layer.units.act) == [0, 1, 0, 1]
+
+
+def test_hard_clamp_event_forces_a_layer_if_the_names_match() -> None:
+    clamp = pr.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    layer = lr.Layer("lr1", 3)
+    layer.handle(clamp)
+    assert layer.clamped
+    assert all(layer.units.act == 0.7)
+
+
+def test_hard_clamp_event_does_nothing_if_the_names_do_not_match() -> None:
+    clamp = pr.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    layer = lr.Layer("WHALES", 3)
+    layer.handle(clamp)
+    assert not layer.clamped
