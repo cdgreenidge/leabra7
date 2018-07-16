@@ -7,7 +7,7 @@ import torch  # type: ignore
 
 from leabra7 import log
 from leabra7 import specs
-from leabra7 import program
+from leabra7 import events
 from leabra7 import unit
 
 
@@ -33,7 +33,7 @@ def _parse_unit_attr(attr: str) -> str:
     return parts[1]
 
 
-class Layer(log.ObservableMixin, program.EventListenerMixin):
+class Layer(log.ObservableMixin, events.EventListenerMixin):
     """A layer of units (neurons).
 
     Args:
@@ -230,7 +230,7 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
         parsed = _parse_unit_attr(attr)
         return self.units.observe(parsed)
 
-    def handle(self, event: program.AtomicEvent) -> None:
-        if isinstance(event, program.HardClamp):
+    def handle(self, event: events.Event) -> None:
+        if isinstance(event, events.HardClamp):
             if event.layer_name == self.name:
                 self.force(event.acts)

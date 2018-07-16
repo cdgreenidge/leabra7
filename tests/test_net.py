@@ -1,7 +1,7 @@
 """Test net.py"""
 import pytest
 
-from leabra7 import program
+from leabra7 import events
 from leabra7 import net
 from leabra7 import specs
 
@@ -113,7 +113,7 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
     n = net.Net()
     mocker.spy(n, "cycle")
-    n.handle(program.Cycle())
+    n.handle(events.Cycle())
     assert n.cycle.call_count == 1
 
 
@@ -126,19 +126,7 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
     for _, obj in n.objs.items():
         mocker.spy(obj, "handle")
 
-    n.handle(program.BeginPlusPhase)
+    n.handle(events.BeginPlusPhase)
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1
-
-
-def test_network_can_execute_a_program(mocker) -> None:
-    a = program.Cycle()
-    b = program.Cycle()
-    prg = program.Program((a, b))
-    n = net.Net()
-    mocker.spy(n, "handle")
-
-    n.execute(prg)
-
-    n.handle.assert_has_calls([mocker.call(a), mocker.call(b)])

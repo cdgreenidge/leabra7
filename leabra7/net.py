@@ -5,17 +5,17 @@ from typing import List
 
 from leabra7 import layer
 from leabra7 import log
-from leabra7 import program as prg  # renamed to avoid shadowing later
+from leabra7 import events
 from leabra7 import projn
 from leabra7 import specs
 
 
-class Net(prg.EventListenerMixin):
+class Net(events.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
     def __init__(self) -> None:
         # Each of the following dicts is keyed by the name of the object
-        self.objs: Dict[str, prg.EventListenerMixin] = {}
+        self.objs: Dict[str, events.EventListenerMixin] = {}
         self.layers: Dict[str, layer.Layer] = {}
         self.projns: Dict[str, projn.Projn] = {}
         self.cycle_loggers: List[log.Logger] = []
@@ -163,15 +163,10 @@ class Net(prg.EventListenerMixin):
 
         return logger.to_logs()
 
-    def handle(self, event: prg.AtomicEvent) -> None:
+    def handle(self, event: events.Event) -> None:
         """Overrides events.EventListnerMixin.handle()"""
-        if isinstance(event, prg.Cycle):
+        if isinstance(event, events.Cycle):
             self.cycle()
         else:
             for _, obj in self.objs.items():
                 obj.handle(event)
-
-    def execute(self, program: prg.Program) -> None:
-        """"Executes a prg."""
-        for event in program.atomic_stream():
-            self.handle(event)
