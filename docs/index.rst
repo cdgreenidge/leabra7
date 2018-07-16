@@ -17,12 +17,12 @@ support emergent71 branch of the
 Guide
 =====
 
-* `Purpose`
-* `Overview`
-* `Installation Guide`
-* `Documentation`
-* `Github Page`
-* `Contributors`
+* :ref:`Purpose`
+* :ref:`Overview`
+* :ref:`Installation Guide <install_guide>`
+* :ref:`Documentation`
+* :ref:`Github Page <github_page>`
+* :ref:`Contributors`
 
 .. _Purpose:
 
@@ -38,7 +38,7 @@ Overview
 
 Some overview stuff
 
-.. _Installation_Guide:
+.. _install_guide:
 
 Installation Guide
 ------------------
@@ -55,7 +55,7 @@ Documentation:
 
    leabra7
 
-.. _Github_Page:
+.. _github_page:
 
 Github Page
 -----------
