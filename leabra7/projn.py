@@ -10,6 +10,7 @@ import torch  # type: ignore
 
 from leabra7 import specs
 from leabra7 import layer
+from leabra7 import program
 
 T = TypeVar('T')
 
@@ -124,7 +125,7 @@ def sparsify(sparsity: float,
     return (sparse, num_to_keep)
 
 
-class Projn:
+class Projn(program.EventListenerMixin):
     """A projection links two layers. It is a bundle of connections.
 
     Args:
@@ -215,3 +216,6 @@ class Projn:
         self.post.add_input(
             self.spec.wt_scale_abs * wt_scale_act *
             (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
+
+    def handle(self, event: program.AtomicEvent) -> None:
+        pass

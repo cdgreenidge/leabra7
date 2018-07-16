@@ -144,6 +144,15 @@ class UnitGroup:
         # In the future, this could be a ByteTensor
         self.spike = torch.Tensor(self.size).zero_()
 
+        # Supershort learning average
+        self.avg_ss = torch.Tensor(self.size).zero_()
+        # Short learning average
+        self.avg_s = torch.Tensor(self.size).zero_()
+        # Medium learning average
+        self.avg_m = torch.Tensor(self.size).zero_()
+        # Long learning average
+        self.avg_l = torch.Tensor(self.size).zero_()
+
     def g_i_thr(self, unit_idx: int) -> float:
         """The inhibition that will place a unit at its spike threshold.
 
@@ -256,6 +265,27 @@ class UnitGroup:
             self.spec.adapt_dt * (self.spec.vm_gain *
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
+
+    def update_cycle_learning_averages(self) -> None:
+        """Updates the learning averages computed at the end of each cycle."""
+        self.avg_ss += self.spec.integ * self.spec.ss_dt * (
+            self.act - self.avg_ss)
+        self.avg_s += self.spec.integ * self.spec.s_dt * (
+            self.avg_ss - self.avg_s)
+        self.avg_m += self.spec.integ * self.spec.m_dt * (
+            self.avg_s - self.avg_m)
+
+    def update_trial_learning_averages(self, acts_p_avg: float) -> None:
+        """Updates the learning averages computed at the end of each trial.
+
+        Args:
+          acts_p_avg: The average layer activation at the end of the plus
+            phase.
+
+        """
+        self.avg_l = self.spec.l_dn_dt * acts_p_avg * (self.avg_m - self.avg_l)
+        mask = self.avg_m > 0.1
+        self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.
