@@ -1,21 +1,7 @@
-leabra7 package
+Leabra7
 ===============
 
-Submodules
-----------
-
-leabra7\.layer module
----------------------
-
-.. automodule:: leabra7.layer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-leabra7\.log module
--------------------
-
-.. automodule:: leabra7.log
+.. automodule:: leabra7
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,6 +14,14 @@ leabra7\.net module
     :undoc-members:
     :show-inheritance:
 
+leabra7\.program module
+---------------------
+
+.. automodule:: leabra7.program
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 leabra7\.projn module
 ---------------------
 
@@ -36,18 +30,10 @@ leabra7\.projn module
     :undoc-members:
     :show-inheritance:
 
-leabra7\.rand module
---------------------
-
-.. automodule:: leabra7.rand
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-leabra7\.specs module
+leabra7\.layer module
 ---------------------
 
-.. automodule:: leabra7.specs
+.. automodule:: leabra7.layer
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,19 +46,27 @@ leabra7\.unit module
     :undoc-members:
     :show-inheritance:
 
-leabra7\.utils module
+leabra7\.specs module
 ---------------------
 
-.. automodule:: leabra7.utils
+.. automodule:: leabra7.specs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+leabra7\.log module
+-------------------
+
+.. automodule:: leabra7.log
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-Module contents
----------------
+leabra7\.rand module
+--------------------
 
-.. automodule:: leabra7
+.. automodule:: leabra7.rand
     :members:
     :undoc-members:
     :show-inheritance:
