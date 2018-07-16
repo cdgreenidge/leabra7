@@ -19,9 +19,9 @@ Guide
 
 * :ref:`Purpose`
 * :ref:`Overview`
-* :ref:`Installation Guide <install_guide>`
+* :ref:`User Installation Guide <install_guide>`
 * :ref:`Documentation`
-* :ref:`Github Page <github_page>`
+* :ref:`Developer's Guide <develop_guide>`
 * :ref:`Contributors`
 
 .. _Purpose:
@@ -29,7 +29,14 @@ Guide
 Purpose
 -------
 
-This is the purpose of the library
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ is a
+powerful framework for computational neuroscience simulation, but the project
+is not readily modable and adaptable for new models and new learning algorithms.
+This python library seeks to offer an adaptive framework inspired by Randy O'Reilley's
+work. We hope this library will be indefinitely tweaked and adjusted to create
+a myriad of models to inform the study of computational neuroscience. We hope
+that this framework serves as a platform for inter-institutional and international
+collaboration and code sharing.
 
 .. _Overview:
 
@@ -40,10 +47,36 @@ Some overview stuff
 
 .. _install_guide:
 
-Installation Guide
-------------------
+User Installation Guide
+-----------------------
 
-This is how you install it.
+Prerequisites:
+^^^^^^^^^^^^^^
+
+* Anaconda Distribution of Python 3. See the
+  `Anaconda Installation Guide. <https://conda.io/docs/user-guide/install/download.html>`_
+* The `conda package manager. <https://www.anaconda.com/distribution>`_
+
+Installation:
+^^^^^^^^^^^^^
+
+Run the following commands to add the necessary conda channels:
+
+.. code::
+
+  $ conda config --append channels pytorch
+  $ conda config --append channels conda-forge
+
+Now you can install leabra7 with:
+
+.. code::
+
+  $ conda install -c cdg4 leabra7
+
+
+.. note::
+  If you have Python 2 and Python 3 installed side-by-side, use the
+  commands ``python3`` and ``pip3`` instead of ``pip`` and ``python``.
 
 .. _Documentation:
 
@@ -55,12 +88,14 @@ Documentation:
 
    leabra7
 
-.. _github_page:
+.. _develop_guide:
 
-Github Page
------------
+Developer's Guide
+-----------------
 
 `Github Repo <https://github.com/cdgreenidge/leabra7>`_
+
+`Gitter Chat <https://gitter.im/leabra7/Lobby>`_
 
 .. _Contributors:
 
