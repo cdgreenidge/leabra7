@@ -1,4 +1,4 @@
-"""Tests program.py"""
+"""Tests events.py"""
 import pytest
 
 from leabra7 import events as ev
