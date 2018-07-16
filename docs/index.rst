@@ -18,7 +18,7 @@ Guide
 =====
 
 * :ref:`Purpose`
-* :ref:`Overview`
+* :ref:`Brief Overview <brief_overview>`
 * :ref:`User Installation Guide <install_guide>`
 * :ref:`Documentation`
 * :ref:`Developer's Guide <develop_guide>`
@@ -32,18 +32,24 @@ Purpose
 `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ is a
 powerful framework for computational neuroscience simulation, but the project
 is not readily mod-able and adaptable for new models and new learning algorithms.
-This python library seeks to offer an adaptive framework inspired by Randy O'Reilly's
+This python library seeks to offer an adaptive framework inspired by
+`Randy O'Reilly's <http://psych.colorado.edu/~oreilly>`_
 work. We hope this library will be indefinitely tweaked and adjusted to create
 a myriad of models to inform the study of computational neuroscience. We hope
 that this framework serves as a platform for inter-institutional and international
 collaboration and code sharing.
 
-.. _Overview:
+.. _brief_overview:
 
-Overview
---------
+Brief Overview
+--------------
 
-Some overview stuff
+Networks are composed of layers and projections. Networks are the architecture
+of the model.
+
+Networks execute programs. Programs include specifications of algorithms for
+inhibition, clamping, and learning.
+
 
 .. _install_guide:
 
@@ -80,7 +86,7 @@ Now you can install leabra7 with:
 
 .. _Documentation:
 
-Documentation:
+Documentation
 --------------
 
 .. toctree::
@@ -104,6 +110,8 @@ Contributors
 
 This project was spearheaded by Daniel Greenidge with assistance from Noam Miller
 and Fabien Benureau.
+
+This a project of `Norman Lab. <https://compmem.princeton.edu>`_
 
 Indices and tables
 ==================
