@@ -31,8 +31,8 @@ Purpose
 
 `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ is a
 powerful framework for computational neuroscience simulation, but the project
-is not readily modable and adaptable for new models and new learning algorithms.
-This python library seeks to offer an adaptive framework inspired by Randy O'Reilley's
+is not readily mod-able and adaptable for new models and new learning algorithms.
+This python library seeks to offer an adaptive framework inspired by Randy O'Reilly's
 work. We hope this library will be indefinitely tweaked and adjusted to create
 a myriad of models to inform the study of computational neuroscience. We hope
 that this framework serves as a platform for inter-institutional and international
