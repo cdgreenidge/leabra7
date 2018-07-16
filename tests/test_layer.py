@@ -141,14 +141,6 @@ def test_layer_set_hard_clamp() -> None:
         assert math.isclose(layer.units.act[i], expected[i], abs_tol=1e-6)
 
 
-def test_layer_set_soft_clamp() -> None:
-    layer = lr.Layer(name="in", size=3)
-    layer.clamp(act_ext=[0, 1], hard=False)
-    layer.activation_cycle()
-    # TODO: define soft clamping
-    # assert list(layer.units.act) == [0, 1, 0]
-
-
 def test_layer_can_unclamp() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.clamp([0, 1])
