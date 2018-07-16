@@ -99,6 +99,33 @@ def test_forcing_a_layer_validates_its_name() -> None:
         net.Net().force_layer("abcd", [0])
 
 
+def test_running_a_minus_phase_raises_error_if_num_cycles_less_than_one(
+) -> None:
+    with pytest.raises(ValueError):
+        net.Net().minus_phase_cycle(-1)
+
+
+def test_running_a_minus_phase_broadcasts_minus_phase_event_markers(
+        mocker) -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1)
+    mocker.spy(n, "handle")
+    n.minus_phase_cycle(num_cycles=1)
+    assert isinstance(n.handle.call_args_list[0][0][0], events.BeginMinusPhase)
+    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndMinusPhase)
+
+
+def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
+        mocker) -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1)
+    mocker.spy(n, "handle")
+    n.minus_phase_cycle(num_cycles=42)
+    assert all(
+        isinstance(i, events.Cycle)
+        for i in n.handle.call_args_list[1:43][0][0])
+
+
 def test_running_a_plus_phase_raises_error_if_num_cycles_less_than_one(
 ) -> None:
     with pytest.raises(ValueError):

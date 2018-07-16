@@ -146,6 +146,27 @@ class Net(events.EventListenerMixin):
         self._validate_layer_name(name)
         self.handle(events.HardClamp(name, acts))
 
+    def minus_phase_cycle(self, num_cycles: int = 50) -> None:
+        """Runs a series of cycles for the trial minus phase.
+
+        A minus phase is the trial phase where target values are not clamped
+        output layers. Clamping the values on the output layers is the user's
+        responsibility.
+
+        Args:
+          num_cycles: The number of cycles to run.
+
+        Raises:
+          ValueError: If num_cycles is less than 1.
+
+        """
+        if num_cycles < 1:
+            raise ValueError("Number of cycles must be >= 1.")
+        self.handle(events.BeginMinusPhase())
+        for _ in range(num_cycles):
+            self.handle(events.Cycle())
+        self.handle(events.EndMinusPhase())
+
     def plus_phase_cycle(self, num_cycles: int = 50) -> None:
         """Runs a series of cycles for the trial plus phase.
 
