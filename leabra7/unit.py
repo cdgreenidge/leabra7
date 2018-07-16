@@ -291,11 +291,6 @@ class UnitGroup:
         # TODO: there might be more here
         self.i_net = torch.Tensor(self.size).zero_()
 
-    def soft_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
-        """Implementation of soft clamping at unit level."""
-        # TODO: define this
-        pass
-
     def update_cycle_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each cycle."""
         self.avg_ss += self.spec.integ * self.spec.ss_dt * (

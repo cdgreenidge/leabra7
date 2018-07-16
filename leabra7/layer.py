@@ -227,8 +227,6 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
 
         if self.hard:
             self.units.hard_clamp(self.act_ext)
-        else:
-            self.units.soft_clamp(self.act_ext)
 
     def unclamp(self) -> None:
         """Unclamps units."""
@@ -237,11 +235,7 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
     def update_clamp(self) -> None:
         """Updates clamping of layer."""
         if self.hard:
-            # Pointless to update hard clamped
-            # self.units.hard_clamp(self, self.act_ext)
             pass
-        else:
-            self.units.soft_clamp(self.act_ext)
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr not in self.parts_attrs:
