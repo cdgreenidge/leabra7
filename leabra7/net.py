@@ -1,7 +1,7 @@
 """A network."""
 from typing import Dict
-from typing import Iterable
 from typing import List
+from typing import Sequence
 
 from leabra7 import layer
 from leabra7 import log
@@ -35,6 +35,20 @@ class Net(events.EventListenerMixin):
         if name not in self.objs:
             raise ValueError("No object found with name {0}".format(name))
 
+    def _validate_layer_name(self, name: str) -> None:
+        """Checks if a layer name exists.
+
+        Args:
+          name: The name of the layer.
+
+        Raises:
+          ValueError: If no layer with such a name exists.
+
+        """
+        if name not in self.layers:
+            raise ValueError(
+                "Name {0} does not refer to a layer.".format(name))
+
     def _get_layer(self, name: str) -> layer.Layer:
         """Gets a layer by name.
 
@@ -47,11 +61,8 @@ class Net(events.EventListenerMixin):
                 within user-facing methods.
 
         """
-        try:
-            return self.layers[name]
-        except KeyError:
-            raise ValueError(
-                "Name {0} does not refer to a layer.".format(name))
+        self._validate_layer_name(name)
+        return self.layers[name]
 
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:
@@ -75,24 +86,6 @@ class Net(events.EventListenerMixin):
 
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
-
-    def force_layer(self, name: str, acts: Iterable[float]) -> None:
-        """Forces the layer's activations.
-
-        After forcing, the layer's activations will be set to the values
-        contained in `acts` and will not change from cycle to cycle.
-
-        Args:
-            name: The name of the layer.
-            acts: An iterable containing the activations that the layer's
-                units will be forced to. If its length is less than the number
-                of units in the layer, it will be tiled. If its length is
-                greater, the extra values will be ignored.
-
-        ValueError: If `name` does not match any existing layer name.
-
-        """
-        self._get_layer(name).force(acts)
 
     def new_projn(self,
                   name: str,
@@ -133,6 +126,25 @@ class Net(events.EventListenerMixin):
 
         for _, pr in self.projns.items():
             pr.flush()
+
+    def force_layer(self, name: str, acts: Sequence[float]) -> None:
+        """Forces the layer's activations.
+
+        After forcing, the layer's activations will be set to the values
+        contained in `acts` and will not change from cycle to cycle.
+
+        Args:
+            name: The name of the layer.
+            acts: An iterable containing the activations that the layer's
+                units will be forced to. If its length is less than the number
+                of units in the layer, it will be tiled. If its length is
+                greater, the extra values will be ignored.
+
+        ValueError: If `name` does not match any existing layer name.
+
+        """
+        self._validate_layer_name(name)
+        self.handle(events.HardClamp(name, acts))
 
     def logs(self, freq: str, name: str) -> log.Logs:
         """Retrieves logs for an object in the network.

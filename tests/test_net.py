@@ -22,6 +22,14 @@ def test_the_network_can_get_a_layer_by_name() -> None:
     assert n._get_layer("layer1") is layer1
 
 
+def test_the_network_can_validate_layer_names() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 3)
+    n._validate_layer_name("layer1")
+    with pytest.raises(ValueError):
+        n._validate_layer_name("whales")
+
+
 def test_getting_an_invalid_layer_name_raises_value_error() -> None:
     n = net.Net()
     n.new_layer("layer1", 3)

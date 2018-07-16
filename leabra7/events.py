@@ -52,9 +52,7 @@ class HardClamp(Event):
 
     """
 
-    def __init__(self,
-                 layer_name: str,
-                 acts: Sequence[float]) -> None:
+    def __init__(self, layer_name: str, acts: Sequence[float]) -> None:
         self.layer_name = layer_name
 
         if not all(0 <= i <= 1 for i in acts):
