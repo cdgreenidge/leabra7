@@ -64,6 +64,11 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
+        # Last plus phase activation
+        self.acts_p = torch.Tensor(self.size).zero_()
+        # Last minus phase activation
+        self.acts_m = torch.Tensor(self.size).zero_()
+
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
 
@@ -234,3 +239,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         if isinstance(event, events.HardClamp):
             if event.layer_name == self.name:
                 self.force(event.acts)
+        elif isinstance(event, events.EndPlusPhase):
+            self.acts_p.copy_(self.units.act)
+        elif isinstance(event, events.EndMinusPhase):
+            self.acts_m.copy_(self.units.act)
