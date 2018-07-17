@@ -156,6 +156,36 @@ def test_it_should_validate_adapt_dt(f) -> None:
         sp.UnitSpec(adapt_dt=f).validate()
 
 
+@given(float_outside_range(0, float("Inf")))
+def test_it_should_validate_ss_dt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.UnitSpec(ss_dt=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_it_should_validate_s_dt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.UnitSpec(s_dt=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_it_should_validate_m_dt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.UnitSpec(m_dt=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_it_should_validate_l_dn_dt(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.UnitSpec(l_dn_dt=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_it_should_validate_l_up_inc(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.UnitSpec(l_up_inc=f).validate()
+
+
 # Test LayerSpec validation
 @given(st.text())
 @example("kwta")

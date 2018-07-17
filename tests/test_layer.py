@@ -8,6 +8,7 @@ import pytest
 import torch  # type: ignore
 
 from leabra7 import layer as lr
+from leabra7 import events as ev
 from leabra7 import specs as sp
 
 
@@ -101,7 +102,7 @@ def test_layer_should_be_able_to_observe_whole_attributes() -> None:
     assert layer.observe_whole_attr("avg_act") == ("avg_act", 0.0)
 
 
-def test_layer_shuld_be_able_to_observe_parts_attributes() -> None:
+def test_layer_should_be_able_to_observe_parts_attributes() -> None:
     layer = lr.Layer(name="in", size=3)
     assert layer.observe_parts_attr("unit_act") == {
         "unit": [0, 1, 2],
@@ -115,6 +116,19 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
         layer.observe_parts_attr("whales")
 
 
+# TODO: Better test
+def test_layer_can_update_learning_averages() -> None:
+    layer = lr.Layer(name="layer1", size=3)
+    layer.force([1.0])
+    layer.activation_cycle()
+    layer.update_trial_learning_averages()
+
+    assert (layer.avg_ss != torch.zeros(3)).all()
+    assert (layer.avg_s != torch.zeros(3)).all()
+    assert (layer.avg_m != torch.zeros(3)).all()
+    assert (layer.avg_l != torch.zeros(3)).all()
+
+
 def test_layer_forcing_should_change_the_unit_activations() -> None:
     layer = lr.Layer(name="in", size=4)
     layer.force([0, 1])
@@ -126,3 +140,32 @@ def test_layer_forcing_should_not_change_after_cycles() -> None:
     layer.force([0, 1])
     layer.activation_cycle()
     assert list(layer.units.act) == [0, 1, 0, 1]
+
+
+def test_hard_clamp_event_forces_a_layer_if_the_names_match() -> None:
+    clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    layer = lr.Layer("lr1", 3)
+    layer.handle(clamp)
+    assert layer.forced
+    assert all(layer.units.act == 0.7)
+
+
+def test_hard_clamp_event_does_nothing_if_the_names_do_not_match() -> None:
+    clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    layer = lr.Layer("WHALES", 3)
+    layer.handle(clamp)
+    assert not layer.forced
+
+
+def test_end_plus_phase_event_saves_activations() -> None:
+    layer = lr.Layer("lr1", 3)
+    layer.force([1, 0, 1])
+    layer.handle(ev.EndPlusPhase())
+    assert (layer.acts_p == torch.Tensor([1, 0, 1])).all()
+
+
+def test_end_minus_phase_event_saves_activations() -> None:
+    layer = lr.Layer("lr1", 3)
+    layer.force([1, 0, 0.5])
+    layer.handle(ev.EndMinusPhase())
+    assert (layer.acts_m == torch.Tensor([1, 0, 0.5])).all()

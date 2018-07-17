@@ -88,157 +88,6 @@ def nxx1_table() -> Any:
     return xs_valid, conv
 
 
-class Unit:
-    """A computational unit (aka neuron.)
-
-    Args:
-        spec: The specification for the unit.
-
-    """
-    nxx1_xs, nxx1_ys = nxx1_table()
-    nxx1 = scipy.interpolate.interp1d(
-        nxx1_xs,
-        nxx1_ys,
-        copy=False,
-        fill_value=(nxx1_ys[0], nxx1_ys[-1]),
-        bounds_error=False)
-    """Evaluates the noisy X/(X + 1) function.
-
-    This is used to approximate the rate-coded unit response to a given
-    input. This is a function, since interp1d is callable.
-
-    Args:
-        x: The value at which to evaluate the noisy X/(X + 1)
-           function. Can be any array-like type.
-
-    Returns:
-        The value of the noisy X/(X + 1) function at `x`.
-
-    """
-
-    def __init__(self, spec: specs.UnitSpec = None) -> None:
-        if spec is None:
-            self.spec = specs.UnitSpec()
-        else:
-            self.spec = spec
-
-        # When adding any attribute to this class, update
-        # layer.LayerSpec._valid_log_on_cycle
-
-        # Net input (excitation) without time integration
-        self.net_raw = 0.0
-        # Net inpput (excitation) with time integration
-        self.net = 0.0
-        # Total (feedback + feedforward) inhibition
-        self.gc_i = 0.0
-        # Activation
-        self.act = 0.0
-        # Net current
-        self.i_net = 0.0
-        # Net current, rate-coded (driven by v_m_eq)
-        self.i_net_r = 0.0
-        # Membrane potential
-        self.v_m = 0.0
-        # Equilibrium membrane potential (does not reset on spike)
-        self.v_m_eq = 0.0
-        # Adaption current
-        self.adapt = 0.0
-        # Are we spiking? (0 or 1)
-        self.spike = 0
-
-    def g_i_thr(self) -> float:
-        """The inhibition that will place the unit at its spike threshold."""
-        return (((self.spec.e_rev_e - self.spec.spk_thr) * self.net +
-                 (self.spec.e_rev_l - self.spec.spk_thr) * self.spec.gc_l) /
-                (self.spec.spk_thr - self.spec.e_rev_i))
-
-    def add_input(self, inpt: float) -> None:
-        """Registers an input to the unit."""
-        self.net_raw += inpt
-
-    def update_net(self) -> None:
-        """Calculates the input for the next cycle by integrating over time."""
-        self.net += self.spec.integ * self.spec.net_dt * (
-            self.net_raw - self.net)
-        self.net_raw = 0.0
-
-    def update_inhibition(self, gc_i: float) -> None:
-        """Sets the unit inhibition."""
-        self.gc_i = gc_i
-
-    def update_membrane_potential(self) -> None:
-        """Updates the membrane potential.
-
-        This assumes we already have updated the net input and unit
-        inhibition.
-
-        """
-        # yapf: disable
-        self.i_net = (self.net * (self.spec.e_rev_e - self.v_m) +
-                      self.spec.gc_l * (self.spec.e_rev_l - self.v_m) +
-                      self.gc_i * (self.spec.e_rev_i - self.v_m))
-        self.v_m += self.spec.integ * self.spec.vm_dt * (
-            self.i_net - self.adapt)
-
-        self.i_net_r = (self.net * (self.spec.e_rev_e - self.v_m_eq) +
-                        self.spec.gc_l * (self.spec.e_rev_l - self.v_m_eq) +
-                        self.gc_i * (self.spec.e_rev_i - self.v_m_eq))
-        self.v_m_eq += self.spec.integ * self.spec.vm_dt * (
-            self.i_net_r - self.adapt)
-        # yapf: enable
-
-    def update_activation(self) -> None:
-        """Updates the unit activation.
-
-        This assumes we have already updated the unit membrane potential.
-
-        """
-        # yapf: disable
-        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) *
-                   self.spec.gc_l * (self.spec.e_rev_l - self.spec.spk_thr) -
-                   self.adapt) / (self.spec.spk_thr - self.spec.e_rev_e)
-        # yapf: enable
-
-        if self.v_m > self.spec.spk_thr:
-            self.spike = 1
-            self.v_m = self.spec.v_m_r
-        else:
-            self.spike = 0
-
-        if self.v_m_eq <= self.spec.spk_thr:
-            new_act = self.nxx1(self.v_m_eq - self.spec.spk_thr)
-        else:
-            new_act = self.nxx1(self.net - g_e_thr)
-        self.act += self.spec.integ * self.spec.vm_dt * (new_act - self.act)
-
-        self.adapt += self.spec.integ * (
-            self.spec.adapt_dt * (self.spec.vm_gain *
-                                  (self.v_m - self.spec.e_rev_l) - self.adapt)
-            + self.spike * self.spec.spike_gain)
-
-    def observe(self, attr: str) -> log.PartsObs:
-        """Observes an attribute of the UnitGroup.
-
-        This is not quite the same as
-        `log.ObservableMixin.observe_parts_attr()`, because we don't
-        want to give every unit a name. This lets us return a dict
-        instead of a list containing one dict.
-
-        Args:
-            attr: The attribute to observe.
-
-        Returns:
-            A dict: {attr: val} where val is the value of the attribute.
-
-        """
-        simple_attrs = ("net_raw", "net", "gc_i", "act", "i_net", "i_net_r",
-                        "v_m", "v_m_eq", "adapt", "spike")
-        if attr in simple_attrs:
-            return {attr: getattr(self, attr)}
-        else:
-            raise ValueError("{0} is not a loggable attr.".format(attr))
-
-
 class UnitGroup:
     """A group of computational units (aka neurons.)
 
@@ -294,6 +143,15 @@ class UnitGroup:
         # Are we spiking? (0 or 1)
         # In the future, this could be a ByteTensor
         self.spike = torch.Tensor(self.size).zero_()
+
+        # Supershort learning average
+        self.avg_ss = torch.Tensor(self.size).zero_()
+        # Short learning average
+        self.avg_s = torch.Tensor(self.size).zero_()
+        # Medium learning average
+        self.avg_m = torch.Tensor(self.size).zero_()
+        # Long learning average
+        self.avg_l = torch.Tensor(self.size).zero_()
 
     def g_i_thr(self, unit_idx: int) -> float:
         """The inhibition that will place a unit at its spike threshold.
@@ -407,6 +265,27 @@ class UnitGroup:
             self.spec.adapt_dt * (self.spec.vm_gain *
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
+
+    def update_cycle_learning_averages(self) -> None:
+        """Updates the learning averages computed at the end of each cycle."""
+        self.avg_ss += self.spec.integ * self.spec.ss_dt * (
+            self.act - self.avg_ss)
+        self.avg_s += self.spec.integ * self.spec.s_dt * (
+            self.avg_ss - self.avg_s)
+        self.avg_m += self.spec.integ * self.spec.m_dt * (
+            self.avg_s - self.avg_m)
+
+    def update_trial_learning_averages(self, acts_p_avg: float) -> None:
+        """Updates the learning averages computed at the end of each trial.
+
+        Args:
+          acts_p_avg: The average layer activation at the end of the plus
+            phase.
+
+        """
+        self.avg_l = self.spec.l_dn_dt * acts_p_avg * (self.avg_m - self.avg_l)
+        mask = self.avg_m > 0.1
+        self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.
