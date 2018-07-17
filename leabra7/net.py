@@ -87,6 +87,35 @@ class Net(events.EventListenerMixin):
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
 
+    def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
+        """Clamps the layer's activations.
+
+        After forcing, the layer's activations will be set to the values
+        contained in `acts` and will not change from cycle to cycle.
+
+        Args:
+            name: The name of the layer.
+            acts: A sequence containing the activations that the layer's
+                units will be clamped to. If its length is less than the number
+                of units in the layer, it will be tiled. If its length is
+                greater, the extra values will be ignored.
+
+        ValueError: If `name` does not match any existing layer name.
+
+        """
+        self._validate_layer_name(name)
+        self.handle(events.HardClamp(name, acts))
+
+    def unclamp_layer(self, name: str) -> None:
+        """Unclamps the layer's activations.
+
+        After unclamping, the layer's activations will be
+        updated each cycle.
+
+        """
+        self._validate_layer_name(name)
+        self.handle(events.Unclamp(name))
+
     def new_projn(self,
                   name: str,
                   pre: str,
@@ -126,25 +155,6 @@ class Net(events.EventListenerMixin):
 
         for _, pr in self.projns.items():
             pr.flush()
-
-    def force_layer(self, name: str, acts: Sequence[float]) -> None:
-        """Forces the layer's activations.
-
-        After forcing, the layer's activations will be set to the values
-        contained in `acts` and will not change from cycle to cycle.
-
-        Args:
-            name: The name of the layer.
-            acts: An iterable containing the activations that the layer's
-                units will be forced to. If its length is less than the number
-                of units in the layer, it will be tiled. If its length is
-                greater, the extra values will be ignored.
-
-        ValueError: If `name` does not match any existing layer name.
-
-        """
-        self._validate_layer_name(name)
-        self.handle(events.HardClamp(name, acts))
 
     def minus_phase_cycle(self, num_cycles: int = 50) -> None:
         """Runs a series of cycles for the trial minus phase.
