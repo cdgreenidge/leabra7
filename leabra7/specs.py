@@ -272,6 +272,8 @@ class ProjnSpec(Spec):
     # Relative net input scaling weight (relative to other projections
     # terminating in the same layer)
     wt_scale_rel: float = 1.0
+    # Learning rate
+    lrate = 0.02
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
@@ -288,5 +290,6 @@ class ProjnSpec(Spec):
 
         self.assert_in_range("wt_scale_abs", 0, float("Inf"))
         self.assert_in_range("wt_scale_rel", 0, float("Inf"))
+        self.assert_in_range("lrate", 0, float("Inf"))
 
         super().validate()

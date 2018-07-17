@@ -4,6 +4,7 @@ import hypothesis.strategies as st
 import pytest
 import torch  # type: ignore
 
+from leabra7 import events as ev
 from leabra7 import layer as lr
 from leabra7 import projn as pr
 from leabra7 import rand as rn
@@ -244,3 +245,19 @@ def test_projns_can_be_sparse() -> None:
     projn = pr.Projn("proj", pre, post, spec)
     num_on = projn.wts.sum()
     assert num_on == 2.0
+
+
+def test_projn_can_learn() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    projn = pr.Projn("proj", pre, post)
+    projn.learn()
+
+
+def test_projn_can_handle_learn_events(mocker) -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    projn = pr.Projn("proj", pre, post)
+    mocker.spy(projn, "learn")
+    projn.handle(ev.Learn())
+    projn.learn.assert_called_once()

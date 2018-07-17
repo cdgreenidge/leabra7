@@ -196,11 +196,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.units.update_trial_learning_averages(acts_p_avg_eff)
 
     @property
-    def avg_ss(self) -> torch.Tensor:
-        """The supershort learning average for each unit."""
-        return self.units.avg_ss
-
-    @property
     def avg_s(self) -> torch.Tensor:
         """The short learning average for each unit."""
         return self.units.avg_s

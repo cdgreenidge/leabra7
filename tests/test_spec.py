@@ -351,3 +351,9 @@ def test_projn_spec_validates_wt_scale_abs(f) -> None:
 def test_projn_spec_validates_wt_scale_rel(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(wt_scale_rel=f).validate()
+
+
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_lrate(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(lrate=f).validate()
