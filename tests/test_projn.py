@@ -1,6 +1,4 @@
 """Test projn.py"""
-import math
-
 from hypothesis import given
 import hypothesis.strategies as st
 import pytest
