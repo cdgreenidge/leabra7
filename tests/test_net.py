@@ -57,7 +57,7 @@ def test_you_can_create_a_layer_with_a_default_spec() -> None:
 def test_you_can_hard_clamp_a_layer() -> None:
     n = net.Net()
     n.new_layer("layer1", 4)
-    n.clamp_layer("layer1", [0, 1], hard=True)
+    n.clamp_layer("layer1", [0, 1])
     n.cycle()
     expected = [0, 1, 0, 1]
     for i in range(4):
@@ -67,15 +67,24 @@ def test_you_can_hard_clamp_a_layer() -> None:
 
 def test_you_can_unclamp_a_layer() -> None:
     n = net.Net()
-    n.new_layer("layer1", 4)
-    n.clamp_layer("layer1", [0, 1], hard=True)
-    n.cycle()
-    n.unclamp_layer("layer1")
+    n.new_layer("layer1", 1)
+    n.new_layer("layer2", 2)
+    n.new_projn("projn1", pre="layer1", post="layer2")
+
+    n.clamp_layer("layer2", [0])
+    n.clamp_layer("layer1", [0.7])
+    n.unclamp_layer("layer2")
+
+    # Drive layer 2 so it should spike
+    for _ in range(50):
+        n.cycle()
+
+    assert (n.layers["layer2"].units.act > 0).all()
 
 
 def test_clamping_a_layer_validates_its_name() -> None:
     with pytest.raises(ValueError):
-        net.Net().clamp_layer("abcd", [0], hard=True)
+        net.Net().clamp_layer("abcd", [0])
 
 
 def test_unclamping_a_layer_validates_its_name() -> None:

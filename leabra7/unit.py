@@ -277,18 +277,16 @@ class UnitGroup:
             + self.spike * self.spec.spike_gain)
 
     def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
-        """Implementation of hard clamping at unit level."""
+        """Sets unit act, v_m, and i_net from external hard clamp."""
         act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
         self.act_nd = act_clip
         self.act = act_clip
 
-        for i in range(self.size):
-            if -1e-6 < act_clip[i] < 1e-6:
-                self.v_m[i] = self.spec.e_rev_l
-            else:
-                self.v_m[i] = (
-                    self.spec.spk_thr + act_clip[i] / self.spec.act_gain)
-        # TODO: there might be more here
+        mask = (-1e-6 < act_clip) & (act_clip < 1e-6)
+        self.v_m[mask] = self.spec.e_rev_l
+        self.v_m[~mask] = (
+            self.spec.spk_thr + act_clip[~mask] / self.spec.act_gain)
+
         self.i_net = torch.Tensor(self.size).zero_()
 
     def update_cycle_learning_averages(self) -> None:

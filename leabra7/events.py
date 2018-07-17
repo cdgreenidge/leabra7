@@ -38,7 +38,7 @@ class EndMinusPhase(Event):
     pass
 
 
-class Clamp(Event):
+class HardClamp(Event):
     """The event that clamps a layer.
 
     Args:
@@ -55,17 +55,14 @@ class Clamp(Event):
 
     def __init__(self,
                  layer_name: str,
-                 acts: Sequence[float],
-                 hard: bool = True) -> None:
+                 acts: Sequence[float]) -> None:
         self.layer_name = layer_name
-
         if not all(0 <= i <= 1 for i in acts):
             raise ValueError("All values of acts must be in [0, 1].")
         self.acts = acts
-        self.hard = hard
 
 
-class UnClamp(Event):
+class Unclamp(Event):
     """The event that unclamps a layer.
 
     Args:

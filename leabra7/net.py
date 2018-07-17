@@ -87,8 +87,7 @@ class Net(events.EventListenerMixin):
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
 
-    def clamp_layer(self, name: str, acts: Sequence[float],
-                    hard: bool = True) -> None:
+    def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.
 
         After forcing, the layer's activations will be set to the values
@@ -105,7 +104,7 @@ class Net(events.EventListenerMixin):
 
         """
         self._validate_layer_name(name)
-        self.handle(events.Clamp(name, acts, hard=hard))
+        self.handle(events.HardClamp(name, acts))
 
     def unclamp_layer(self, name: str) -> None:
         """Unclamps the layer's activations.
@@ -115,7 +114,7 @@ class Net(events.EventListenerMixin):
 
         """
         self._validate_layer_name(name)
-        self.handle(events.UnClamp(name))
+        self.handle(events.Unclamp(name))
 
     def new_projn(self,
                   name: str,

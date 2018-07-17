@@ -61,8 +61,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.gc_i = 0.0
         # Is the layer activation clamped?
         self.clamped = False
-        # Hard or soft clamping
-        self.hard = True
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
@@ -198,20 +196,17 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
-        if self.clamped:
-            self.update_clamp()
-        else:
+        if not self.clamped:
             self.update_net()
             self.update_inhibition()
             self.units.update_membrane_potential()
             self.units.update_activation()
 
         self.units.update_cycle_learning_averages()
-
         self.input_buffer.zero_()
         self.wt_scale_rel_sum = 0
 
-    def clamp(self, act_ext: Iterable[float], hard: bool = True) -> None:
+    def hard_clamp(self, act_ext: Iterable[float]) -> None:
         """Forces the layer's activations.
 
         After forcing, the layer's activations will be set to the values
@@ -225,21 +220,13 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         """
         self.clamped = True
-        self.hard = hard
         self.act_ext = torch.Tensor(
             list(itertools.islice(itertools.cycle(act_ext), self.size)))
-
-        if self.hard:
-            self.units.hard_clamp(self.act_ext)
+        self.units.hard_clamp(self.act_ext)
 
     def unclamp(self) -> None:
-        """Unclamps units."""
+        """Unclamps the layer."""
         self.clamped = False
-
-    def update_clamp(self) -> None:
-        """Updates clamping of layer."""
-        if self.hard:
-            pass
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr not in self.parts_attrs:
@@ -248,10 +235,13 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         return self.units.observe(parsed)
 
     def handle(self, event: events.Event) -> None:
-        if isinstance(event, events.Clamp):
+        if isinstance(event, events.HardClamp):
             if event.layer_name == self.name:
-                self.clamp(event.acts, hard=event.hard)
+                self.hard_clamp(event.acts)
         elif isinstance(event, events.EndPlusPhase):
             self.acts_p.copy_(self.units.act)
         elif isinstance(event, events.EndMinusPhase):
             self.acts_m.copy_(self.units.act)
+        elif isinstance(event, events.Unclamp):
+            if event.layer_name == self.name:
+                self.unclamp()
