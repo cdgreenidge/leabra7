@@ -14,10 +14,10 @@ leabra7\.net module
     :undoc-members:
     :show-inheritance:
 
-leabra7\.program module
----------------------
+leabra7\.events module
+----------------------
 
-.. automodule:: leabra7.program
+.. automodule:: leabra7.events
     :members:
     :undoc-members:
     :show-inheritance:

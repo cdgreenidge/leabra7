@@ -8,7 +8,7 @@ import pytest
 import torch  # type: ignore
 
 from leabra7 import layer as lr
-from leabra7 import program as pr
+from leabra7 import events as ev
 from leabra7 import specs as sp
 
 
@@ -143,7 +143,7 @@ def test_layer_forcing_should_not_change_after_cycles() -> None:
 
 
 def test_hard_clamp_event_forces_a_layer_if_the_names_match() -> None:
-    clamp = pr.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
     layer = lr.Layer("lr1", 3)
     layer.handle(clamp)
     assert layer.forced
@@ -151,7 +151,21 @@ def test_hard_clamp_event_forces_a_layer_if_the_names_match() -> None:
 
 
 def test_hard_clamp_event_does_nothing_if_the_names_do_not_match() -> None:
-    clamp = pr.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
     layer = lr.Layer("WHALES", 3)
     layer.handle(clamp)
     assert not layer.forced
+
+
+def test_end_plus_phase_event_saves_activations() -> None:
+    layer = lr.Layer("lr1", 3)
+    layer.force([1, 0, 1])
+    layer.handle(ev.EndPlusPhase())
+    assert (layer.acts_p == torch.Tensor([1, 0, 1])).all()
+
+
+def test_end_minus_phase_event_saves_activations() -> None:
+    layer = lr.Layer("lr1", 3)
+    layer.force([1, 0, 0.5])
+    layer.handle(ev.EndMinusPhase())
+    assert (layer.acts_m == torch.Tensor([1, 0, 0.5])).all()
