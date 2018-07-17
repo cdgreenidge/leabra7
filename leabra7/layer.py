@@ -206,6 +206,31 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.input_buffer.zero_()
         self.wt_scale_rel_sum = 0
 
+    def update_trial_learning_averages(self) -> None:
+        """Updates the learning averages computed at the end of each trial."""
+        acts_p_avg_eff = self.acts_p.mean()
+        self.units.update_trial_learning_averages(acts_p_avg_eff)
+
+    @property
+    def avg_ss(self) -> torch.Tensor:
+        """The supershort learning average for each unit."""
+        return self.units.avg_ss
+
+    @property
+    def avg_s(self) -> torch.Tensor:
+        """The short learning average for each unit."""
+        return self.units.avg_s
+
+    @property
+    def avg_m(self) -> torch.Tensor:
+        """The medium learning average for each unit."""
+        return self.units.avg_m
+
+    @property
+    def avg_l(self) -> torch.Tensor:
+        """The long learning average for each unit."""
+        return self.units.avg_l
+
     def hard_clamp(self, act_ext: Iterable[float]) -> None:
         """Forces the layer's activations.
 
