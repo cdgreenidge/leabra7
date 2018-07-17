@@ -24,7 +24,7 @@ def test_kwta_suppresses_all_but_k_units() -> None:
         pr2_spec = sp.ProjnSpec(dist=rn.Uniform(low=0.25, high=0.75))
         n.new_projn("proj2", "lr1", "lr2", pr2_spec)
 
-        n.force_layer("lr1", [1])
+        n.clamp_layer("lr1", [1])
         for i in range(50):
             n.cycle()
 
@@ -53,7 +53,7 @@ def test_kwta_avg_suppresses_all_but_k_units() -> None:
         pr2_spec = sp.ProjnSpec(dist=rn.Uniform(low=0.25, high=0.75))
         n.new_projn("proj2", "lr1", "lr2", pr2_spec)
 
-        n.force_layer("lr1", [1])
+        n.clamp_layer("lr1", [1])
         for i in range(100):
             n.cycle()
 

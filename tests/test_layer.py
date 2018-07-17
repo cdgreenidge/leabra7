@@ -87,11 +87,6 @@ def test_layer_should_be_able_to_update_its_units_kwta_avg_inhibition(
     layer.update_inhibition()
 
 
-def test_layer_should_be_able_to_update_its_units_activation() -> None:
-    layer = lr.Layer(name="in", size=3)
-    layer.update_activation()
-
-
 def test_layer_should_be_able_to_do_an_activation_cycle() -> None:
     layer = lr.Layer(name="in", size=3)
     layer.activation_cycle()
@@ -117,9 +112,9 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
 
 
 # TODO: Better test
-def test_layer_can_update_learning_averages() -> None:
+def test_layer_can_update_learning_averages_when_hard_clamped() -> None:
     layer = lr.Layer(name="layer1", size=3)
-    layer.force([1.0])
+    layer.hard_clamp([1.0])
     layer.activation_cycle()
     layer.update_trial_learning_averages()
 
@@ -129,24 +124,36 @@ def test_layer_can_update_learning_averages() -> None:
     assert (layer.avg_l != torch.zeros(3)).all()
 
 
-def test_layer_forcing_should_change_the_unit_activations() -> None:
+def test_layer_hard_clamping_should_change_the_unit_activations() -> None:
     layer = lr.Layer(name="in", size=4)
-    layer.force([0, 1])
-    assert list(layer.units.act) == [0, 1, 0, 1]
+    layer.hard_clamp([0, 1])
+    expected = [0, 1, 0, 1]
+    for i in range(4):
+        assert math.isclose(layer.units.act[i], expected[i], abs_tol=1e-6)
 
 
-def test_layer_forcing_should_not_change_after_cycles() -> None:
-    layer = lr.Layer(name="in", size=4)
-    layer.force([0, 1])
+def test_layer_set_hard_clamp() -> None:
+    layer = lr.Layer(name="in", size=3)
+    layer.hard_clamp(act_ext=[0, 1])
     layer.activation_cycle()
+    expected = [0, 1, 0]
+    for i in range(3):
+        assert math.isclose(layer.units.act[i], expected[i], abs_tol=1e-6)
+
+
+def test_layer_can_unclamp() -> None:
+    layer = lr.Layer(name="in", size=4)
+    layer.hard_clamp([0, 1])
+    layer.unclamp()
+    assert not layer.clamped
     assert list(layer.units.act) == [0, 1, 0, 1]
 
 
-def test_hard_clamp_event_forces_a_layer_if_the_names_match() -> None:
+def test_hard_clamp_event_hard_clamps_a_layer_if_the_names_match() -> None:
     clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
     layer = lr.Layer("lr1", 3)
     layer.handle(clamp)
-    assert layer.forced
+    assert layer.clamped
     assert all(layer.units.act == 0.7)
 
 
@@ -154,18 +161,18 @@ def test_hard_clamp_event_does_nothing_if_the_names_do_not_match() -> None:
     clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
     layer = lr.Layer("WHALES", 3)
     layer.handle(clamp)
-    assert not layer.forced
+    assert not layer.clamped
 
 
 def test_end_plus_phase_event_saves_activations() -> None:
     layer = lr.Layer("lr1", 3)
-    layer.force([1, 0, 1])
+    layer.hard_clamp([1, 0, 1])
     layer.handle(ev.EndPlusPhase())
     assert (layer.acts_p == torch.Tensor([1, 0, 1])).all()
 
 
 def test_end_minus_phase_event_saves_activations() -> None:
     layer = lr.Layer("lr1", 3)
-    layer.force([1, 0, 0.5])
+    layer.hard_clamp([1, 0, 0.5])
     layer.handle(ev.EndMinusPhase())
     assert (layer.acts_m == torch.Tensor([1, 0, 0.5])).all()
