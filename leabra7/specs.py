@@ -208,6 +208,8 @@ class LayerSpec(Spec):
     fb_dt = 1 / 1.4
     # Global (feedforward + feedback) inhibition multiplier
     gi = 1.8
+    # cos_diff_avg integration time constant
+    avg_dt = 0.01
 
     # Attrs to log every cycle.
     log_on_cycle: Iterable[str] = ()

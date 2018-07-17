@@ -308,7 +308,8 @@ class UnitGroup:
             implemented.
 
         """
-        self.avg_l = self.spec.l_dn_dt * acts_p_avg * (self.avg_m - self.avg_l)
+        self.avg_l = self.spec.l_dn_dt * acts_p_avg_eff * (
+            self.avg_m - self.avg_l)
         mask = self.avg_m > 0.1
         self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
 

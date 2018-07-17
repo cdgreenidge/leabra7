@@ -9,6 +9,7 @@ from leabra7 import log
 from leabra7 import specs
 from leabra7 import events
 from leabra7 import unit
+from leabra7 import utils
 
 
 def _parse_unit_attr(attr: str) -> str:
@@ -70,6 +71,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.acts_p = torch.Tensor(self.size).zero_()
         # Last minus phase activation
         self.acts_m = torch.Tensor(self.size).zero_()
+        # Cosine similiarity between acts_p and acts_m, integrated over trials
+        self.cos_diff_avg = 0.0
 
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
@@ -104,26 +107,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
-
-    @property
-    def avg_ss(self) -> torch.Tensor:
-        """The supershort learning average for each unit."""
-        return self.units.avg_ss
-
-    @property
-    def avg_s(self) -> torch.Tensor:
-        """The short learning average for each unit."""
-        return self.units.avg_s
-
-    @property
-    def avg_m(self) -> torch.Tensor:
-        """The medium learning average for each unit."""
-        return self.units.avg_m
-
-    @property
-    def avg_l(self) -> torch.Tensor:
-        """The long learning average for each unit."""
-        return self.units.avg_l
 
     def add_input(self, inpt: torch.Tensor, wt_scale_rel: float = 1.0) -> None:
         """Adds an input to the layer.
@@ -190,10 +173,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
 
-    def update_trial_learning_averages(self) -> None:
-        """Updates the learning averages computed at the end of each trial."""
-        self.units.update_trial_learning_averages(self.avg_act)
-
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
         if not self.clamped:
@@ -208,6 +187,11 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
     def update_trial_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each trial."""
+        cos_diff = torch.nn.functional.cosine_similarity(
+            self.acts_p, self.acts_m, dim=0)
+        cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
+        self.cos_diff_avg = self.spec.avg_dt * (cos_diff - self.cos_diff_avg)
+
         acts_p_avg_eff = self.acts_p.mean()
         self.units.update_trial_learning_averages(acts_p_avg_eff)
 
@@ -265,6 +249,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
                 self.hard_clamp(event.acts)
         elif isinstance(event, events.EndPlusPhase):
             self.acts_p.copy_(self.units.act)
+            self.update_trial_learning_averages()
         elif isinstance(event, events.EndMinusPhase):
             self.acts_m.copy_(self.units.act)
         elif isinstance(event, events.Unclamp):
