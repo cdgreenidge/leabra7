@@ -1,4 +1,6 @@
 """Test net.py"""
+import math
+
 import pytest
 
 from leabra7 import events
@@ -52,6 +54,44 @@ def test_you_can_create_a_layer_with_a_default_spec() -> None:
     n.new_layer("layer1", 3)
 
 
+def test_you_can_hard_clamp_a_layer() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 4)
+    n.clamp_layer("layer1", [0, 1])
+    n.cycle()
+    expected = [0, 1, 0, 1]
+    for i in range(4):
+        assert math.isclose(
+            n.objs["layer1"].units.act[i], expected[i], abs_tol=1e-6)
+
+
+def test_you_can_unclamp_a_layer() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1)
+    n.new_layer("layer2", 2)
+    n.new_projn("projn1", pre="layer1", post="layer2")
+
+    n.clamp_layer("layer2", [0])
+    n.clamp_layer("layer1", [0.7])
+    n.unclamp_layer("layer2")
+
+    # Drive layer 2 so it should spike
+    for _ in range(50):
+        n.cycle()
+
+    assert (n.layers["layer2"].units.act > 0).all()
+
+
+def test_clamping_a_layer_validates_its_name() -> None:
+    with pytest.raises(ValueError):
+        net.Net().clamp_layer("abcd", [0])
+
+
+def test_unclamping_a_layer_validates_its_name() -> None:
+    with pytest.raises(ValueError):
+        net.Net().unclamp_layer("abcd")
+
+
 def test_a_new_projn_validates_its_spec() -> None:
     n = net.Net()
     n.new_layer("layer1", 3)
@@ -84,19 +124,6 @@ def test_projn_checks_if_the_receiving_layer_name_is_valid() -> None:
 
 # Right now, it's difficult to test net.cycle(), because it's the core of the
 # stateful updates. Eventually, we'll add some regression tests for it.
-
-
-def test_you_can_force_a_layer() -> None:
-    n = net.Net()
-    n.new_layer("layer1", 4)
-    n.force_layer("layer1", [0, 1])
-    n.cycle()
-    assert list(n.objs["layer1"].units.act) == [0, 1, 0, 1]
-
-
-def test_forcing_a_layer_validates_its_name() -> None:
-    with pytest.raises(ValueError):
-        net.Net().force_layer("abcd", [0])
 
 
 def test_running_a_minus_phase_raises_error_if_num_cycles_less_than_one(

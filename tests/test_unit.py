@@ -2,6 +2,8 @@
 import math
 from typing import Tuple
 
+from hypothesis import given
+import hypothesis.strategies as st
 import numpy as np
 import pytest
 import torch  # type: ignore
@@ -70,6 +72,20 @@ def test_nxx1_equals_the_max_value_outside_the_max_bound(nxx1_table) -> None:
     assert unit.nxx1(xs[-1] + 1) == conv[-1]
 
 
+@given(
+    vals=st.lists(
+        elements=st.floats(min_value=0.0, max_value=1.0),
+        min_size=1,
+        max_size=10),
+    minimum=st.floats(min_value=0.0, max_value=1.0),
+    maximum=st.floats(min_value=0.0, max_value=1.0))
+def test_clip_method(vals, minimum, maximum):
+    if minimum < maximum:
+        clipped = un.clip(torch.Tensor(vals), minimum, maximum)
+        for i in range(len(clipped)):
+            assert minimum <= clipped[i] <= maximum
+
+
 # Test Unit Group
 def test_unitgroup_init_checks_that_size_is_positive() -> None:
     with pytest.raises(ValueError):
@@ -136,6 +152,16 @@ def test_unitgroup_uses_the_default_spec_if_none_is_provided() -> None:
 def test_unitgroup_sets_the_spec_you_provide() -> None:
     spec = sp.UnitSpec()
     assert un.UnitGroup(size=3, spec=spec).spec is spec
+
+
+@given(st.lists(elements=st.floats(), min_size=5, max_size=5))
+def test_unitgroup_hard_clamp_in_range(act_ext) -> None:
+    spec = sp.UnitSpec(act_min=0.25, act_max=0.75)
+    group = un.UnitGroup(size=5, spec=spec)
+    group.hard_clamp(torch.Tensor(act_ext))
+    for i in range(5):
+        assert 0.25 <= group.act[i] <= 0.75
+        assert 0.25 <= group.act_nd[i] <= 0.75
 
 
 def test_unitgroup_can_return_the_top_k_net_input_values() -> None:

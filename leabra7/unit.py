@@ -88,6 +88,12 @@ def nxx1_table() -> Any:
     return xs_valid, conv
 
 
+def clip(vals: torch.Tensor, minimum: float, maximum: float) -> torch.Tensor:
+    """Clips values to fit within range."""
+    clipped = torch.max(vals, minimum * torch.ones(vals.shape))
+    return torch.min(clipped, maximum * torch.ones(vals.shape))
+
+
 class UnitGroup:
     """A group of computational units (aka neurons.)
 
@@ -128,6 +134,8 @@ class UnitGroup:
         self.net = torch.Tensor(self.size).zero_()
         # Total (feedback + feedforward) inhibition
         self.gc_i = torch.Tensor(self.size).zero_()
+        # Non depressed activation
+        self.act_nd = torch.Tensor(self.size).zero_()
         # Activation
         self.act = torch.Tensor(self.size).zero_()
         # Net current
@@ -258,13 +266,28 @@ class UnitGroup:
         post_spike = 1 - pre_spike
         act_driver = pre_spike * (self.v_m_eq - self.spec.spk_thr
                                   ) + post_spike * (self.net - g_e_thr)
-        self.act += (self.spec.integ * self.spec.vm_dt *
-                     (self.nxx1(act_driver) - self.act))
+        self.act_nd += (self.spec.integ * self.spec.vm_dt *
+                        (self.nxx1(act_driver) - self.act_nd))
+
+        self.act = self.act_nd * self.spec.syn_tr
 
         self.adapt += self.spec.integ * (
             self.spec.adapt_dt * (self.spec.vm_gain *
                                   (self.v_m - self.spec.e_rev_l) - self.adapt)
             + self.spike * self.spec.spike_gain)
+
+    def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
+        """Sets unit act, v_m, and i_net from external hard clamp."""
+        act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
+        self.act_nd = act_clip
+        self.act = act_clip
+
+        mask = (-1e-6 < act_clip) & (act_clip < 1e-6)
+        self.v_m[mask] = self.spec.e_rev_l
+        self.v_m[~mask] = (
+            self.spec.spk_thr + act_clip[~mask] / self.spec.act_gain)
+
+        self.i_net = torch.Tensor(self.size).zero_()
 
     def update_cycle_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each cycle."""
