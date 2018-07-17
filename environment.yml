@@ -4,6 +4,7 @@ channels:
   - default
   - pytorch
   - conda-forge
+  - cdg4
 
 dependencies:
   - leabra7
