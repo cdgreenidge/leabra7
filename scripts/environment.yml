@@ -16,6 +16,6 @@ dependencies:
   - pytest-mock>=1.10
   - pytest>=3.6
   - python=3.6.*
-  - pytorch>=0.4
+  - pytorch>=0.3
   - scipy>=1.1
   - yapf>=0.22
