@@ -7,7 +7,7 @@ import torch  # type: ignore
 
 from leabra7 import log
 from leabra7 import specs
-from leabra7 import program
+from leabra7 import events
 from leabra7 import unit
 
 
@@ -33,7 +33,7 @@ def _parse_unit_attr(attr: str) -> str:
     return parts[1]
 
 
-class Layer(log.ObservableMixin, program.EventListenerMixin):
+class Layer(log.ObservableMixin, events.EventListenerMixin):
     """A layer of units (neurons).
 
     Args:
@@ -68,6 +68,10 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
 
         # Desired clamping values
         self.act_ext = torch.Tensor(self.size).zero_()
+        # Last plus phase activation
+        self.acts_p = torch.Tensor(self.size).zero_()
+        # Last minus phase activation
+        self.acts_m = torch.Tensor(self.size).zero_()
 
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
@@ -243,7 +247,11 @@ class Layer(log.ObservableMixin, program.EventListenerMixin):
         parsed = _parse_unit_attr(attr)
         return self.units.observe(parsed)
 
-    def handle(self, event: program.AtomicEvent) -> None:
-        if isinstance(event, program.HardClamp):
+    def handle(self, event: events.Event) -> None:
+        if isinstance(event, events.Clamp):
             if event.layer_name == self.name:
-                self.clamp(event.acts)
+                self.clamp(event.acts, hard=event.hard)
+        elif isinstance(event, events.EndPlusPhase):
+            self.acts_p.copy_(self.units.act)
+        elif isinstance(event, events.EndMinusPhase):
+            self.acts_m.copy_(self.units.act)
