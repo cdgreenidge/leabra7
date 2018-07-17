@@ -44,11 +44,20 @@ collaboration and code sharing.
 Brief Overview
 --------------
 
-Networks are composed of layers and projections. Networks are the architecture
-of the model.
+Networks are composed of layers and projections. Layers represent groups of units.
+These units are not themselves interconnected but are mutually inhibitory. These
+layers can be connected to each other through projections. These projections "project"
+activations forward as input to the next layer. These values are fed through a weight matrix.
+Projections can also have special setups, namely they can be made sparse, such that
+there are some percent fewer connections than full connectivity (every unit in the pre layer
+connected to every unit in the post layer). Projections can also involve "masking" either the prelayer
+or postlayer or both, so that only a few units of each layer are connected. The weights of these
+projections is updated according to the LEABRA algorithm.
 
-Networks execute programs. Programs include specifications of algorithms for
-inhibition, clamping, and learning.
+Networks execute events. These events can be assembled into a sequence of instructions
+to train and/or test a network. Events include cycling the activations of the layers and
+clamping the activations of layers. See our sample notebooks to see how events
+can be used to train and test a network.
 
 
 .. _install_guide:
