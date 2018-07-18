@@ -25,7 +25,7 @@ class Scalar(Distribution):
 
     """
 
-    def __init__(self, value: float) -> None:
+    def __init__(self, value: float = 0.5) -> None:
         self.value = value
 
     def fill(self, tensor: torch.Tensor) -> None:
@@ -45,7 +45,7 @@ class Uniform(Distribution):
 
     """
 
-    def __init__(self, low: float, high: float) -> None:
+    def __init__(self, low: float = 0, high: float = 1) -> None:
         if low >= high:
             raise ValueError("low ({0}) must be less than high "
                              "({1}).".format(low, high))
@@ -69,7 +69,7 @@ class Gaussian(Distribution):
 
     """
 
-    def __init__(self, mean: float, var: float) -> None:
+    def __init__(self, mean: float = 0.5, var: float = 0.0625) -> None:
         if var < 0:
             raise ValueError("Variance ({0}) must be positive.".format(var))
         self.mu = mean
@@ -92,7 +92,7 @@ class LogNormal(Distribution):
 
     """
 
-    def __init__(self, mean: float, var: float) -> None:
+    def __init__(self, mean: float = 0.0, var: float = 1.0) -> None:
         if var < 0:
             raise ValueError("Variance ({0}) must be positive.".format(var))
         self.mu = mean
@@ -111,7 +111,7 @@ class Exponential(Distribution):
 
     """
 
-    def __init__(self, lambd: float) -> None:
+    def __init__(self, lambd: float = 1.0) -> None:
         self.lambd = lambd
 
     def fill(self, tensor: torch.Tensor) -> None:
