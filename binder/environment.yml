@@ -8,6 +8,7 @@ channels:
 
 dependencies:
   - leabra7
+  - matplotlib>=2.2.2
   - numpy>=1.14
   - pandas>=0.23
   - python=3.6.*
