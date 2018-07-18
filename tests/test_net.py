@@ -278,6 +278,7 @@ def test_network_template_unique_net_generation() -> None:
         "spec": pr2_spec
     })
 
-    nets = [template.create() for i in range(5)]
+    nets = [template.create() for i in range(2)]
 
     assert nets[0] != nets[1]
+    assert "t1" == nets[0].template == nets[1].template

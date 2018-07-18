@@ -16,7 +16,16 @@ from leabra7 import specs
 class Net(events.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
-    def __init__(self) -> None:
+    def __init__(self, template: str = None) -> None:
+        """Initializes network.
+
+        Args:
+            template: name of template that network was generated from.
+                (Default: None)
+
+        """
+        # Keep track of template network is made from
+        self.template = template
         # Each of the following dicts is keyed by the name of the object
         self.objs: Dict[str, events.EventListenerMixin] = {}
         self.layers: Dict[str, layer.Layer] = {}
@@ -240,23 +249,42 @@ class Net(events.EventListenerMixin):
 
 
 class NetTemplate():
-    """ A generator for networks. """
+    """A template that creates networks according to its specifications."""
 
     def __init__(self, name: str) -> None:
+        """Initializes network template.
+
+        Args:
+            name: Name of template. To be applied to each net created
+                from the template.
+
+        """
         self.name = name
         self.assembly: List[Tuple[Callable, Dict[str, Any]]] = []
 
-    def new_layer(self, d: Dict[str, Any]) -> None:
-        """Adds a new layer to the network generator template."""
-        self.assembly.append((Net.new_layer, d))
+    def new_layer(self, args: Dict[str, Any]) -> None:
+        """Adds a new layer to the network generator template.
 
-    def new_projn(self, d: Dict[str, Any]) -> None:
-        """Adds a new projn to the network generator template."""
-        self.assembly.append((Net.new_projn, d))
+        Args:
+            args: Dictionary of arguments for new layer with argument names
+                for keys and their corresponding values.
+
+        """
+        self.assembly.append((Net.new_layer, args))
+
+    def new_projn(self, args: Dict[str, Any]) -> None:
+        """Adds a new projn to the network generator template.
+
+        Args:
+            args: Dictionary of arguments for new projn with argument names
+                for keys and their corresponding values.
+
+        """
+        self.assembly.append((Net.new_projn, args))
 
     def create(self) -> Net:
         """Creates a network according to the template."""
-        n = Net()
+        n = Net(template=self.name)
         for step in self.assembly:
             step[0](self=n, **step[1])
         return n
