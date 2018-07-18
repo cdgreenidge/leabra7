@@ -35,6 +35,7 @@ def batch(network: net.Net, input_patterns: Iterable[Iterable[float]],
 
 
 def output(network: net.Net, pattern: Iterable[float]) -> List[float]:
+    """Runs the network with an input pattern and cleans up the output."""
     network.clamp_layer("input", pattern)
     for _ in range(50):
         network.cycle()
