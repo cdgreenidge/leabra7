@@ -252,7 +252,7 @@ class ProjnSpec(Spec):
     """Spec for `Projn` objects."""
     # The probability distribution from which the connection weights will be
     # drawn
-    dist: rand.Distribution = rand.Scalar(0.5)
+    dist: rand.Distribution = rand.Scalar()
     # Selects which pre layer units will be included in the projection
     # If the length is less than the number of units in the pre_layer, it will
     # be tiled. If the length is more, it will be truncated.
