@@ -195,8 +195,17 @@ def test_net_logs_checks_whether_the_object_name_is_valid() -> None:
 
 def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n = net.Net()
-    n.new_layer("layer1", 3, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
-    n.cycle()
+    n.new_layer(
+        name="layer1",
+        size=3,
+        spec=specs.LayerSpec(
+            log_on_cycle=("avg_act", ),
+            log_on_trial=("avg_act", ),
+            log_on_epoch=("avg_act", ),
+            log_on_batch=("avg_act", )))
+    n.plus_phase_cycle(1)
+    n.end_epoch()
+    n.end_batch()
     assert "avg_act" in n.logs("cycle", "layer1").whole.columns
 
 

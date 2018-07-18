@@ -312,6 +312,21 @@ def test_it_should_check_for_invalid_log_on_cycle_attrs() -> None:
         sp.LayerSpec(log_on_cycle=("whales", )).validate()
 
 
+def test_it_should_check_for_invalid_log_on_trial_attrs() -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(log_on_trial=("whales", )).validate()
+
+
+def test_it_should_check_for_invalid_log_on_epoch_attrs() -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(log_on_epoch=("whales", )).validate()
+
+
+def test_it_should_check_for_invalid_log_on_batch_attrs() -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(log_on_batch=("whales", )).validate()
+
+
 # Test ProjnSpec validation
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f) -> None:

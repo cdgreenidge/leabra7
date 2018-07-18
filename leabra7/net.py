@@ -19,6 +19,9 @@ class Net(events.EventListenerMixin):
         self.layers: Dict[str, layer.Layer] = {}
         self.projns: Dict[str, projn.Projn] = {}
         self.cycle_loggers: List[log.Logger] = []
+        self.trial_loggers: List[log.Logger] = []
+        self.epoch_loggers: List[log.Logger] = []
+        self.batch_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -86,6 +89,12 @@ class Net(events.EventListenerMixin):
 
         if lr.spec.log_on_cycle != ():
             self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
+        if lr.spec.log_on_trial != ():
+            self.trial_loggers.append(log.Logger(lr, lr.spec.log_on_trial))
+        if lr.spec.log_on_epoch != ():
+            self.epoch_loggers.append(log.Logger(lr, lr.spec.log_on_epoch))
+        if lr.spec.log_on_batch != ():
+            self.batch_loggers.append(log.Logger(lr, lr.spec.log_on_batch))
 
     def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.
@@ -244,6 +253,15 @@ class Net(events.EventListenerMixin):
         """Overrides events.EventListnerMixin.handle()"""
         if isinstance(event, events.Cycle):
             self.cycle()
-        else:
-            for _, obj in self.objs.items():
-                obj.handle(event)
+        elif isinstance(event, events.EndTrial):
+            for lg in self.trial_loggers:
+                lg.record()
+        elif isinstance(event, events.EndEpoch):
+            for lg in self.epoch_loggers:
+                lg.record()
+        elif isinstance(event, events.EndBatch):
+            for lg in self.batch_loggers:
+                lg.record()
+
+        for _, obj in self.objs.items():
+            obj.handle(event)

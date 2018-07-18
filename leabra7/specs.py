@@ -250,10 +250,12 @@ class LayerSpec(Spec):
         self.assert_sane_float("gi")
         self.unit_spec.validate()
 
-        for attr in self.log_on_cycle:
-            if attr not in self._valid_attrs_to_log:
-                raise ValidationError("{0} is not a valid member of "
-                                      "log_on_cycle.".format(attr))
+        for freq in ["cycle", "trial", "epoch", "batch"]:
+            attr_list_name = "log_on_{0}".format(freq)
+            for attr in getattr(self, attr_list_name):
+                if attr not in self._valid_attrs_to_log:
+                    raise ValidationError("{0} is not a valid member of "
+                                          "{1}".format(attr, attr_list_name))
 
 
 class ProjnSpec(Spec):
