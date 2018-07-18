@@ -211,9 +211,9 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
     n = net.Net()
-    mocker.spy(n, "cycle")
+    mocker.spy(n, "_cycle")
     n.handle(events.Cycle())
-    assert n.cycle.call_count == 1
+    assert n._cycle.call_count == 1
 
 
 def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:

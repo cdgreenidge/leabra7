@@ -88,13 +88,21 @@ class Net(events.EventListenerMixin):
         self.objs[name] = lr
 
         if lr.spec.log_on_cycle != ():
-            self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
+            logger = log.Logger(lr, lr.spec.log_on_cycle, events.Cycle)
+            self.cycle_loggers.append(logger)
+            self.objs["{0}_cycle_logger".format(name)] = logger
         if lr.spec.log_on_trial != ():
-            self.trial_loggers.append(log.Logger(lr, lr.spec.log_on_trial))
+            logger = log.Logger(lr, lr.spec.log_on_trial, events.EndTrial)
+            self.trial_loggers.append(logger)
+            self.objs["{0}_trial_logger".format(name)] = logger
         if lr.spec.log_on_epoch != ():
-            self.epoch_loggers.append(log.Logger(lr, lr.spec.log_on_epoch))
+            logger = log.Logger(lr, lr.spec.log_on_epoch, events.EndEpoch)
+            self.epoch_loggers.append(logger)
+            self.objs["{0}_epoch_logger".format(name)] = logger
         if lr.spec.log_on_batch != ():
-            self.batch_loggers.append(log.Logger(lr, lr.spec.log_on_batch))
+            logger = log.Logger(lr, lr.spec.log_on_batch, events.EndBatch)
+            self.batch_loggers.append(logger)
+            self.objs["{0}_batch_logger".format(name)] = logger
 
     def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.
@@ -154,16 +162,17 @@ class Net(events.EventListenerMixin):
         self.projns[name] = pr
         self.objs[name] = pr
 
-    def cycle(self) -> None:
-        """Cycles the network."""
-        for lg in self.cycle_loggers:
-            lg.record()
-
+    def _cycle(self) -> None:
+        """Cycles the network (triggered by cycle event)."""
         for _, lr in self.layers.items():
             lr.activation_cycle()
 
         for _, pr in self.projns.items():
             pr.flush()
+
+    def cycle(self) -> None:
+        """Cycles the network."""
+        self.handle(events.Cycle())
 
     def minus_phase_cycle(self, num_cycles: int = 50) -> None:
         """Runs a series of cycles for the trial minus phase.
@@ -252,16 +261,7 @@ class Net(events.EventListenerMixin):
     def handle(self, event: events.Event) -> None:
         """Overrides events.EventListnerMixin.handle()"""
         if isinstance(event, events.Cycle):
-            self.cycle()
-        elif isinstance(event, events.EndTrial):
-            for lg in self.trial_loggers:
-                lg.record()
-        elif isinstance(event, events.EndEpoch):
-            for lg in self.epoch_loggers:
-                lg.record()
-        elif isinstance(event, events.EndBatch):
-            for lg in self.batch_loggers:
-                lg.record()
+            self._cycle()
 
         for _, obj in self.objs.items():
             obj.handle(event)
