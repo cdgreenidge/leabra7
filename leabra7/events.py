@@ -38,6 +38,21 @@ class EndMinusPhase(Event):
     pass
 
 
+class EndTrial(Event):
+    """The event that signals the end of a trial."""
+    pass
+
+
+class EndEpoch(Event):
+    """The event that signals the end of an epoch."""
+    pass
+
+
+class EndBatch(Event):
+    """The event that signals the end of a batch."""
+    pass
+
+
 class HardClamp(Event):
     """The event that hard clamps a layer.
 

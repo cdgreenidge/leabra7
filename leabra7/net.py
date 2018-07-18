@@ -197,6 +197,15 @@ class Net(events.EventListenerMixin):
         for _ in range(num_cycles):
             self.handle(events.Cycle())
         self.handle(events.EndPlusPhase())
+        self.handle(events.EndTrial())
+
+    def end_epoch(self) -> None:
+        """Signals to the network that an epoch has ended."""
+        self.handle(events.EndEpoch())
+
+    def end_batch(self) -> None:
+        """Signals to the network that a batch has ended."""
+        self.handle(events.EndBatch())
 
     def learn(self) -> None:
         """Updates projection weights with XCAL learning equation."""

@@ -166,7 +166,8 @@ def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
     mocker.spy(n, "handle")
     n.plus_phase_cycle(num_cycles=1)
     assert isinstance(n.handle.call_args_list[0][0][0], events.BeginPlusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndPlusPhase)
+    assert isinstance(n.handle.call_args_list[-2][0][0], events.EndPlusPhase)
+    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndTrial)
 
 
 def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
@@ -226,3 +227,17 @@ def test_learn_broadcasts_learn_events_to_each_object(mocker) -> None:
     mocker.spy(n, "handle")
     n.learn()
     assert isinstance(n.handle.call_args_list[0][0][0], events.Learn)
+
+
+def test_you_can_signal_the_end_of_an_epoch(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.end_epoch()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.EndEpoch)
+
+
+def test_you_can_signal_the_end_of_a_batch(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.end_batch()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.EndBatch)

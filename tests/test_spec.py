@@ -301,7 +301,7 @@ def test_it_should_validate_the_unit_spec() -> None:
 
 
 def test_every_valid_log_on_cycle_attribute_can_be_logged() -> None:
-    valid_attrs = sp.LayerSpec()._valid_log_on_cycle
+    valid_attrs = sp.LayerSpec()._valid_attrs_to_log
     lr1 = lr.Layer("lr1", 3)
     for attr in valid_attrs:
         lr1.validate_attr(attr)

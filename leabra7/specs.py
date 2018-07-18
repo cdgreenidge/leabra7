@@ -211,14 +211,20 @@ class LayerSpec(Spec):
     # cos_diff_avg integration time constant
     avg_dt = 0.01
 
-    # Attrs to log every cycle.
+    # Attrs to log every cycle
     log_on_cycle: Iterable[str] = ()
+    # Attrs to log every trial
+    log_on_trial: Iterable[str] = ()
+    # Attrs to log every epoch
+    log_on_epoch: Iterable[str] = ()
+    # Attrs to log every batch
+    log_on_batch: Iterable[str] = ()
 
     # Valid attributes to log on every cycle
     # When adding any loggable attribute or property to this list,
     # update layer._whole_attrs or layer._parts_attrs as appropriate
     # (we represent in two places to avoid a circular dependency)
-    _valid_log_on_cycle = ("avg_act", "avg_net", "fbi", "unit_net_raw",
+    _valid_attrs_to_log = ("avg_act", "avg_net", "fbi", "unit_net_raw",
                            "unit_net", "unit_gc_i", "unit_act", "unit_i_net",
                            "unit_i_net_r", "unit_v_m", "unit_v_m_eq",
                            "unit_adapt", "unit_spike")
@@ -245,7 +251,7 @@ class LayerSpec(Spec):
         self.unit_spec.validate()
 
         for attr in self.log_on_cycle:
-            if attr not in self._valid_log_on_cycle:
+            if attr not in self._valid_attrs_to_log:
                 raise ValidationError("{0} is not a valid member of "
                                       "log_on_cycle.".format(attr))
 
