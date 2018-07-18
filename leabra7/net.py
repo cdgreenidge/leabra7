@@ -242,7 +242,12 @@ class Net(events.EventListenerMixin):
                 recorded for the desired object.
 
         """
-        freq_names = {"cycle": self.cycle_loggers}
+        freq_names = {
+            "cycle": self.cycle_loggers,
+            "trial": self.trial_loggers,
+            "epoch": self.epoch_loggers,
+            "batch": self.batch_loggers
+        }
         try:
             freq_loggers = freq_names[freq]
         except KeyError:

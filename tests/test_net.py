@@ -206,7 +206,8 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n.plus_phase_cycle(1)
     n.end_epoch()
     n.end_batch()
-    assert "avg_act" in n.logs("cycle", "layer1").whole.columns
+    for freq in ("cycle", "trial", "epoch", "batch"):
+        assert "avg_act" in n.logs(freq, "layer1").whole.columns
 
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
