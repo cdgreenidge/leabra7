@@ -198,6 +198,10 @@ class Net(events.EventListenerMixin):
             self.handle(events.Cycle())
         self.handle(events.EndPlusPhase())
 
+    def learn(self) -> None:
+        """Updates projection weights with XCAL learning equation."""
+        self.handle(events.Learn())
+
     def logs(self, freq: str, name: str) -> log.Logs:
         """Retrieves logs for an object in the network.
 

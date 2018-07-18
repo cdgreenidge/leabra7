@@ -208,6 +208,8 @@ class LayerSpec(Spec):
     fb_dt = 1 / 1.4
     # Global (feedforward + feedback) inhibition multiplier
     gi = 1.8
+    # cos_diff_avg integration time constant
+    avg_dt = 0.01
 
     # Attrs to log every cycle.
     log_on_cycle: Iterable[str] = ()
@@ -270,6 +272,12 @@ class ProjnSpec(Spec):
     # Relative net input scaling weight (relative to other projections
     # terminating in the same layer)
     wt_scale_rel: float = 1.0
+    # Learning rate
+    lrate = 0.02
+    # Gain for sigmoidal weight contrast enhancement
+    sig_gain = 6
+    # Offset for sigmoidal weight contrast enhancement
+    sig_offset = 1
 
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
@@ -286,5 +294,8 @@ class ProjnSpec(Spec):
 
         self.assert_in_range("wt_scale_abs", 0, float("Inf"))
         self.assert_in_range("wt_scale_rel", 0, float("Inf"))
+        self.assert_in_range("lrate", 0, float("Inf"))
+        self.assert_in_range("sig_gain", 0, float("Inf"))
+        self.assert_sane_float("sig_offset")
 
         super().validate()

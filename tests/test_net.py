@@ -219,3 +219,10 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1
+
+
+def test_learn_broadcasts_learn_events_to_each_object(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.learn()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.Learn)

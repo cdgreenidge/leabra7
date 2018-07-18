@@ -72,6 +72,11 @@ class Unclamp(Event):
         self.layer_name = layer_name
 
 
+class Learn(Event):
+    """The event that triggers learning in projections."""
+    pass
+
+
 class EventListenerMixin(metaclass=abc.ABCMeta):
     """Defines an interface for handling network events.
 
