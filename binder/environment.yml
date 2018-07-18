@@ -1,0 +1,15 @@
+name: leabra7-binder
+
+channels:
+  - conda-forge
+  - pytorch
+  - cdg4
+  - default
+
+dependencies:
+  - leabra7
+  - numpy>=1.14
+  - pandas>=0.23
+  - python=3.6.*
+  - pytorch>=0.4
+  - scipy>=1.1
