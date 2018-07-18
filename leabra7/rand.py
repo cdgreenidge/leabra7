@@ -25,7 +25,7 @@ class Scalar(Distribution):
 
     """
 
-    def __init__(self, value: float = 0.5) -> None:
+    def __init__(self, value: float = 1.0) -> None:
         self.value = value
 
     def fill(self, tensor: torch.Tensor) -> None:
