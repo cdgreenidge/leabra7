@@ -2,6 +2,7 @@
 import math
 
 import pytest
+import torch
 
 from leabra7 import events
 from leabra7 import net
@@ -197,6 +198,28 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n.new_layer("layer1", 3, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
     n.cycle()
     assert "avg_act" in n.logs("cycle", "layer1").whole.columns
+
+
+def test_net_log_pausing_and_resuming() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 2, spec=specs.LayerSpec(log_on_cycle=("unit_act", "avg_act", )))
+    for i in range(2):
+        n.cycle()
+    n.pause_logging()
+    for i in range(2):
+        n.cycle()
+    n.resume_logging()
+    for i in range(2):
+        n.cycle()
+
+    partsTime = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
+    wholeTime = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
+
+    assert partsTime.size() == [8]
+    assert wholeTime.size() == [4]
+
+    assert (partsTime == torch.Tensor([0, 0, 1, 1, 4, 4, 5, 5])).all()
+    assert (wholeTime == torch.Tensor([0, 1, 4, 5])).all()
 
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
