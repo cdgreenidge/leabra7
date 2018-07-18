@@ -1,9 +1,9 @@
 name: leabra7-binder
 
 channels:
-  - conda-forge
-  - pytorch
   - cdg4
+  - pytorch
+  - conda-forge
   - default
 
 dependencies:
