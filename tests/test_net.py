@@ -6,6 +6,7 @@ import pytest
 from leabra7 import events
 from leabra7 import net
 from leabra7 import specs
+from leabra7 import rand
 
 
 def test_the_network_can_check_if_an_object_exists_within_it() -> None:
@@ -219,3 +220,64 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1
+
+
+## Test Network Generator
+
+
+def test_network_template_creation() -> None:
+    template = net.NetTemplate(name="t1")
+    template.new_layer({"name": "lr1", "size": 1})
+
+    lr2_spec = specs.LayerSpec(
+        inhibition_type="kwta",
+        kwta_pct=0.3,
+        log_on_cycle=("unit_act", ),
+        unit_spec=specs.UnitSpec(adapt_dt=0, spike_gain=0))
+    template.new_layer({"name": "lr2", "size": 10, "spec": lr2_spec})
+
+    template.new_projn({
+        "name": "proj1",
+        "pre": "lr1",
+        "post": "lr2",
+        "spec": specs.ProjnSpec()
+    })
+
+    pr2_spec = specs.ProjnSpec(dist=rand.Uniform(low=0.25, high=0.75))
+    template.new_projn({
+        "name": "proj2",
+        "pre": "lr1",
+        "post": "lr2",
+        "spec": pr2_spec
+    })
+
+
+def test_network_template_unique_net_generation() -> None:
+    template = net.NetTemplate(name="t1")
+    template.new_layer({"name": "lr1", "size": 1})
+
+    lr2_spec = specs.LayerSpec(
+        inhibition_type="kwta",
+        kwta_pct=0.3,
+        log_on_cycle=("unit_act", ),
+        unit_spec=specs.UnitSpec(adapt_dt=0, spike_gain=0))
+    template.new_layer({"name": "lr2", "size": 10, "spec": lr2_spec})
+
+    template.new_projn({
+        "name": "proj1",
+        "pre": "lr1",
+        "post": "lr2",
+        "spec": specs.ProjnSpec()
+    })
+
+    pr2_spec = specs.ProjnSpec(dist=rand.Uniform(low=0.25, high=0.75))
+    template.new_projn({
+        "name": "proj2",
+        "pre": "lr1",
+        "post": "lr2",
+        "spec": pr2_spec
+    })
+
+    nets = [template.create() for i in range(5)]
+
+    assert nets[0] != nets[1]

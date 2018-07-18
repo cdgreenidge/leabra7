@@ -1,7 +1,10 @@
 """A network."""
+from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Sequence
+from typing import Tuple
 
 from leabra7 import layer
 from leabra7 import log
@@ -234,3 +237,26 @@ class Net(events.EventListenerMixin):
         else:
             for _, obj in self.objs.items():
                 obj.handle(event)
+
+
+class NetTemplate():
+    """ A generator for networks. """
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.assembly: List[Tuple[Callable, Dict[str, Any]]] = []
+
+    def new_layer(self, d: Dict[str, Any]) -> None:
+        """Adds a new layer to the network generator template."""
+        self.assembly.append((Net.new_layer, d))
+
+    def new_projn(self, d: Dict[str, Any]) -> None:
+        """Adds a new projn to the network generator template."""
+        self.assembly.append((Net.new_projn, d))
+
+    def create(self) -> Net:
+        """Creates a network according to the template."""
+        n = Net()
+        for step in self.assembly:
+            step[0](self=n, **step[1])
+        return n
