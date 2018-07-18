@@ -150,6 +150,20 @@ def xcal(x: torch.Tensor, thr: torch.Tensor) -> torch.Tensor:
     return result
 
 
+def sig(gain: float, offset: float, x: torch.Tensor) -> torch.Tensor:
+    """Computes element-wise sigmoid function.
+
+    Args:
+      gain: The sigmoid function gain.
+      offset: The sigmoid function offset.
+
+    Returns:
+      The sigmoid function evaluated for each element in the tensor.
+
+    """
+    return 1 / (1 + (offset * (1 - x) / x)**gain)
+
+
 class Projn(events.EventListenerMixin):
     """A projection links two layers. It is a bundle of connections.
 
@@ -178,8 +192,11 @@ class Projn(events.EventListenerMixin):
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
-        # presynaptic units
+        # presynaptic units. These weights are sigmoidally contrast-enchanced,
+        # and are used to send net input to other neurons.
         self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
+        # These weights ("fast weights") are linear and not contrast enhanced
+        self.fwts = torch.Tensor(self.post.size, self.pre.size).zero_()
 
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
@@ -199,6 +216,8 @@ class Projn(events.EventListenerMixin):
         rand_nums = torch.Tensor(num_nonzero)
         self.spec.dist.fill(rand_nums)
         self.wts[self.mask] = rand_nums
+
+        self.fwts = self.wts
 
         # Record the number of incoming connections for each unit
         self.num_recv_conns = torch.sum(self.mask, dim=1).float()
@@ -244,6 +263,7 @@ class Projn(events.EventListenerMixin):
 
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
+        # Compute weight changes
         srs = torch.ger(self.post.avg_s, self.pre.avg_s)
         srm = torch.ger(self.post.avg_m, self.pre.avg_m)
         s_mix = 0.9
@@ -252,9 +272,16 @@ class Projn(events.EventListenerMixin):
         lthr = thr_l_mix * self.post.cos_diff_avg * torch.ger(
             self.post.avg_m, self.pre.avg_l)
         mthr = (1 - thr_l_mix * self.post.cos_diff_avg) * srm
-        dwt = self.spec.lrate * xcal(sm_mix, lthr + mthr)
-        dwt[~self.mask] = 0
-        self.wts += dwt
+        dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
+        dwts[~self.mask] = 0
+
+        # Apply weights
+        mask = dwts > 0
+        dwts[mask] *= 1 - self.fwts[mask]
+        dwts[~mask] *= self.fwts[~mask]
+        self.fwts += dwts
+        self.wts = sig(self.spec.sig_gain, self.spec.sig_offset, self.fwts)
+        return
 
     def handle(self, event: events.Event) -> None:
         """Overrides `event.EventListenerMixin.handle()`."""
