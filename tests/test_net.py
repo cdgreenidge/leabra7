@@ -166,7 +166,8 @@ def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
     mocker.spy(n, "handle")
     n.plus_phase_cycle(num_cycles=1)
     assert isinstance(n.handle.call_args_list[0][0][0], events.BeginPlusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndPlusPhase)
+    assert isinstance(n.handle.call_args_list[-2][0][0], events.EndPlusPhase)
+    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndTrial)
 
 
 def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
@@ -194,16 +195,26 @@ def test_net_logs_checks_whether_the_object_name_is_valid() -> None:
 
 def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n = net.Net()
-    n.new_layer("layer1", 3, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
-    n.cycle()
-    assert "avg_act" in n.logs("cycle", "layer1").whole.columns
+    n.new_layer(
+        name="layer1",
+        size=3,
+        spec=specs.LayerSpec(
+            log_on_cycle=("avg_act", ),
+            log_on_trial=("avg_act", ),
+            log_on_epoch=("avg_act", ),
+            log_on_batch=("avg_act", )))
+    n.plus_phase_cycle(1)
+    n.end_epoch()
+    n.end_batch()
+    for freq in ("cycle", "trial", "epoch", "batch"):
+        assert "avg_act" in n.logs(freq, "layer1").whole.columns
 
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
     n = net.Net()
-    mocker.spy(n, "cycle")
+    mocker.spy(n, "_cycle")
     n.handle(events.Cycle())
-    assert n.cycle.call_count == 1
+    assert n._cycle.call_count == 1
 
 
 def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
@@ -219,3 +230,24 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1
+
+
+def test_learn_broadcasts_learn_events_to_each_object(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.learn()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.Learn)
+
+
+def test_you_can_signal_the_end_of_an_epoch(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.end_epoch()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.EndEpoch)
+
+
+def test_you_can_signal_the_end_of_a_batch(mocker) -> None:
+    n = net.Net()
+    mocker.spy(n, "handle")
+    n.end_batch()
+    assert isinstance(n.handle.call_args_list[0][0][0], events.EndBatch)

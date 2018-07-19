@@ -298,15 +298,18 @@ class UnitGroup:
         self.avg_m += self.spec.integ * self.spec.m_dt * (
             self.avg_s - self.avg_m)
 
-    def update_trial_learning_averages(self, acts_p_avg: float) -> None:
+    def update_trial_learning_averages(self, acts_p_avg_eff: float) -> None:
         """Updates the learning averages computed at the end of each trial.
 
         Args:
           acts_p_avg: The average layer activation at the end of the plus
-            phase.
+            phase. The "eff" (effective) suffix denotes that it can be
+            scaled by a multiplier, but this is currently not
+            implemented.
 
         """
-        self.avg_l = self.spec.l_dn_dt * acts_p_avg * (self.avg_m - self.avg_l)
+        self.avg_l = self.spec.l_dn_dt * acts_p_avg_eff * (
+            self.avg_m - self.avg_l)
         mask = self.avg_m > 0.1
         self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
 

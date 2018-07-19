@@ -111,17 +111,17 @@ def test_observing_invalid_parts_attribute_should_raise_error() -> None:
         layer.observe_parts_attr("whales")
 
 
-# TODO: Better test
-def test_layer_can_update_learning_averages_when_hard_clamped() -> None:
+def test_layer_can_update_learning_averages_when_hard_clamped(mocker) -> None:
     layer = lr.Layer(name="layer1", size=3)
+    mocker.spy(layer, "update_trial_learning_averages")
+    mocker.spy(layer.units, "update_cycle_learning_averages")
+
     layer.hard_clamp([1.0])
     layer.activation_cycle()
-    layer.update_trial_learning_averages()
+    layer.handle(ev.EndPlusPhase())
 
-    assert (layer.avg_ss != torch.zeros(3)).all()
-    assert (layer.avg_s != torch.zeros(3)).all()
-    assert (layer.avg_m != torch.zeros(3)).all()
-    assert (layer.avg_l != torch.zeros(3)).all()
+    layer.units.update_cycle_learning_averages.assert_called_once()
+    layer.update_trial_learning_averages.assert_called_once()
 
 
 def test_layer_hard_clamping_should_change_the_unit_activations() -> None:

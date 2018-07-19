@@ -38,6 +38,21 @@ class EndMinusPhase(Event):
     pass
 
 
+class EndTrial(Event):
+    """The event that signals the end of a trial."""
+    pass
+
+
+class EndEpoch(Event):
+    """The event that signals the end of an epoch."""
+    pass
+
+
+class EndBatch(Event):
+    """The event that signals the end of a batch."""
+    pass
+
+
 class HardClamp(Event):
     """The event that hard clamps a layer.
 
@@ -70,6 +85,11 @@ class Unclamp(Event):
 
     def __init__(self, layer_name: str) -> None:
         self.layer_name = layer_name
+
+
+class Learn(Event):
+    """The event that triggers learning in projections."""
+    pass
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):
