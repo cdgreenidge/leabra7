@@ -1,14 +1,18 @@
 """Tools to log data from the network."""
 import abc
 import collections
+import inspect
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
+from typing import Type
 
 import pandas as pd  # type: ignore
+
+from leabra7 import events
 
 WholeObs = Tuple[str, Any]
 """The observation of an entire object.
@@ -201,26 +205,36 @@ class Logs(NamedTuple):
     parts: pd.DataFrame
 
 
-class Logger:
+class Logger(events.EventListenerMixin):
     """Records target attributes to internal buffers.
 
     Args:
         target: The object from which to record attributes. It must inherit
             from `ObservableMixin`.
         attrs: A list of attribute names to log.
+        event_trigger: The class object for the event on which this
+          logger should record a new entry
 
     Attrs:
         name (str): The name of the target object.
 
+    Raises:
+      TypeError: If event_trigger is not a type.
+
     """
 
-    def __init__(self, target: ObservableMixin, attrs: Iterable[str]) -> None:
+    def __init__(self, target: ObservableMixin, attrs: Iterable[str],
+                 event_trigger: Type[events.Event]) -> None:
         self.target = target
         self.target_name = target.name
         self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
         self.parts_attrs = [i for i in attrs if i in target.parts_attrs]
         self.whole_buffer = DataFrameBuffer()
         self.parts_buffer = DataFrameBuffer()
+
+        if not inspect.isclass(event_trigger):
+            raise TypeError("event_trigger must be a type (class object.)")
+        self.event_trigger = event_trigger
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
@@ -242,3 +256,8 @@ class Logger:
         """
         return Logs(
             whole=self.whole_buffer.to_df(), parts=self.parts_buffer.to_df())
+
+    def handle(self, event: events.Event) -> None:
+        """Overrides `events.EventListnerMixin.handle()`."""
+        if isinstance(event, self.event_trigger):
+            self.record()

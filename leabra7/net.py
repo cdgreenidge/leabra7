@@ -19,6 +19,9 @@ class Net(events.EventListenerMixin):
         self.layers: Dict[str, layer.Layer] = {}
         self.projns: Dict[str, projn.Projn] = {}
         self.cycle_loggers: List[log.Logger] = []
+        self.trial_loggers: List[log.Logger] = []
+        self.epoch_loggers: List[log.Logger] = []
+        self.batch_loggers: List[log.Logger] = []
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -85,7 +88,21 @@ class Net(events.EventListenerMixin):
         self.objs[name] = lr
 
         if lr.spec.log_on_cycle != ():
-            self.cycle_loggers.append(log.Logger(lr, lr.spec.log_on_cycle))
+            logger = log.Logger(lr, lr.spec.log_on_cycle, events.Cycle)
+            self.cycle_loggers.append(logger)
+            self.objs["{0}_cycle_logger".format(name)] = logger
+        if lr.spec.log_on_trial != ():
+            logger = log.Logger(lr, lr.spec.log_on_trial, events.EndTrial)
+            self.trial_loggers.append(logger)
+            self.objs["{0}_trial_logger".format(name)] = logger
+        if lr.spec.log_on_epoch != ():
+            logger = log.Logger(lr, lr.spec.log_on_epoch, events.EndEpoch)
+            self.epoch_loggers.append(logger)
+            self.objs["{0}_epoch_logger".format(name)] = logger
+        if lr.spec.log_on_batch != ():
+            logger = log.Logger(lr, lr.spec.log_on_batch, events.EndBatch)
+            self.batch_loggers.append(logger)
+            self.objs["{0}_batch_logger".format(name)] = logger
 
     def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.
@@ -145,16 +162,17 @@ class Net(events.EventListenerMixin):
         self.projns[name] = pr
         self.objs[name] = pr
 
-    def cycle(self) -> None:
-        """Cycles the network."""
-        for lg in self.cycle_loggers:
-            lg.record()
-
+    def _cycle(self) -> None:
+        """Cycles the network (triggered by cycle event)."""
         for _, lr in self.layers.items():
             lr.activation_cycle()
 
         for _, pr in self.projns.items():
             pr.flush()
+
+    def cycle(self) -> None:
+        """Cycles the network."""
+        self.handle(events.Cycle())
 
     def minus_phase_cycle(self, num_cycles: int = 50) -> None:
         """Runs a series of cycles for the trial minus phase.
@@ -197,6 +215,15 @@ class Net(events.EventListenerMixin):
         for _ in range(num_cycles):
             self.handle(events.Cycle())
         self.handle(events.EndPlusPhase())
+        self.handle(events.EndTrial())
+
+    def end_epoch(self) -> None:
+        """Signals to the network that an epoch has ended."""
+        self.handle(events.EndEpoch())
+
+    def end_batch(self) -> None:
+        """Signals to the network that a batch has ended."""
+        self.handle(events.EndBatch())
 
     def learn(self) -> None:
         """Updates projection weights with XCAL learning equation."""
@@ -215,7 +242,12 @@ class Net(events.EventListenerMixin):
                 recorded for the desired object.
 
         """
-        freq_names = {"cycle": self.cycle_loggers}
+        freq_names = {
+            "cycle": self.cycle_loggers,
+            "trial": self.trial_loggers,
+            "epoch": self.epoch_loggers,
+            "batch": self.batch_loggers
+        }
         try:
             freq_loggers = freq_names[freq]
         except KeyError:
@@ -234,7 +266,7 @@ class Net(events.EventListenerMixin):
     def handle(self, event: events.Event) -> None:
         """Overrides events.EventListnerMixin.handle()"""
         if isinstance(event, events.Cycle):
-            self.cycle()
-        else:
-            for _, obj in self.objs.items():
-                obj.handle(event)
+            self._cycle()
+
+        for _, obj in self.objs.items():
+            obj.handle(event)

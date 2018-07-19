@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd  # type: ignore
 import pytest
 
+from leabra7 import events
 from leabra7 import log
 
 
@@ -112,8 +113,8 @@ def test_you_can_merge_whole_observations() -> None:
 # Test log.Logger
 def test_logger_can_record_attributes_from_an_object() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["unit_act", "avg_act"])
-    logger.record()
+    logger = log.Logger(obj, ["unit_act", "avg_act"], events.Cycle)
+    logger.handle(events.Cycle())
     expected_parts = pd.DataFrame.from_dict({
         "time": [0, 0],
         "act": [0.3, 0.5],
@@ -129,6 +130,12 @@ def test_logger_can_record_attributes_from_an_object() -> None:
 
 def test_logger_has_a_name_property() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["a"])
+    logger = log.Logger(obj, ["a"], events.Cycle)
     logger.name = "obj"
     assert logger.name == "obj"
+
+
+def test_logger_raises_error_if_event_trigger_is_not_a_type() -> None:
+    obj = ObjToLog("obj")
+    with pytest.raises(TypeError):
+        log.Logger(obj, [], events.Cycle())

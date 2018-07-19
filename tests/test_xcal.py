@@ -24,6 +24,7 @@ def epoch(network: net.Net, input_patterns: Iterable[Iterable[float]],
     for in_pattern, out_pattern in zip(input_patterns, output_patterns):
         for _ in range(10):
             trial(network, in_pattern, out_pattern)
+    network.end_epoch()
 
 
 def batch(network: net.Net, input_patterns: Iterable[Iterable[float]],
@@ -32,6 +33,7 @@ def batch(network: net.Net, input_patterns: Iterable[Iterable[float]],
     num_epochs = 2
     for _ in range(num_epochs):
         epoch(network, input_patterns, output_patterns)
+    network.end_batch()
 
 
 def output(network: net.Net, pattern: Iterable[float]) -> List[float]:
