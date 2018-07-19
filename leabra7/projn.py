@@ -10,6 +10,7 @@ import torch  # type: ignore
 
 from leabra7 import specs
 from leabra7 import layer
+from leabra7 import log
 from leabra7 import events
 
 T = TypeVar('T')
@@ -164,7 +165,7 @@ def sig(gain: float, offset: float, x: torch.Tensor) -> torch.Tensor:
     return 1 / (1 + (offset * (1 - x) / x)**gain)
 
 
-class Projn(events.EventListenerMixin):
+class Projn(events.EventListenerMixin, log.ObservableMixin):
     """A projection links two layers. It is a bundle of connections.
 
     Args:
@@ -181,14 +182,14 @@ class Projn(events.EventListenerMixin):
                  pre: layer.Layer,
                  post: layer.Layer,
                  spec: specs.ProjnSpec = None) -> None:
-        self.name = name
+        self._name = name
         self.pre = pre
         self.post = post
 
         if spec is None:
-            self.spec = specs.ProjnSpec()
+            self._spec = specs.ProjnSpec()
         else:
-            self.spec = spec
+            self._spec = spec
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
@@ -221,6 +222,24 @@ class Projn(events.EventListenerMixin):
 
         # Record the number of incoming connections for each unit
         self.num_recv_conns = torch.sum(self.mask, dim=1).float()
+
+        # When adding any loggable attribute or property to these lists, update
+        # specs.ProjnSpec._valid_log_on_cycle (we represent in two places to
+        # avoid a circular dependency)
+        whole_attrs: List[str] = []
+        parts_attrs: List[str] = ["conn_wt", "conn_fwt"]
+
+        super().__init__(whole_attrs=whole_attrs, parts_attrs=parts_attrs)
+
+    @property
+    def name(self) -> str:
+        """Overrides `log.ObservableMixin.name`."""
+        return self._name
+
+    @property
+    def spec(self) -> specs.ProjnSpec:
+        """Overrides `log.ObservableMixin.spec`."""
+        return self._spec
 
     def netin_scale(self) -> torch.Tensor:
         """Computes the net input scaling factor for each receiving unit.
@@ -282,6 +301,25 @@ class Projn(events.EventListenerMixin):
         self.fwts += dwts
         self.wts = sig(self.spec.sig_gain, self.spec.sig_offset, self.fwts)
         return
+
+    def observe_parts_attr(self, attr: str) -> log.PartsObs:
+        """Overrides `log.ObservableMixin.observe_parts_attr()`."""
+        if attr == "conn_wt":
+            attr_to_get = "wts"
+        elif attr == "conn_fwt":
+            attr_to_get = "fwts"
+        else:
+            raise ValueError(
+                "{0} is not a valid parts attribute for Projn.".format(attr))
+
+        matrix = getattr(self, attr_to_get)
+        indices = torch.nonzero(self.mask)
+        values = torch.masked_select(matrix, self.mask)
+        return {
+            "pre_unit": indices[:, 1].tolist(),
+            "post_unit": indices[:, 0].tolist(),
+            attr: values.tolist()
+        }
 
     def handle(self, event: events.Event) -> None:
         """Overrides `event.EventListenerMixin.handle()`."""

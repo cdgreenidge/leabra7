@@ -120,7 +120,7 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def spec(self) -> specs.Spec:
+    def spec(self) -> specs.ObservableSpec:
         """Returns the object spec."""
 
     def validate_attr(self, attr: str) -> None:

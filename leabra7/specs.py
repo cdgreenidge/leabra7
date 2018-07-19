@@ -98,6 +98,59 @@ class Spec(metaclass=abc.ABCMeta):
         self.assert_in_range("integ", 0, float("Inf"))
 
 
+class ObservableSpec(Spec, metaclass=abc.ABCMeta):
+    """A spec for an observable object."""
+
+    # Attrs to log every cycle
+    log_on_cycle: Iterable[str] = ()
+    # Attrs to log every trial
+    log_on_trial: Iterable[str] = ()
+    # Attrs to log every epoch
+    log_on_epoch: Iterable[str] = ()
+    # Attrs to log every batch
+    log_on_batch: Iterable[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def _valid_attrs_to_log(self) -> Iterable[str]:
+        """A tuple of valid attributes to log."""
+
+    def attrs_to_log(self, freq: events.Frequency) -> Iterable[str]:
+        """Given a frequency, returns attrs to log.
+
+        Args:
+          freq: The frequency for which to get the attrs to log.
+
+        Returns:
+          An iterable of the attributes to log.
+
+        Raises:
+          AttributeError: if the spec doesn't specify which attrs to log for
+            the frequency
+
+        """
+        return getattr(self, "log_on_" + freq.name)
+
+    def validate_attrs_to_log(self) -> None:
+        """Validates attrs to log for an observable object.
+
+        Raises:
+          ValidationError: If any of the attrs to log is invalid.
+
+        """
+        for freq_name, _ in events.Frequency.registry.items():
+            attr_list_name = "log_on_{0}".format(freq_name)
+            for attr in getattr(self, attr_list_name):
+                if attr not in self._valid_attrs_to_log:
+                    raise ValidationError("{0} is not a valid member of "
+                                          "{1}".format(attr, attr_list_name))
+
+    @abc.abstractmethod
+    def validate(self) -> None:
+        self.validate_attrs_to_log()
+        super().validate()
+
+
 class UnitSpec(Spec):
     """Spec for unit objects."""
     # Excitation (net input) reversal potential
@@ -190,7 +243,7 @@ class UnitSpec(Spec):
                                            self.vm_max))
 
 
-class LayerSpec(Spec):
+class LayerSpec(ObservableSpec):
     """Spec for Layer objects."""
     # Can be either "fffb" for feedforward-feedback inhibition, or
     # "kwta" for k-winner-take-all inhibition
@@ -212,26 +265,19 @@ class LayerSpec(Spec):
     # cos_diff_avg integration time constant
     avg_dt = 0.01
 
-    # Attrs to log every cycle
-    log_on_cycle: Iterable[str] = ()
-    # Attrs to log every trial
-    log_on_trial: Iterable[str] = ()
-    # Attrs to log every epoch
-    log_on_epoch: Iterable[str] = ()
-    # Attrs to log every batch
-    log_on_batch: Iterable[str] = ()
-
-    # Valid attributes to log on every cycle
-    # When adding any loggable attribute or property to this list,
-    # update layer._whole_attrs or layer._parts_attrs as appropriate
-    # (we represent in two places to avoid a circular dependency)
-    _valid_attrs_to_log = ("avg_act", "avg_net", "fbi", "unit_net_raw",
-                           "unit_net", "unit_gc_i", "unit_act", "unit_i_net",
-                           "unit_i_net_r", "unit_v_m", "unit_v_m_eq",
-                           "unit_adapt", "unit_spike")
-
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
+
+    @property
+    def _valid_attrs_to_log(self) -> Iterable[str]:
+        """Overrides `ObservableSpec._valid_attrs_to_log`."""
+        # Valid attributes to log on every cycle
+        # When adding any loggable attribute or property to this list,
+        # update layer._whole_attrs or layer._parts_attrs as appropriate
+        # (we represent in two places to avoid a circular dependency)
+        return ("avg_act", "avg_net", "fbi", "unit_net_raw", "unit_net",
+                "unit_gc_i", "unit_act", "unit_i_net", "unit_i_net_r",
+                "unit_v_m", "unit_v_m_eq", "unit_adapt", "unit_spike")
 
     def validate(self) -> None:
         """Extends `Spec.validate`."""
@@ -251,15 +297,8 @@ class LayerSpec(Spec):
         self.assert_sane_float("gi")
         self.unit_spec.validate()
 
-        for freq in ["cycle", "trial", "epoch", "batch"]:
-            attr_list_name = "log_on_{0}".format(freq)
-            for attr in getattr(self, attr_list_name):
-                if attr not in self._valid_attrs_to_log:
-                    raise ValidationError("{0} is not a valid member of "
-                                          "{1}".format(attr, attr_list_name))
 
-
-class ProjnSpec(Spec):
+class ProjnSpec(ObservableSpec):
     """Spec for `Projn` objects."""
     # The probability distribution from which the connection weights will be
     # drawn
@@ -274,7 +313,7 @@ class ProjnSpec(Spec):
     post_mask: Iterable[bool] = (True, )
     # Sparsity of the connection (i.e. the percentage of active connections.)
     sparsity: float = 1.0
-    # Set special type of projection
+    # Set special type of projection. One of ["full", "one_to_one"].
     projn_type = "full"
     # Absolute net input scaling weight
     wt_scale_abs: float = 1.0
@@ -288,8 +327,19 @@ class ProjnSpec(Spec):
     # Offset for sigmoidal weight contrast enhancement
     sig_offset = 1
 
+    @property
+    def _valid_attrs_to_log(self) -> Iterable[str]:
+        """Overrides `ObservableSpec._valid_attrs_to_log`."""
+        # Valid attributes to log on every cycle
+        # When adding any loggable attribute or property to this list,
+        # update Projn._whole_attrs or Projn._parts_attrs as appropriate
+        # (we represent in two places to avoid a circular dependency)
+        return ("conn_wt", "conn_fwt")
+
     def validate(self) -> None:  # pylint: disable=W0235
         """Extends `Spec.validate`."""
+        super().validate()
+
         if not isinstance(self.dist, rand.Distribution):
             raise ValidationError("{0} is not a valid "
                                   "distribution.".format(self.dist))
@@ -306,22 +356,3 @@ class ProjnSpec(Spec):
         self.assert_in_range("lrate", 0, float("Inf"))
         self.assert_in_range("sig_gain", 0, float("Inf"))
         self.assert_sane_float("sig_offset")
-
-        super().validate()
-
-
-def attrs_to_log(spec: Spec, freq: events.Frequency) -> Iterable[str]:
-    """A convenience for parsing attrs to log out of a spec by frequency.
-
-    Args:
-      freq: The frequency for which to get the attrs to log.
-
-    Returns:
-      An iterable of the attributes to log.
-
-    Raises:
-      AttributeError: if the spec doesn't specify which attrs to log for the
-        frequency
-
-    """
-    return getattr(spec, "log_on_" + freq.name)

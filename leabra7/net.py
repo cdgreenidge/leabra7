@@ -72,7 +72,7 @@ class Net(events.EventListenerMixin):
 
         """
         for freq_name, freq in events.Frequency.registry.items():
-            attrs_to_log = specs.attrs_to_log(obj.spec, freq)
+            attrs_to_log = obj.spec.attrs_to_log(freq)
             if attrs_to_log:
                 logger = log.Logger(obj, attrs_to_log, freq)
                 self.loggers.append(logger)
