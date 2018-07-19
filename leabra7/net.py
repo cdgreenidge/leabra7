@@ -239,22 +239,27 @@ class Net(events.EventListenerMixin):
 
     @property
     def cycle_logging(self) -> bool:
+        """Cycle logging enabled."""
         return self._cycle_logging
 
     @property
     def trial_logging(self) -> bool:
+        """Trial logging enabled."""
         return self._trial_logging
 
     @property
     def epoch_logging(self) -> bool:
+        """Epoch logging enabled."""
         return self._epoch_logging
 
     @property
     def batch_logging(self) -> bool:
+        """Batch logging enabled."""
         return self._batch_logging
 
     @cycle_logging.setter  #type: ignore
     def cycle_logging(self, run: bool) -> None:
+        """Enable or disable cycle logging."""
         self._cycle_logging = run
         if self.cycle_logging:
             self.handle(events.ResumeCycleLog())
@@ -263,6 +268,7 @@ class Net(events.EventListenerMixin):
 
     @trial_logging.setter  #type: ignore
     def trial_logging(self, run: bool) -> None:
+        """Enable or disable trial logging."""
         self._trial_logging = run
         if self.trial_logging:
             self.handle(events.ResumeTrialLog())
@@ -271,6 +277,7 @@ class Net(events.EventListenerMixin):
 
     @epoch_logging.setter  #type: ignore
     def epoch_logging(self, run: bool) -> None:
+        """Enable or disable epoch logging."""
         self._epoch_logging = run
         if self.epoch_logging:
             self.handle(events.ResumeEpochLog())
@@ -279,6 +286,7 @@ class Net(events.EventListenerMixin):
 
     @batch_logging.setter  #type: ignore
     def batch_logging(self, run: bool) -> None:
+        """Enable or disable batch logging."""
         self._batch_logging = run
         if self.batch_logging:
             self.handle(events.ResumeBatchLog())
