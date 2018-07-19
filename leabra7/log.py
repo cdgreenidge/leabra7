@@ -1,18 +1,17 @@
 """Tools to log data from the network."""
 import abc
 import collections
-import inspect
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
-from typing import Type
 
 import pandas as pd  # type: ignore
 
 from leabra7 import events
+from leabra7 import specs
 
 WholeObs = Tuple[str, Any]
 """The observation of an entire object.
@@ -61,6 +60,10 @@ class DataFrameBuffer:
         self.buffer.append(df)
         self.time += 1
 
+    def increment_time(self) -> None:
+        """Increments the time counter."""
+        self.time += 1
+
     def to_df(self) -> pd.DataFrame:
         """Returns a DataFrame containing the data in the buffer."""
         return pd.concat(self.buffer, ignore_index=True)
@@ -69,14 +72,13 @@ class DataFrameBuffer:
 class ObservableMixin(metaclass=abc.ABCMeta):
     """Defines the interface required by `Logger` to record attributes.
 
-    Classes that use this mixin should inject `name`, `whole_attrs`, and
+    Classes that use this mixin should inject `whole_attrs`, and
     `parts_attrs`into into `super().__init__()`. For example:
 
         class ObjToLog(log.ObservableMixin):
 
         def __init__(self, name, *args: Any, **kwargs: Any) -> None:
             super().__init__(
-                name=name,
                 whole_attrs=["avg_act"],
                 parts_attrs=["unit0_act", "unit1_act"],
                 *args,
@@ -86,25 +88,40 @@ class ObservableMixin(metaclass=abc.ABCMeta):
     `ObjToLog(name="obj1"), but it will have `whole_attrs` and
     `parts_attrs` attributes.
 
+    Classes that use this mixin must also provide the `name` and `spec`
+    properties.
+
     Args:
       name: The name of the object.
       whole_attrs: The whole attributes that we can log on the object.
       parts_attrs: The parts attributes that we can log on the object.
 
     Attributes:
-      name (str): The name of the object.
       whole_attrs (Set[str]): The valid whole attributes to log.
       parts_attrs (Set[str]): The valid parts attributes to log.
 
+    Properties:
+      name (str): The name of the object.
+      spec (specs.Spec): The object spec.
+
     """
 
-    def __init__(self, name: str, whole_attrs: List[str],
-                 parts_attrs: List[str], *args: Any, **kwargs: Any) -> None:
-        self.name = name
+    def __init__(self, whole_attrs: List[str], parts_attrs: List[str],
+                 *args: Any, **kwargs: Any) -> None:
         self.whole_attrs = set(whole_attrs)
         self.parts_attrs = set(parts_attrs)
         # noinspection PyArgumentList
         super().__init__(*args, **kwargs)  # type: ignore
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """Returns the name of the object."""
+
+    @property
+    @abc.abstractmethod
+    def spec(self) -> specs.Spec:
+        """Returns the object spec."""
 
     def validate_attr(self, attr: str) -> None:
         """Checks if an attr is valid to log.
@@ -212,8 +229,7 @@ class Logger(events.EventListenerMixin):
         target: The object from which to record attributes. It must inherit
             from `ObservableMixin`.
         attrs: A list of attribute names to log.
-        event_trigger: The class object for the event on which this
-          logger should record a new entry
+        freq: The frequency at which this logger should record.
 
     Attrs:
         name (str): The name of the target object.
@@ -224,20 +240,23 @@ class Logger(events.EventListenerMixin):
     """
 
     def __init__(self, target: ObservableMixin, attrs: Iterable[str],
-                 event_trigger: Type[events.Event]) -> None:
+                 freq: events.Frequency) -> None:
         self.target = target
         self.target_name = target.name
         self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
         self.parts_attrs = [i for i in attrs if i in target.parts_attrs]
         self.whole_buffer = DataFrameBuffer()
         self.parts_buffer = DataFrameBuffer()
-
-        if not inspect.isclass(event_trigger):
-            raise TypeError("event_trigger must be a type (class object.)")
-        self.event_trigger = event_trigger
+        self.paused = False
+        self.freq = freq
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
+        if self.paused:
+            self.whole_buffer.increment_time()
+            self.parts_buffer.increment_time()
+            return
+
         whole_observations = [
             self.target.observe_whole_attr(a) for a in self.whole_attrs
         ]
@@ -259,5 +278,11 @@ class Logger(events.EventListenerMixin):
 
     def handle(self, event: events.Event) -> None:
         """Overrides `events.EventListnerMixin.handle()`."""
-        if isinstance(event, self.event_trigger):
+        if isinstance(event, self.freq.end_event_type):
             self.record()
+        elif isinstance(event, events.PauseLogging):
+            if event.freq == self.freq:
+                self.paused = True
+        elif isinstance(event, events.ResumeLogging):
+            if event.freq == self.freq:
+                self.paused = False

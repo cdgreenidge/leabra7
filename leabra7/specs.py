@@ -5,6 +5,7 @@ import math
 from typing import Any
 from typing import Iterable
 
+from leabra7 import events
 from leabra7 import rand
 
 
@@ -307,3 +308,20 @@ class ProjnSpec(Spec):
         self.assert_sane_float("sig_offset")
 
         super().validate()
+
+
+def attrs_to_log(spec: Spec, freq: events.Frequency) -> Iterable[str]:
+    """A convenience for parsing attrs to log out of a spec by frequency.
+
+    Args:
+      freq: The frequency for which to get the attrs to log.
+
+    Returns:
+      An iterable of the attributes to log.
+
+    Raises:
+      AttributeError: if the spec doesn't specify which attrs to log for the
+        frequency
+
+    """
+    return getattr(spec, "log_on_" + freq.name)
