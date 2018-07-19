@@ -22,10 +22,10 @@ class Net(events.EventListenerMixin):
         self.trial_loggers: List[log.Logger] = []
         self.epoch_loggers: List[log.Logger] = []
         self.batch_loggers: List[log.Logger] = []
-        self.cycle_logging = True
-        self.trial_logging = True
-        self.epoch_logging = True
-        self.batch_logging = True
+        self._cycle_logging = True
+        self._trial_logging = True
+        self._epoch_logging = True
+        self._batch_logging = True
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -92,19 +92,23 @@ class Net(events.EventListenerMixin):
         self.objs[name] = lr
 
         if lr.spec.log_on_cycle != ():
-            logger = log.Logger(lr, lr.spec.log_on_cycle, events.Cycle)
+            logger = log.Logger(lr, lr.spec.log_on_cycle, events.Cycle,
+                                events.PauseCycleLog, events.ResumeCycleLog)
             self.cycle_loggers.append(logger)
             self.objs["{0}_cycle_logger".format(name)] = logger
         if lr.spec.log_on_trial != ():
-            logger = log.Logger(lr, lr.spec.log_on_trial, events.EndTrial)
+            logger = log.Logger(lr, lr.spec.log_on_trial, events.EndTrial,
+                                events.PauseTrialLog, events.ResumeTrialLog)
             self.trial_loggers.append(logger)
             self.objs["{0}_trial_logger".format(name)] = logger
         if lr.spec.log_on_epoch != ():
-            logger = log.Logger(lr, lr.spec.log_on_epoch, events.EndEpoch)
+            logger = log.Logger(lr, lr.spec.log_on_epoch, events.EndEpoch,
+                                events.PauseEpochLog, events.ResumeEpochLog)
             self.epoch_loggers.append(logger)
             self.objs["{0}_epoch_logger".format(name)] = logger
         if lr.spec.log_on_batch != ():
-            logger = log.Logger(lr, lr.spec.log_on_batch, events.EndBatch)
+            logger = log.Logger(lr, lr.spec.log_on_batch, events.EndBatch,
+                                events.PauseBatchLog, events.ResumeBatchLog)
             self.batch_loggers.append(logger)
             self.objs["{0}_batch_logger".format(name)] = logger
 
@@ -233,73 +237,53 @@ class Net(events.EventListenerMixin):
         """Updates projection weights with XCAL learning equation."""
         self.handle(events.Learn())
 
-    def pause_logging(self, *args: str) -> None:
-        """Pauses specified frequency loggers.
+    @property
+    def cycle_logging(self) -> bool:
+        return self._cycle_logging
 
-        Args:
-            args: Names of frequency loggers to be paused.
-                Ex: "cycle", "trial", "epoch", "batch"
+    @property
+    def trial_logging(self) -> bool:
+        return self._trial_logging
 
-        """
-        freq_names = {"cycle", "trial", "epoch", "batch"}
-        pause_freqs = set(args)
+    @property
+    def epoch_logging(self) -> bool:
+        return self._epoch_logging
 
-        for freq in pause_freqs:
-            if freq not in freq_names:
-                raise ValueError("{0} must be one of {1}.".format(
-                    freq, freq_names))
+    @property
+    def batch_logging(self) -> bool:
+        return self._batch_logging
 
-        for freq in pause_freqs:
-            if freq == "cycle":
-                self.cycle_logging = False
-                for logger in self.cycle_loggers:
-                    logger.pause_logger()
-            elif freq == "trial":
-                self.trial_logging = False
-                for logger in self.trial_loggers:
-                    logger.pause_logger()
-            elif freq == "epoch":
-                self.epoch_logging = False
-                for logger in self.epoch_loggers:
-                    logger.pause_logger()
-            else:
-                self.batch_logging = False
-                for logger in self.batch_loggers:
-                    logger.pause_logger()
+    @cycle_logging.setter  #type: ignore
+    def cycle_logging(self, run: bool) -> None:
+        self._cycle_logging = run
+        if self.cycle_logging:
+            self.handle(events.ResumeCycleLog())
+        else:
+            self.handle(events.PauseCycleLog())
 
-    def resume_logging(self, *args: str) -> None:
-        """Resumes specified frequency loggers.
+    @trial_logging.setter  #type: ignore
+    def trial_logging(self, run: bool) -> None:
+        self._trial_logging = run
+        if self.trial_logging:
+            self.handle(events.ResumeTrialLog())
+        else:
+            self.handle(events.PauseTrialLog())
 
-        Args:
-            args: Names of frequency loggers to be resumed.
-                Ex: "cycle", "trial", "epoch", "batch"
+    @epoch_logging.setter  #type: ignore
+    def epoch_logging(self, run: bool) -> None:
+        self._epoch_logging = run
+        if self.epoch_logging:
+            self.handle(events.ResumeEpochLog())
+        else:
+            self.handle(events.PauseEpochLog())
 
-        """
-        freq_names = {"cycle", "trial", "epoch", "batch"}
-        resume_freqs = set(args)
-
-        for freq in resume_freqs:
-            if freq not in freq_names:
-                raise ValueError("{0} must be one of {1}.".format(
-                    freq, freq_names))
-
-        for freq in resume_freqs:
-            if freq == "cycle":
-                self.cycle_logging = True
-                for logger in self.cycle_loggers:
-                    logger.resume_logger()
-            elif freq == "trial":
-                self.trial_logging = True
-                for logger in self.trial_loggers:
-                    logger.resume_logger()
-            elif freq == "epoch":
-                self.epoch_logging = True
-                for logger in self.epoch_loggers:
-                    logger.resume_logger()
-            else:
-                self.batch_logging = True
-                for logger in self.batch_loggers:
-                    logger.resume_logger()
+    @batch_logging.setter  #type: ignore
+    def batch_logging(self, run: bool) -> None:
+        self._batch_logging = run
+        if self.batch_logging:
+            self.handle(events.ResumeBatchLog())
+        else:
+            self.handle(events.PauseBatchLog())
 
     def logs(self, freq: str, name: str) -> log.Logs:
         """Retrieves logs for an object in the network.

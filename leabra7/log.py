@@ -228,7 +228,9 @@ class Logger(events.EventListenerMixin):
     """
 
     def __init__(self, target: ObservableMixin, attrs: Iterable[str],
-                 event_trigger: Type[events.Event]) -> None:
+                 event_trigger: Type[events.Event],
+                 event_pause: Type[events.Event],
+                 event_resume: Type[events.Event]) -> None:
         self.target = target
         self.target_name = target.name
         self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
@@ -240,6 +242,14 @@ class Logger(events.EventListenerMixin):
         if not inspect.isclass(event_trigger):
             raise TypeError("event_trigger must be a type (class object.)")
         self.event_trigger = event_trigger
+
+        if not inspect.isclass(event_pause):
+            raise TypeError("event_pause must be a type (class object.)")
+        self.event_pause = event_pause
+
+        if not inspect.isclass(event_resume):
+            raise TypeError("event_resume must be a type (class object.)")
+        self.event_resume = event_resume
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
@@ -281,3 +291,7 @@ class Logger(events.EventListenerMixin):
         """Overrides `events.EventListnerMixin.handle()`."""
         if isinstance(event, self.event_trigger):
             self.record()
+        elif isinstance(event, self.event_pause):
+            self.pause_logger()
+        elif isinstance(event, self.event_resume):
+            self.resume_logger()

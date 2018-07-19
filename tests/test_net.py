@@ -214,32 +214,24 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
         assert "avg_act" in n.logs(freq, "layer1").whole.columns
 
 
-@given(text=st.text())
-@example("cycle")
-@example("trial")
-@example("epoch")
-@example("batch")
-def test_net_log_pausing_verficiation(text) -> None:
+def test_net_cycle_logging_can_be_read() -> None:
     n = net.Net()
-    if text in {"cycle", "trial", "epoch", "batch"}:
-        n.pause_logging(text)
-    else:
-        with pytest.raises(ValueError):
-            n.pause_logging(text)
+    n.cycle_logging
 
 
-@given(text=st.text())
-@example("cycle")
-@example("trial")
-@example("epoch")
-@example("batch")
-def test_net_log_resuming_verficiation(text) -> None:
+def test_net_trial_logging_can_be_read() -> None:
     n = net.Net()
-    if text in {"cycle", "trial", "epoch", "batch"}:
-        n.resume_logging(text)
-    else:
-        with pytest.raises(ValueError):
-            n.resume_logging(text)
+    n.trial_logging
+
+
+def test_net_epoch_logging_can_be_read() -> None:
+    n = net.Net()
+    n.epoch_logging
+
+
+def test_net_batch_logging_can_be_read() -> None:
+    n = net.Net()
+    n.batch_logging
 
 
 def test_net_cycle_log_pausing_and_resuming() -> None:
@@ -253,10 +245,10 @@ def test_net_cycle_log_pausing_and_resuming() -> None:
         )))
     for i in range(2):
         n.cycle()
-    n.pause_logging("cycle")
+    n.cycle_logging = False
     for i in range(2):
         n.cycle()
-    n.resume_logging("cycle")
+    n.cycle_logging = True
     for i in range(2):
         n.cycle()
 
@@ -283,12 +275,12 @@ def test_net_trial_log_pausing_and_resuming() -> None:
     n.minus_phase_cycle(num_cycles=5)
     n.plus_phase_cycle(num_cycles=5)
 
-    n.pause_logging("trial")
+    n.trial_logging = False
 
     n.minus_phase_cycle(num_cycles=5)
     n.plus_phase_cycle(num_cycles=5)
 
-    n.resume_logging("trial")
+    n.trial_logging = True
 
     n.minus_phase_cycle(num_cycles=5)
     n.plus_phase_cycle(num_cycles=5)
@@ -314,9 +306,9 @@ def test_net_epoch_log_pausing_and_resuming() -> None:
         )))
 
     n.end_epoch()
-    n.pause_logging("epoch")
+    n.epoch_logging = False
     n.end_epoch()
-    n.resume_logging("epoch")
+    n.epoch_logging = True
     n.end_epoch()
 
     partsTime = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
@@ -340,9 +332,9 @@ def test_net_batch_log_pausing_and_resuming() -> None:
         )))
 
     n.end_batch()
-    n.pause_logging("batch")
+    n.batch_logging = False
     n.end_batch()
-    n.resume_logging("batch")
+    n.batch_logging = True
     n.end_batch()
 
     partsTime = torch.Tensor(n.logs("batch", "layer1").parts["time"])
