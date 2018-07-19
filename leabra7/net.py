@@ -243,7 +243,7 @@ class Net(events.EventListenerMixin):
         """Resumes logging in the network.
 
         Args:
-          freq: The frequency for which to resume logging. If None, pauses
+          freq: The frequency for which to resume logging. If None, resumes
             all frequencies.
 
         Raises:
