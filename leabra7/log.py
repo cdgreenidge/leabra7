@@ -116,12 +116,12 @@ class ObservableMixin(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        pass
+        """Returns the name of the object."""
 
     @property
     @abc.abstractmethod
     def spec(self) -> specs.Spec:
-        pass
+        """Returns the object spec."""
 
     def validate_attr(self, attr: str) -> None:
         """Checks if an attr is valid to log.
