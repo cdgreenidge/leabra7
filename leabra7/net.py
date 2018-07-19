@@ -84,22 +84,12 @@ class Net(events.EventListenerMixin):
         self.layers[name] = lr
         self.objs[name] = lr
 
-        if lr.spec.log_on_cycle != ():
-            logger = log.Logger(lr, lr.spec.log_on_cycle, events.CycleFreq)
-            self.loggers.append(logger)
-            self.objs["{0}_cycle_logger".format(name)] = logger
-        if lr.spec.log_on_trial != ():
-            logger = log.Logger(lr, lr.spec.log_on_trial, events.TrialFreq)
-            self.loggers.append(logger)
-            self.objs["{0}_trial_logger".format(name)] = logger
-        if lr.spec.log_on_epoch != ():
-            logger = log.Logger(lr, lr.spec.log_on_epoch, events.EpochFreq)
-            self.loggers.append(logger)
-            self.objs["{0}_epoch_logger".format(name)] = logger
-        if lr.spec.log_on_batch != ():
-            logger = log.Logger(lr, lr.spec.log_on_batch, events.BatchFreq)
-            self.loggers.append(logger)
-            self.objs["{0}_batch_logger".format(name)] = logger
+        for freq_name, freq in events.Frequency.registry.items():
+            attrs_to_log = specs.attrs_to_log(lr.spec, freq)
+            if attrs_to_log:
+                logger = log.Logger(lr, attrs_to_log, freq)
+                self.loggers.append(logger)
+                self.objs["{0}_{1}_logger".format(name, freq_name)] = logger
 
     def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.

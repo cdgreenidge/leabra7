@@ -4,6 +4,7 @@ from hypothesis import given
 import hypothesis.strategies as st
 import pytest
 
+from leabra7 import events as ev
 from leabra7 import layer as lr
 from leabra7 import specs as sp
 
@@ -384,3 +385,15 @@ def test_projn_spec_validates_sig_gain(f) -> None:
 def test_projn_spec_validates_sig_offset(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(sig_offset=f).validate()
+
+
+def test_attrs_to_log_gets_the_attrs_to_log_by_frequency() -> None:
+    spec = sp.LayerSpec(
+        log_on_cycle=("unit_act", ),
+        log_on_trial=("unit_v_m", ),
+        log_on_epoch=("unit_spike", ),
+        log_on_batch=("unit_i_net", ))
+    assert sp.attrs_to_log(spec, ev.CycleFreq) == ("unit_act", )
+    assert sp.attrs_to_log(spec, ev.TrialFreq) == ("unit_v_m", )
+    assert sp.attrs_to_log(spec, ev.EpochFreq) == ("unit_spike", )
+    assert sp.attrs_to_log(spec, ev.BatchFreq) == ("unit_i_net", )

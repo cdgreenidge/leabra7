@@ -137,7 +137,7 @@ class Frequency():
 
     """
     # Stores a reference to each created frequency object, keyed by name
-    _registry: Dict[str, "Frequency"] = {}
+    registry: Dict[str, "Frequency"] = {}
 
     name: str
     end_event_type: Type[Event]
@@ -147,12 +147,12 @@ class Frequency():
             raise TypeError("end_event_type must be a class variable.")
         self.name = name
         self.end_event_type = end_event_type
-        Frequency._registry[name] = self
+        Frequency.registry[name] = self
 
     @classmethod
     def names(cls) -> Sequence[str]:
         """Returns the names of all defined frequencies."""
-        return tuple(cls._registry.keys())
+        return tuple(cls.registry.keys())
 
     @classmethod
     def from_name(cls, freq_name: str) -> "Frequency":
@@ -166,7 +166,7 @@ class Frequency():
 
         """
         try:
-            return cls._registry[freq_name]
+            return cls.registry[freq_name]
         except KeyError:
             raise ValueError(
                 "No frequency with name {0} exists.".format(freq_name))
