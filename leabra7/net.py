@@ -64,6 +64,21 @@ class Net(events.EventListenerMixin):
         self._validate_layer_name(name)
         return self.layers[name]
 
+    def _add_loggers(self, obj: log.ObservableMixin) -> None:
+        """Instantiates loggers for an observable object.
+
+        We assume the object has a "spec" attribute that specifies which
+        attributes to log at each frequency, as well as a "name" attribute.
+
+        """
+        for freq_name, freq in events.Frequency.registry.items():
+            attrs_to_log = specs.attrs_to_log(obj.spec, freq)
+            if attrs_to_log:
+                logger = log.Logger(obj, attrs_to_log, freq)
+                self.loggers.append(logger)
+                self.objs["{0}_{1}_logger".format(obj.name,
+                                                  freq_name)] = logger
+
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:
         """Adds a new layer to the network.
@@ -83,13 +98,7 @@ class Net(events.EventListenerMixin):
         lr = layer.Layer(name, size, spec)
         self.layers[name] = lr
         self.objs[name] = lr
-
-        for freq_name, freq in events.Frequency.registry.items():
-            attrs_to_log = specs.attrs_to_log(lr.spec, freq)
-            if attrs_to_log:
-                logger = log.Logger(lr, attrs_to_log, freq)
-                self.loggers.append(logger)
-                self.objs["{0}_{1}_logger".format(name, freq_name)] = logger
+        self._add_loggers(lr)
 
     def clamp_layer(self, name: str, acts: Sequence[float]) -> None:
         """Clamps the layer's activations.

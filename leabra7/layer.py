@@ -47,12 +47,13 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
     def __init__(self, name: str, size: int,
                  spec: specs.LayerSpec = None) -> None:
+        self._name = name
         self.size = size
 
         if spec is None:
-            self.spec = specs.LayerSpec()
+            self._spec = specs.LayerSpec()
         else:
-            self.spec = spec
+            self._spec = spec
 
         self.units = unit.UnitGroup(size=size, spec=self.spec.unit_spec)
 
@@ -96,7 +97,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
             "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
             "unit_spike"
         ]
-        super().__init__(name, whole_attrs, parts_attrs)
+
+        super().__init__(whole_attrs=whole_attrs, parts_attrs=parts_attrs)
 
     @property
     def avg_act(self) -> float:
@@ -107,6 +109,16 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def avg_net(self) -> float:
         """Returns the average net input of the layer's units."""
         return torch.mean(self.units.net)
+
+    @property
+    def name(self) -> str:
+        """Overrides `ObservableMixin.name`."""
+        return self._name
+
+    @property
+    def spec(self) -> specs.LayerSpec:
+        """Overrides `ObservableMixin.spec`."""
+        return self._spec
 
     def add_input(self, inpt: torch.Tensor, wt_scale_rel: float = 1.0) -> None:
         """Adds an input to the layer.

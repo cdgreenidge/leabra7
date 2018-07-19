@@ -11,6 +11,7 @@ from typing import Tuple
 import pandas as pd  # type: ignore
 
 from leabra7 import events
+from leabra7 import specs
 
 WholeObs = Tuple[str, Any]
 """The observation of an entire object.
@@ -71,14 +72,13 @@ class DataFrameBuffer:
 class ObservableMixin(metaclass=abc.ABCMeta):
     """Defines the interface required by `Logger` to record attributes.
 
-    Classes that use this mixin should inject `name`, `whole_attrs`, and
+    Classes that use this mixin should inject `whole_attrs`, and
     `parts_attrs`into into `super().__init__()`. For example:
 
         class ObjToLog(log.ObservableMixin):
 
         def __init__(self, name, *args: Any, **kwargs: Any) -> None:
             super().__init__(
-                name=name,
                 whole_attrs=["avg_act"],
                 parts_attrs=["unit0_act", "unit1_act"],
                 *args,
@@ -88,25 +88,40 @@ class ObservableMixin(metaclass=abc.ABCMeta):
     `ObjToLog(name="obj1"), but it will have `whole_attrs` and
     `parts_attrs` attributes.
 
+    Classes that use this mixin must also provide the `name` and `spec`
+    properties.
+
     Args:
       name: The name of the object.
       whole_attrs: The whole attributes that we can log on the object.
       parts_attrs: The parts attributes that we can log on the object.
 
     Attributes:
-      name (str): The name of the object.
       whole_attrs (Set[str]): The valid whole attributes to log.
       parts_attrs (Set[str]): The valid parts attributes to log.
 
+    Properties:
+      name (str): The name of the object.
+      spec (specs.Spec): The object spec.
+
     """
 
-    def __init__(self, name: str, whole_attrs: List[str],
-                 parts_attrs: List[str], *args: Any, **kwargs: Any) -> None:
-        self.name = name
+    def __init__(self, whole_attrs: List[str], parts_attrs: List[str],
+                 *args: Any, **kwargs: Any) -> None:
         self.whole_attrs = set(whole_attrs)
         self.parts_attrs = set(parts_attrs)
         # noinspection PyArgumentList
         super().__init__(*args, **kwargs)  # type: ignore
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def spec(self) -> specs.Spec:
+        pass
 
     def validate_attr(self, attr: str) -> None:
         """Checks if an attr is valid to log.

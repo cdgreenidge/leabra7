@@ -6,6 +6,7 @@ import pytest
 
 from leabra7 import events
 from leabra7 import log
+from leabra7 import specs
 
 
 # Test log.DataFrameBuffer
@@ -35,12 +36,18 @@ class ObjToLog(log.ObservableMixin):
         self.unit = [0, 1]
         self.acts = [0.3, 0.5]
         self.avg_act = 0.4
+        self._name = name
+        self._spec = specs.LayerSpec()
         super().__init__(
-            name=name,
-            whole_attrs=["avg_act"],
-            parts_attrs=["unit_act"],
-            *args,
-            **kwargs)
+            whole_attrs=["avg_act"], parts_attrs=["unit_act"], *args, **kwargs)
+
+    @property
+    def spec(self) -> specs.Spec:
+        return self._spec
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr != "unit_act":
