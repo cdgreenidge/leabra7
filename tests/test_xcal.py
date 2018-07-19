@@ -2,11 +2,10 @@
 from typing import List
 from typing import Iterable
 
-from leabra7 import specs
-from leabra7 import net
+import leabra7 as lb
 
 
-def trial(network: net.Net, input_pattern: Iterable[float],
+def trial(network: lb.Net, input_pattern: Iterable[float],
           output_pattern: Iterable[float]) -> None:
     """Runs a trial."""
     network.clamp_layer("input", input_pattern)
@@ -18,7 +17,7 @@ def trial(network: net.Net, input_pattern: Iterable[float],
     network.learn()
 
 
-def epoch(network: net.Net, input_patterns: Iterable[Iterable[float]],
+def epoch(network: lb.Net, input_patterns: Iterable[Iterable[float]],
           output_patterns: Iterable[Iterable[float]]) -> None:
     """Runs an epoch."""
     for in_pattern, out_pattern in zip(input_patterns, output_patterns):
@@ -27,7 +26,7 @@ def epoch(network: net.Net, input_patterns: Iterable[Iterable[float]],
     network.end_epoch()
 
 
-def batch(network: net.Net, input_patterns: Iterable[Iterable[float]],
+def batch(network: lb.Net, input_patterns: Iterable[Iterable[float]],
           output_patterns: Iterable[Iterable[float]]) -> None:
     """Runs a training batch."""
     num_epochs = 2
@@ -36,7 +35,7 @@ def batch(network: net.Net, input_patterns: Iterable[Iterable[float]],
     network.end_batch()
 
 
-def output(network: net.Net, pattern: Iterable[float]) -> List[float]:
+def output(network: lb.Net, pattern: Iterable[float]) -> List[float]:
     """Runs the network with an input pattern and cleans up the output."""
     network.clamp_layer("input", pattern)
     for _ in range(50):
@@ -49,10 +48,10 @@ def output(network: net.Net, pattern: Iterable[float]) -> List[float]:
 
 
 def test_a_simple_network_can_learn_simple_things() -> None:
-    network = net.Net()
+    network = lb.Net()
     network.new_layer("input", size=2)
     network.new_layer("output", size=2)
-    projn_spec = specs.ProjnSpec(lrate=0.2)
+    projn_spec = lb.ProjnSpec(lrate=0.2)
     network.new_projn(
         "input_to_output", pre="input", post="output", spec=projn_spec)
 
