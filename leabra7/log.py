@@ -61,6 +61,10 @@ class DataFrameBuffer:
         self.buffer.append(df)
         self.time += 1
 
+    def increment_time(self) -> None:
+        """Increments time without updating dataframe buffer."""
+        self.time += 1
+
     def to_df(self) -> pd.DataFrame:
         """Returns a DataFrame containing the data in the buffer."""
         return pd.concat(self.buffer, ignore_index=True)
@@ -231,6 +235,7 @@ class Logger(events.EventListenerMixin):
         self.parts_attrs = [i for i in attrs if i in target.parts_attrs]
         self.whole_buffer = DataFrameBuffer()
         self.parts_buffer = DataFrameBuffer()
+        self.paused = False
 
         if not inspect.isclass(event_trigger):
             raise TypeError("event_trigger must be a type (class object.)")
@@ -238,14 +243,29 @@ class Logger(events.EventListenerMixin):
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
-        whole_observations = [
-            self.target.observe_whole_attr(a) for a in self.whole_attrs
-        ]
-        parts_observations = [
-            self.target.observe_parts_attr(a) for a in self.parts_attrs
-        ]
-        self.whole_buffer.append(merge_whole_observations(whole_observations))
-        self.parts_buffer.append(merge_parts_observations(parts_observations))
+        if self.paused:
+            self.whole_buffer.increment_time()
+            self.parts_buffer.increment_time()
+
+        else:
+            whole_observations = [
+                self.target.observe_whole_attr(a) for a in self.whole_attrs
+            ]
+            parts_observations = [
+                self.target.observe_parts_attr(a) for a in self.parts_attrs
+            ]
+            self.whole_buffer.append(
+                merge_whole_observations(whole_observations))
+            self.parts_buffer.append(
+                merge_parts_observations(parts_observations))
+
+    def pause_logger(self) -> None:
+        """Pauses logger."""
+        self.paused = True
+
+    def resume_logger(self) -> None:
+        """Resumes logger."""
+        self.paused = False
 
     def to_logs(self) -> Logs:
         """Converts the internal buffer to a Logs object.
