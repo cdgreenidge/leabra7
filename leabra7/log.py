@@ -1,14 +1,12 @@
 """Tools to log data from the network."""
 import abc
 import collections
-import inspect
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
-from typing import Type
 
 import pandas as pd  # type: ignore
 
@@ -62,7 +60,7 @@ class DataFrameBuffer:
         self.time += 1
 
     def increment_time(self) -> None:
-        """Increments time without updating dataframe buffer."""
+        """Increments the time counter."""
         self.time += 1
 
     def to_df(self) -> pd.DataFrame:
@@ -216,8 +214,7 @@ class Logger(events.EventListenerMixin):
         target: The object from which to record attributes. It must inherit
             from `ObservableMixin`.
         attrs: A list of attribute names to log.
-        event_trigger: The class object for the event on which this
-          logger should record a new entry
+        freq: The frequency at which this logger should record.
 
     Attrs:
         name (str): The name of the target object.
@@ -228,7 +225,7 @@ class Logger(events.EventListenerMixin):
     """
 
     def __init__(self, target: ObservableMixin, attrs: Iterable[str],
-                 event_trigger: Type[events.Event]) -> None:
+                 freq: events.Frequency) -> None:
         self.target = target
         self.target_name = target.name
         self.whole_attrs = [i for i in attrs if i in target.whole_attrs]
@@ -236,36 +233,23 @@ class Logger(events.EventListenerMixin):
         self.whole_buffer = DataFrameBuffer()
         self.parts_buffer = DataFrameBuffer()
         self.paused = False
-
-        if not inspect.isclass(event_trigger):
-            raise TypeError("event_trigger must be a type (class object.)")
-        self.event_trigger = event_trigger
+        self.freq = freq
 
     def record(self) -> None:
         """Records the attributes to an internal buffer."""
         if self.paused:
             self.whole_buffer.increment_time()
             self.parts_buffer.increment_time()
+            return
 
-        else:
-            whole_observations = [
-                self.target.observe_whole_attr(a) for a in self.whole_attrs
-            ]
-            parts_observations = [
-                self.target.observe_parts_attr(a) for a in self.parts_attrs
-            ]
-            self.whole_buffer.append(
-                merge_whole_observations(whole_observations))
-            self.parts_buffer.append(
-                merge_parts_observations(parts_observations))
-
-    def pause_logger(self) -> None:
-        """Pauses logger."""
-        self.paused = True
-
-    def resume_logger(self) -> None:
-        """Resumes logger."""
-        self.paused = False
+        whole_observations = [
+            self.target.observe_whole_attr(a) for a in self.whole_attrs
+        ]
+        parts_observations = [
+            self.target.observe_parts_attr(a) for a in self.parts_attrs
+        ]
+        self.whole_buffer.append(merge_whole_observations(whole_observations))
+        self.parts_buffer.append(merge_parts_observations(parts_observations))
 
     def to_logs(self) -> Logs:
         """Converts the internal buffer to a Logs object.
@@ -279,5 +263,11 @@ class Logger(events.EventListenerMixin):
 
     def handle(self, event: events.Event) -> None:
         """Overrides `events.EventListnerMixin.handle()`."""
-        if isinstance(event, self.event_trigger):
+        if isinstance(event, self.freq.end_event_type):
             self.record()
+        elif isinstance(event, events.PauseLogging):
+            if event.freq == self.freq:
+                self.paused = True
+        elif isinstance(event, events.ResumeLogging):
+            if event.freq == self.freq:
+                self.paused = False

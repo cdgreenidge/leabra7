@@ -214,35 +214,7 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
         assert "avg_act" in n.logs(freq, "layer1").whole.columns
 
 
-@given(text=st.text())
-@example("cycle")
-@example("trial")
-@example("epoch")
-@example("batch")
-def test_net_log_pausing_verficiation(text) -> None:
-    n = net.Net()
-    if text in {"cycle", "trial", "epoch", "batch"}:
-        n.pause_logging(text)
-    else:
-        with pytest.raises(ValueError):
-            n.pause_logging(text)
-
-
-@given(text=st.text())
-@example("cycle")
-@example("trial")
-@example("epoch")
-@example("batch")
-def test_net_log_resuming_verficiation(text) -> None:
-    n = net.Net()
-    if text in {"cycle", "trial", "epoch", "batch"}:
-        n.resume_logging(text)
-    else:
-        with pytest.raises(ValueError):
-            n.resume_logging(text)
-
-
-def test_net_cycle_log_pausing_and_resuming() -> None:
+def test_net_can_pause_and_resume_logging() -> None:
     n = net.Net()
     n.new_layer(
         "layer1",
@@ -253,16 +225,15 @@ def test_net_cycle_log_pausing_and_resuming() -> None:
         )))
     for i in range(2):
         n.cycle()
-    n.pause_logging("cycle")
+    n.pause_logging()
     for i in range(2):
         n.cycle()
-    n.resume_logging("cycle")
+    n.resume_logging()
     for i in range(2):
         n.cycle()
 
     partsTime = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
     wholeTime = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
-
     assert list(partsTime.size()) == [8]
     assert list(wholeTime.size()) == [4]
 

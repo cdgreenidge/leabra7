@@ -21,6 +21,13 @@ def test_dataframebuffer_can_record_observations() -> None:
     assert dfb.to_df().equals(expected)
 
 
+def test_dataframebuffer_can_increment_time() -> None:
+    dfb = log.DataFrameBuffer()
+    assert dfb.time == 0
+    dfb.increment_time()
+    assert dfb.time == 1
+
+
 class ObjToLog(log.ObservableMixin):
     """A dummy class with which to test logging."""
 
@@ -113,7 +120,7 @@ def test_you_can_merge_whole_observations() -> None:
 # Test log.Logger
 def test_logger_can_record_attributes_from_an_object() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["unit_act", "avg_act"], events.Cycle)
+    logger = log.Logger(obj, ["unit_act", "avg_act"], events.CycleFreq)
     logger.handle(events.Cycle())
     expected_parts = pd.DataFrame.from_dict({
         "time": [0, 0],
@@ -130,12 +137,21 @@ def test_logger_can_record_attributes_from_an_object() -> None:
 
 def test_logger_has_a_name_property() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["a"], events.Cycle)
+    logger = log.Logger(obj, ["a"], events.CycleFreq)
     logger.name = "obj"
     assert logger.name == "obj"
 
 
-def test_logger_raises_error_if_event_trigger_is_not_a_type() -> None:
+def test_logger_can_pause_logging() -> None:
     obj = ObjToLog("obj")
-    with pytest.raises(TypeError):
-        log.Logger(obj, [], events.Cycle())
+    logger = log.Logger(obj, ["avg_act", "unit_act"], events.CycleFreq)
+    logger.handle(events.Cycle())
+    logger.handle(events.PauseLogging("cycle"))
+    logger.handle(events.ResumeLogging("trial"))
+    logger.handle(events.Cycle())
+    logger.handle(events.ResumeLogging("cycle"))
+    logger.handle(events.PauseLogging("trial"))
+    logger.handle(events.Cycle())
+    whole_obs, parts_obs = logger.to_logs()
+    assert list(whole_obs["time"]) == [0, 2]
+    assert list(parts_obs.loc[parts_obs["unit"] == 0]["time"]) == [0, 2]
