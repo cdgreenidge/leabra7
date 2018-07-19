@@ -53,6 +53,46 @@ class EndBatch(Event):
     pass
 
 
+class PauseCycleLog(Event):
+    """The even that pauses cycle logging."""
+    pass
+
+
+class PauseTrialLog(Event):
+    """The even that pauses trial logging."""
+    pass
+
+
+class PauseEpochLog(Event):
+    """The even that pauses epoch logging."""
+    pass
+
+
+class PauseBatchLog(Event):
+    """The even that pauses batch logging."""
+    pass
+
+
+class ResumeCycleLog(Event):
+    """The even that resumes cycle logging."""
+    pass
+
+
+class ResumeTrialLog(Event):
+    """The even that resumes trial logging."""
+    pass
+
+
+class ResumeEpochLog(Event):
+    """The even that resumes epoch logging."""
+    pass
+
+
+class ResumeBatchLog(Event):
+    """The even that resumes batch logging."""
+    pass
+
+
 class HardClamp(Event):
     """The event that hard clamps a layer.
 

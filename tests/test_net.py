@@ -1,7 +1,11 @@
 """Test net.py"""
 import math
 
+from hypothesis import example
+from hypothesis import given
+import hypothesis.strategies as st
 import pytest
+import torch
 
 from leabra7 import events
 from leabra7 import net
@@ -208,6 +212,139 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
     n.end_batch()
     for freq in ("cycle", "trial", "epoch", "batch"):
         assert "avg_act" in n.logs(freq, "layer1").whole.columns
+
+
+def test_net_cycle_logging_can_be_read() -> None:
+    n = net.Net()
+    n.cycle_logging
+
+
+def test_net_trial_logging_can_be_read() -> None:
+    n = net.Net()
+    n.trial_logging
+
+
+def test_net_epoch_logging_can_be_read() -> None:
+    n = net.Net()
+    n.epoch_logging
+
+
+def test_net_batch_logging_can_be_read() -> None:
+    n = net.Net()
+    n.batch_logging
+
+
+def test_net_cycle_log_pausing_and_resuming() -> None:
+    n = net.Net()
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(log_on_cycle=(
+            "unit_act",
+            "avg_act",
+        )))
+    for i in range(2):
+        n.cycle()
+    n.cycle_logging = False
+    for i in range(2):
+        n.cycle()
+    n.cycle_logging = True
+    for i in range(2):
+        n.cycle()
+
+    partsTime = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
+    wholeTime = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
+
+    assert list(partsTime.size()) == [8]
+    assert list(wholeTime.size()) == [4]
+
+    assert (partsTime == torch.Tensor([0, 0, 1, 1, 4, 4, 5, 5])).all()
+    assert (wholeTime == torch.Tensor([0, 1, 4, 5])).all()
+
+
+def test_net_trial_log_pausing_and_resuming() -> None:
+    n = net.Net()
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(log_on_trial=(
+            "unit_act",
+            "avg_act",
+        )))
+
+    n.minus_phase_cycle(num_cycles=5)
+    n.plus_phase_cycle(num_cycles=5)
+
+    n.trial_logging = False
+
+    n.minus_phase_cycle(num_cycles=5)
+    n.plus_phase_cycle(num_cycles=5)
+
+    n.trial_logging = True
+
+    n.minus_phase_cycle(num_cycles=5)
+    n.plus_phase_cycle(num_cycles=5)
+
+    partsTime = torch.Tensor(n.logs("trial", "layer1").parts["time"])
+    wholeTime = torch.Tensor(n.logs("trial", "layer1").whole["time"])
+
+    assert list(partsTime.size()) == [4]
+    assert list(wholeTime.size()) == [2]
+
+    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
+    assert (wholeTime == torch.Tensor([0, 2])).all()
+
+
+def test_net_epoch_log_pausing_and_resuming() -> None:
+    n = net.Net()
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(log_on_epoch=(
+            "unit_act",
+            "avg_act",
+        )))
+
+    n.end_epoch()
+    n.epoch_logging = False
+    n.end_epoch()
+    n.epoch_logging = True
+    n.end_epoch()
+
+    partsTime = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
+    wholeTime = torch.Tensor(n.logs("epoch", "layer1").whole["time"])
+
+    assert list(partsTime.size()) == [4]
+    assert list(wholeTime.size()) == [2]
+
+    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
+    assert (wholeTime == torch.Tensor([0, 2])).all()
+
+
+def test_net_batch_log_pausing_and_resuming() -> None:
+    n = net.Net()
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(log_on_batch=(
+            "unit_act",
+            "avg_act",
+        )))
+
+    n.end_batch()
+    n.batch_logging = False
+    n.end_batch()
+    n.batch_logging = True
+    n.end_batch()
+
+    partsTime = torch.Tensor(n.logs("batch", "layer1").parts["time"])
+    wholeTime = torch.Tensor(n.logs("batch", "layer1").whole["time"])
+
+    assert list(partsTime.size()) == [4]
+    assert list(wholeTime.size()) == [2]
+
+    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
+    assert (wholeTime == torch.Tensor([0, 2])).all()
 
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
