@@ -22,7 +22,7 @@ check-notebook:
 check-script:
 	@mypy scripts/*.py
 	@pylint scripts/*.py
-	@yapf --parallel --recursive --diff scipts/*.py
+	@yapf --parallel --recursive --diff scripts/*.py
 
 clean:
 	rm -rf .cache .mypy_cache *.egg-info .tox $(PROJECT)/__pycache__ \

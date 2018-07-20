@@ -1,10 +1,7 @@
 import json
 import os
-from os.path import isfile
 from os.path import join
 import re
-
-
 
 notebook_path = os.path.abspath("notebooks")
 notebook_dir = os.listdir("notebooks")
@@ -26,7 +23,7 @@ for name in filenames:
             out_file.write("# Begin Code\n")
             for line in source:
                 if line == "%matplotlib inline\n":
-                    out_file.write("get_ipython().run_line_magic('matplotlib', 'inline')  #type: ignore")
+                    out_file.write("# %matplotlib inline\n")
                 else:
                     out_file.write(line)
         else:
