@@ -201,11 +201,17 @@ def test_observing_unlogged_attr_raises_error_if_obj_not_observable() -> None:
         n.observe("layer1_cycle_logger", "cos_diff_avg")
 
 
-def test_observing_unlogged_attr_raises_error_if_attr_invalid() -> None:
+def test_observing_unlogged_attr_checks_whether_attr_is_invalid() -> None:
     n = net.Net()
     n.new_layer("layer1", 1)
     with pytest.raises(ValueError):
         n.observe("layer1", "whales")
+
+
+def test_observing_unlogged_attr_checks_whether_obj_exists() -> None:
+    n = net.Net()
+    with pytest.raises(ValueError):
+        n.observe("layer1", "avg_act")
 
 
 def test_net_logs_checks_whether_the_frequency_name_is_valid() -> None:
