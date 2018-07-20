@@ -3,6 +3,8 @@ from typing import Dict
 from typing import List
 from typing import Sequence
 
+import pandas as pd  # type: ignore
+
 from leabra7 import layer
 from leabra7 import log
 from leabra7 import events
@@ -259,6 +261,34 @@ class Net(events.EventListenerMixin):
     def learn(self) -> None:
         """Updates projection weights with XCAL learning equation."""
         self.handle(events.Learn())
+
+    def observe(self, name: str, attr: str) -> pd.DataFrame:
+        """Observes an attribute of an object in the network.
+
+        This is like logging, but it only returns the current object state.
+        There is no history. If you do not require historical observations,
+        Use this to avoid the performance penalty of logging.
+
+        Args:
+          name: The name of the object.
+          attr: The attr to observe. This can be any attribute that is valid to
+            log on the object, as defined in the object spec.
+
+        Raises:
+          ValueError: if the object does not exist, does not support
+            observations, or the attribute is not a valid loggable attribute.
+
+        """
+        try:
+            obj = self.objs[name]
+            # We use isinstance instead of catching AttributeError for MyPy
+            if isinstance(obj, log.ObservableMixin):
+                return obj.observe(attr)
+            else:
+                raise ValueError(
+                    "Object {0} does not support observations.".format(name))
+        except KeyError:
+            raise ValueError("No object with name {0} found.".format(name))
 
     def logs(self, freq: str, name: str) -> log.Logs:
         """Retrieves logs for an object in the network.
