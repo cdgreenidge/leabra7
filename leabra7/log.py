@@ -171,6 +171,28 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
         """
 
+    def observe(self, attr: str) -> pd.DataFrame:
+        """Observes an attribute, returning a dataframe.
+
+        This supports the Net.observe() method.
+
+        Args:
+          attr: The attribute to observe.
+
+        Returns:
+          A Pandas Dataframe containing the observation.
+
+        Raises:
+          ValueError: If the attr is not observable.
+
+        """
+        self.validate_attr(attr)
+        if attr in self.parts_attrs:
+            return pd.DataFrame(self.observe_parts_attr(attr))
+        elif attr in self.whole_attrs:
+            name, val = self.observe_whole_attr(attr)
+            return pd.DataFrame({name: (val, )})
+
 
 def merge_parts_observations(observations: Iterable[PartsObs]) -> pd.DataFrame:
     """Merges parts observations together into a dataframe.

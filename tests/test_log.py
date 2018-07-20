@@ -105,6 +105,33 @@ def test_you_can_observe_parts_attributes() -> None:
     }
 
 
+def test_you_can_observe_part_attributes_without_specifying_part() -> None:
+    obj = ObjToLog("obj")
+    pd.util.testing.assert_frame_equal(
+        obj.observe("unit_act"),
+        pd.DataFrame({
+            "unit": [0, 1],
+            "act": [0.3, 0.5]
+        }),
+        check_like=True)
+
+
+def test_you_can_observe_whole_attrs_without_specifying_whole() -> None:
+    obj = ObjToLog("obj")
+    pd.util.testing.assert_frame_equal(
+        obj.observe("avg_act"),
+        pd.DataFrame({
+            "avg_act": [0.4]
+        }),
+        check_like=True)
+
+
+def test_observing_an_invalid_attribute_raises_value_error() -> None:
+    obj = ObjToLog("obj")
+    with pytest.raises(ValueError):
+        obj.observe("whales")
+
+
 # Test log.merge_parts_observations()
 def test_you_can_merge_parts_observations() -> None:
     obs1 = {"unit": [0, 1], "act": [0.2, 0.3]}
