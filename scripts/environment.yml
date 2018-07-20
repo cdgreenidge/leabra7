@@ -8,7 +8,6 @@ channels:
 dependencies:
   - conda-build>=3.10
   - hypothesis>=3.57
-  - ipython>=6.4
   - mypy>=0.6
   - nbconvert>=5.3.1
   - numpy>=1.14
