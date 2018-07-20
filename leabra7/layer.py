@@ -95,7 +95,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         parts_attrs: List[str] = [
             "unit_net", "unit_net_raw", "unit_gc_i", "unit_act", "unit_i_net",
             "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
-            "unit_spike"
+            "unit_spike", "cos_diff_avg"
         ]
 
         super().__init__(whole_attrs=whole_attrs, parts_attrs=parts_attrs)

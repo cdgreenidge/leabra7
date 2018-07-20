@@ -277,7 +277,8 @@ class LayerSpec(ObservableSpec):
         # (we represent in two places to avoid a circular dependency)
         return ("avg_act", "avg_net", "fbi", "unit_net_raw", "unit_net",
                 "unit_gc_i", "unit_act", "unit_i_net", "unit_i_net_r",
-                "unit_v_m", "unit_v_m_eq", "unit_adapt", "unit_spike")
+                "unit_v_m", "unit_v_m_eq", "unit_adapt", "unit_spike",
+                "cos_diff_avg")
 
     def validate(self) -> None:
         """Extends `Spec.validate`."""
