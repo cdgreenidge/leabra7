@@ -3,11 +3,11 @@ PYTHON=python3
 
 all: all-leabra all-notebook all-script
 
-all-leabra: check-leabra format-leabra test-leabra
+all-leabra: format-leabra check-leabra test-leabra
 
 all-notebook: convert-notebook finish-notebook
 
-all-script: check-script format-script
+all-script: format-script check-script
 
 check-leabra:
 	@mypy $(PROJECT)
@@ -34,7 +34,7 @@ convert-notebook:
 distclean: clean
 	rm -rf $(VIRTUALENV_DIR)/$(PROJECT)
 
-finish-notebook: check-notebook format-notebook reverse-notebook
+finish-notebook: format-notebook check-notebook reverse-notebook
 
 format-leabra:
 	@yapf --parallel --recursive --in-place $(PROJECT) tests
