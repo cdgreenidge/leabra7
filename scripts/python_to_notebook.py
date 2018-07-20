@@ -6,6 +6,7 @@ from typing import List
 from typing import Tuple
 import sys
 
+
 def break_cells(data: List[str]) -> Tuple[List[List[str]], List[bool]]:
     """Breaks string into markdown and code cells."""
     last_cell = 0
@@ -14,27 +15,29 @@ def break_cells(data: List[str]) -> Tuple[List[List[str]], List[bool]]:
     cell_code: List[bool] = []
     curr_code = False
 
-    for n, line in enumerate(file_data):
+    for n, line in enumerate(data):
         if line == "# Begin Markdown\n":
             if n:
-                cells += [file_data[last_cell + 1:n - 1]]
+                cells += [data[last_cell + 1:n - 1]]
                 cell_code += [curr_code]
             last_cell = n
             curr_code = False
 
         elif line == "# Begin Code\n":
             if n:
-                cells += [file_data[last_cell + 1:n - 1]]
+                cells += [data[last_cell + 1:n - 1]]
                 cell_code += [curr_code]
             last_cell = n
             curr_code = True
 
-    cells += [file_data[last_cell + 1:len(file_data) - 1]]
+    cells += [data[last_cell + 1:len(data) - 1]]
     cell_code += [curr_code]
 
     return cells, cell_code
 
-def build_cell_list(cells: List[List[str]], cell_code: List[bool]) -> List[Dict[str, Any]]:
+
+def build_cell_list(cells: List[List[str]],
+                    cell_code: List[bool]) -> List[Dict[str, Any]]:
     """Creates list of cells with notebook dictionary entries."""
     out_cells: List[Dict[str, Any]] = []
 
@@ -55,7 +58,7 @@ def build_cell_list(cells: List[List[str]], cell_code: List[bool]) -> List[Dict[
                 source += [line + "\n"]
             else:
                 source += [line[2:] + "\n"]
-                
+
         if source == []:
             continue
 
@@ -64,6 +67,7 @@ def build_cell_list(cells: List[List[str]], cell_code: List[bool]) -> List[Dict[
         out_cells += [new_cell]
 
     return out_cells
+
 
 def build_notebook_dict(out_cells: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Builds final dictionary to be dumped as json."""
@@ -96,6 +100,7 @@ def build_notebook_dict(out_cells: List[Dict[str, Any]]) -> Dict[str, Any]:
     out_data["nbformat_minor"] = 2
 
     return out_data
+
 
 file_data = sys.stdin.readlines()
 file_cells, file_code = break_cells(file_data)
