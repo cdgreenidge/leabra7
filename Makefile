@@ -1,11 +1,13 @@
 PROJECT=leabra7
 PYTHON=python3
 
-all: all-leabra all-notebook
+all: all-leabra all-notebook all-script
 
 all-leabra: check-leabra format-leabra test-leabra
 
 all-notebook: convert-notebook finish-notebook
+
+all-script: check-script format-script
 
 check-leabra:
 	@mypy $(PROJECT)
@@ -15,6 +17,12 @@ check-leabra:
 check-notebook:
 	@mypy notebooks/*.py
 	@pylint notebooks/*.py
+	@yapf --parallel --recursive --diff notebooks/*.py
+
+check-script:
+	@mypy scripts/*.py
+	@pylint scripts/*.py
+	@yapf --parallel --recursive --diff scipts/*.py
 
 clean:
 	rm -rf .cache .mypy_cache *.egg-info .tox $(PROJECT)/__pycache__ \
@@ -33,6 +41,9 @@ format-leabra:
 
 format-notebook:
 	@yapf --parallel --recursive --in-place notebooks/*.py
+
+format-script:
+	@yapf --parallel --recursive --in-place scripts/*.py
 
 test-leabra:
 	@pytest --cov-report term-missing --cov=$(PROJECT) tests
