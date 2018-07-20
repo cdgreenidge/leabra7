@@ -47,7 +47,7 @@ for name in filenames:
     out_cells: List[Dict[str, Any]] = []
 
     for i, raw_source in enumerate(cells):
-        new_cell: Dict[str, Any] = {}
+        new_cell: Dict[str, Any] = dict()
         source: List[str] = []
 
         if cell_code[i]:
