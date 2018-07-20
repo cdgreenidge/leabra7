@@ -157,6 +157,7 @@ class Net(events.EventListenerMixin):
         pr = projn.Projn(name, pre_lr, post_lr, spec)
         self.projns[name] = pr
         self.objs[name] = pr
+        self._add_loggers(pr)
 
     def _cycle(self) -> None:
         """Cycles the network (triggered by cycle event)."""
