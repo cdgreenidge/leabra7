@@ -147,6 +147,7 @@ class ObservableSpec(Spec, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def validate(self) -> None:
+        """Extends `Spec.validate()`."""
         self.validate_attrs_to_log()
         super().validate()
 
