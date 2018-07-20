@@ -4,7 +4,9 @@ from typing import Any
 import pandas as pd  # type: ignore
 import pytest
 
+from leabra7 import events
 from leabra7 import log
+from leabra7 import specs
 
 
 # Test log.DataFrameBuffer
@@ -20,6 +22,13 @@ def test_dataframebuffer_can_record_observations() -> None:
     assert dfb.to_df().equals(expected)
 
 
+def test_dataframebuffer_can_increment_time() -> None:
+    dfb = log.DataFrameBuffer()
+    assert dfb.time == 0
+    dfb.increment_time()
+    assert dfb.time == 1
+
+
 class ObjToLog(log.ObservableMixin):
     """A dummy class with which to test logging."""
 
@@ -27,12 +36,18 @@ class ObjToLog(log.ObservableMixin):
         self.unit = [0, 1]
         self.acts = [0.3, 0.5]
         self.avg_act = 0.4
+        self._name = name
+        self._spec = specs.LayerSpec()
         super().__init__(
-            name=name,
-            whole_attrs=["avg_act"],
-            parts_attrs=["unit_act"],
-            *args,
-            **kwargs)
+            whole_attrs=["avg_act"], parts_attrs=["unit_act"], *args, **kwargs)
+
+    @property
+    def spec(self) -> specs.Spec:
+        return self._spec
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         if attr != "unit_act":
@@ -112,8 +127,8 @@ def test_you_can_merge_whole_observations() -> None:
 # Test log.Logger
 def test_logger_can_record_attributes_from_an_object() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["unit_act", "avg_act"])
-    logger.record()
+    logger = log.Logger(obj, ["unit_act", "avg_act"], events.CycleFreq)
+    logger.handle(events.Cycle())
     expected_parts = pd.DataFrame.from_dict({
         "time": [0, 0],
         "act": [0.3, 0.5],
@@ -129,6 +144,21 @@ def test_logger_can_record_attributes_from_an_object() -> None:
 
 def test_logger_has_a_name_property() -> None:
     obj = ObjToLog("obj")
-    logger = log.Logger(obj, ["a"])
+    logger = log.Logger(obj, ["a"], events.CycleFreq)
     logger.name = "obj"
     assert logger.name == "obj"
+
+
+def test_logger_can_pause_logging() -> None:
+    obj = ObjToLog("obj")
+    logger = log.Logger(obj, ["avg_act", "unit_act"], events.CycleFreq)
+    logger.handle(events.Cycle())
+    logger.handle(events.PauseLogging("cycle"))
+    logger.handle(events.ResumeLogging("trial"))
+    logger.handle(events.Cycle())
+    logger.handle(events.ResumeLogging("cycle"))
+    logger.handle(events.PauseLogging("trial"))
+    logger.handle(events.Cycle())
+    whole_obs, parts_obs = logger.to_logs()
+    assert list(whole_obs["time"]) == [0, 2]
+    assert list(parts_obs.loc[parts_obs["unit"] == 0]["time"]) == [0, 2]

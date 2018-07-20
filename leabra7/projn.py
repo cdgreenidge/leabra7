@@ -124,6 +124,45 @@ def sparsify(sparsity: float,
     return (sparse, num_to_keep)
 
 
+def xcal(x: torch.Tensor, thr: torch.Tensor) -> torch.Tensor:
+    """Computes the XCAL learning function on a tensor (vectorized)
+
+    See the Emergent docs for more info.
+
+    Args:
+      x: A 1D tensor of inputs to the function.
+      thr: A 1D tensor of threshold values.
+
+    Returns:
+      A tensor with XCAL computed for each value.
+
+    """
+    d_thr = 0.0001
+    d_rev = 0.1
+    result = torch.zeros_like(x)
+
+    mask = x > (thr * d_rev)
+    result[mask] = x[mask] - thr[mask]
+    result[~mask] = -x[~mask] * ((1 - d_rev) / d_rev)
+
+    result[x < d_thr] = 0
+    return result
+
+
+def sig(gain: float, offset: float, x: torch.Tensor) -> torch.Tensor:
+    """Computes element-wise sigmoid function.
+
+    Args:
+      gain: The sigmoid function gain.
+      offset: The sigmoid function offset.
+
+    Returns:
+      The sigmoid function evaluated for each element in the tensor.
+
+    """
+    return 1 / (1 + (offset * (1 - x) / x)**gain)
+
+
 class Projn(events.EventListenerMixin):
     """A projection links two layers. It is a bundle of connections.
 
@@ -152,8 +191,11 @@ class Projn(events.EventListenerMixin):
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
-        # presynaptic units
+        # presynaptic units. These weights are sigmoidally contrast-enchanced,
+        # and are used to send net input to other neurons.
         self.wts = torch.Tensor(self.post.size, self.pre.size).zero_()
+        # These weights ("fast weights") are linear and not contrast enhanced
+        self.fwts = torch.Tensor(self.post.size, self.pre.size).zero_()
 
         # Only create the projection between the units selected by the masks
         # Currently, only full connections are supported
@@ -167,15 +209,17 @@ class Projn(events.EventListenerMixin):
             mask = expand_layer_mask_full(tiled_pre_mask, tiled_post_mask)
 
         # Enforce sparsity
-        mask, num_nonzero = sparsify(self.spec.sparsity, mask)
+        self.mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
         rand_nums = torch.Tensor(num_nonzero)
         self.spec.dist.fill(rand_nums)
-        self.wts[mask] = rand_nums
+        self.wts[self.mask] = rand_nums
+
+        self.fwts = self.wts
 
         # Record the number of incoming connections for each unit
-        self.num_recv_conns = torch.sum(mask, dim=1).float()
+        self.num_recv_conns = torch.sum(self.mask, dim=1).float()
 
     def netin_scale(self) -> torch.Tensor:
         """Computes the net input scaling factor for each receiving unit.
@@ -216,5 +260,29 @@ class Projn(events.EventListenerMixin):
             self.spec.wt_scale_abs * wt_scale_act *
             (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
 
+    def learn(self) -> None:
+        """Updates weights with XCAL learning equation."""
+        # Compute weight changes
+        srs = torch.ger(self.post.avg_s, self.pre.avg_s)
+        srm = torch.ger(self.post.avg_m, self.pre.avg_m)
+        s_mix = 0.9
+        sm_mix = s_mix * srs + (1 - s_mix) * srm
+        thr_l_mix = 0.05
+        lthr = thr_l_mix * self.post.cos_diff_avg * torch.ger(
+            self.post.avg_m, self.pre.avg_l)
+        mthr = (1 - thr_l_mix * self.post.cos_diff_avg) * srm
+        dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
+        dwts[~self.mask] = 0
+
+        # Apply weights
+        mask = dwts > 0
+        dwts[mask] *= 1 - self.fwts[mask]
+        dwts[~mask] *= self.fwts[~mask]
+        self.fwts += dwts
+        self.wts = sig(self.spec.sig_gain, self.spec.sig_offset, self.fwts)
+        return
+
     def handle(self, event: events.Event) -> None:
-        pass
+        """Overrides `event.EventListenerMixin.handle()`."""
+        if isinstance(event, events.Learn):
+            self.learn()
