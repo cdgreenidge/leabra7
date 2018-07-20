@@ -261,3 +261,39 @@ def test_projn_can_handle_learn_events(mocker) -> None:
     mocker.spy(projn, "learn")
     projn.handle(ev.Learn())
     projn.learn.assert_called_once()
+
+
+def test_you_can_log_projection_weights() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    projn = pr.Projn(
+        "proj",
+        pre,
+        post,
+        spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(0.5)))
+    expected = {"pre_unit": [0, 1], "post_unit": [0, 1], "conn_wt": [0.5, 0.5]}
+    assert projn.observe_parts_attr("conn_wt") == expected
+
+
+def test_you_can_log_projection_fast_weights() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    projn = pr.Projn(
+        "proj",
+        pre,
+        post,
+        spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(0.5)))
+    expected = {
+        "pre_unit": [0, 1],
+        "post_unit": [0, 1],
+        "conn_fwt": [0.5, 0.5]
+    }
+    assert projn.observe_parts_attr("conn_fwt") == expected
+
+
+def test_observing_invalid_parts_attr_raises_value_error() -> None:
+    pre = lr.Layer("lr1", size=2)
+    post = lr.Layer("lr2", size=2)
+    projn = pr.Projn("proj", pre, post)
+    with pytest.raises(ValueError):
+        projn.observe_parts_attr("whales")

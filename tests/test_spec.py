@@ -387,13 +387,18 @@ def test_projn_spec_validates_sig_offset(f) -> None:
         sp.ProjnSpec(sig_offset=f).validate()
 
 
+def test_projn_spec_validates_attrs_to_log() -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(log_on_cycle=("whales", )).validate()
+
+
 def test_attrs_to_log_gets_the_attrs_to_log_by_frequency() -> None:
     spec = sp.LayerSpec(
         log_on_cycle=("unit_act", ),
         log_on_trial=("unit_v_m", ),
         log_on_epoch=("unit_spike", ),
         log_on_batch=("unit_i_net", ))
-    assert sp.attrs_to_log(spec, ev.CycleFreq) == ("unit_act", )
-    assert sp.attrs_to_log(spec, ev.TrialFreq) == ("unit_v_m", )
-    assert sp.attrs_to_log(spec, ev.EpochFreq) == ("unit_spike", )
-    assert sp.attrs_to_log(spec, ev.BatchFreq) == ("unit_i_net", )
+    assert spec.attrs_to_log(ev.CycleFreq) == ("unit_act", )
+    assert spec.attrs_to_log(ev.TrialFreq) == ("unit_v_m", )
+    assert spec.attrs_to_log(ev.EpochFreq) == ("unit_spike", )
+    assert spec.attrs_to_log(ev.BatchFreq) == ("unit_i_net", )
