@@ -1,9 +1,7 @@
 """Test net.py"""
 import math
 
-from hypothesis import example
-from hypothesis import given
-import hypothesis.strategies as st
+import pandas as pd
 import pytest
 import torch
 
@@ -183,6 +181,31 @@ def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
     assert all(
         isinstance(i, events.Cycle)
         for i in n.handle.call_args_list[1:43][0][0])
+
+
+def test_you_can_observe_unlogged_attributes() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1)
+    pd.util.testing.assert_frame_equal(
+        n.observe("layer1", "cos_diff_avg"),
+        pd.DataFrame({
+            "cos_diff_avg": (0.0, )
+        }),
+        check_like=True)
+
+
+def test_observing_unlogged_attr_raises_error_if_obj_not_observable() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1, spec=specs.LayerSpec(log_on_cycle=("avg_act", )))
+    with pytest.raises(ValueError):
+        n.observe("layer1_cycle_logger", "cos_diff_avg")
+
+
+def test_observing_unlogged_attr_raises_error_if_attr_invalid() -> None:
+    n = net.Net()
+    n.new_layer("layer1", 1)
+    with pytest.raises(ValueError):
+        n.observe("layer1", "whales")
 
 
 def test_net_logs_checks_whether_the_frequency_name_is_valid() -> None:

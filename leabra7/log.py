@@ -189,9 +189,8 @@ class ObservableMixin(metaclass=abc.ABCMeta):
         self.validate_attr(attr)
         if attr in self.parts_attrs:
             return pd.DataFrame(self.observe_parts_attr(attr))
-        elif attr in self.whole_attrs:
-            name, val = self.observe_whole_attr(attr)
-            return pd.DataFrame({name: (val, )})
+        name, val = self.observe_whole_attr(attr)
+        return pd.DataFrame({name: (val, )})
 
 
 def merge_parts_observations(observations: Iterable[PartsObs]) -> pd.DataFrame:
