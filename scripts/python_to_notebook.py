@@ -1,25 +1,13 @@
+#!/usr/bin/env python
 import json
-import os
-from os.path import join
-import re
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Tuple
+import sys
 
-notebook_path = os.path.abspath("notebooks")
-notebook_dir = os.listdir("notebooks")
-
-filenames = [name for name in notebook_dir if re.match("^.*py$", name)]
-
-for name in filenames:
-    file_path = join(notebook_path, name)
-
-    out_filepath = join(notebook_path, name[:-2] + "ipynb")
-
-    out_file = open(out_filepath, "w")
-
-    file_data = open(file_path, "r").read().split("\n")
-
+def break_cells(data: List[str]) -> Tuple[List[List[str]], List[bool]]:
+    """Breaks string into markdown and code cells."""
     last_cell = 0
 
     cells: List[List[str]] = []
@@ -27,14 +15,14 @@ for name in filenames:
     curr_code = False
 
     for n, line in enumerate(file_data):
-        if line == "# Begin Markdown":
+        if line == "# Begin Markdown\n":
             if n:
                 cells += [file_data[last_cell + 1:n - 1]]
                 cell_code += [curr_code]
             last_cell = n
             curr_code = False
 
-        elif line == "# Begin Code":
+        elif line == "# Begin Code\n":
             if n:
                 cells += [file_data[last_cell + 1:n - 1]]
                 cell_code += [curr_code]
@@ -44,12 +32,15 @@ for name in filenames:
     cells += [file_data[last_cell + 1:len(file_data) - 1]]
     cell_code += [curr_code]
 
+    return cells, cell_code
+
+def build_cell_list(cells: List[List[str]], cell_code: List[bool]) -> List[Dict[str, Any]]:
+    """Creates list of cells with notebook dictionary entries."""
     out_cells: List[Dict[str, Any]] = []
 
     for i, raw_source in enumerate(cells):
         new_cell: Dict[str, Any] = dict()
         source: List[str] = []
-
         if cell_code[i]:
             new_cell["cell_type"] = "code"
             new_cell["execution_count"] = None
@@ -60,21 +51,22 @@ for name in filenames:
         new_cell["metadata"] = dict()
 
         for line in raw_source:
-
             if cell_code[i] and line != "# %matplotlib inline":
                 source += [line + "\n"]
             else:
                 source += [line[2:] + "\n"]
-
+                
         if source == []:
             continue
 
         source[-1] = source[-1][:-1]
-
         new_cell["source"] = source
-
         out_cells += [new_cell]
 
+    return out_cells
+
+def build_notebook_dict(out_cells: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Builds final dictionary to be dumped as json."""
     kernelspec: Dict[str, str] = dict()
     kernelspec["display_name"] = "Python Leabra7"
     kernelspec["language"] = "python"
@@ -103,4 +95,10 @@ for name in filenames:
     out_data["nbformat"] = 4
     out_data["nbformat_minor"] = 2
 
-    json.dump(out_data, out_file, sort_keys=True, indent=2)
+    return out_data
+
+file_data = sys.stdin.readlines()
+file_cells, file_code = break_cells(file_data)
+list_cells = build_cell_list(file_cells, file_code)
+notebook_dict = build_notebook_dict(list_cells)
+json.dump(notebook_dict, sys.stdout, sort_keys=True, indent=2)
