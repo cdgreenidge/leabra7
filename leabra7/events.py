@@ -149,6 +149,9 @@ class Frequency():
         self.end_event_type = end_event_type
         Frequency.registry[name] = self
 
+    def __eq__(self, other: 'Frequency'):
+        return self.name == other.name and self.end_event_type == other.end_event_type
+
     @classmethod
     def names(cls) -> Sequence[str]:
         """Returns the names of all defined frequencies."""
