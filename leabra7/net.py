@@ -3,6 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Sequence
 
+import pickle
 import pandas as pd  # type: ignore
 
 from leabra7 import layer
@@ -15,12 +16,28 @@ from leabra7 import specs
 class Net(events.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
-    def __init__(self) -> None:
+    def __init__(self, filename: str = "") -> None:
+        """Initializes network object.
+
+        Args:
+            filename: name of file that stores network.
+                (default: None)
+
+        **Be careful not to load malicious or untrusted files.**
+
+        """
         # Each of the following dicts is keyed by the name of the object
-        self.objs: Dict[str, events.EventListenerMixin] = {}
-        self.layers: Dict[str, layer.Layer] = {}
-        self.projns: Dict[str, projn.Projn] = {}
-        self.loggers: List[log.Logger] = []
+        if filename == "":
+            self.objs: Dict[str, events.EventListenerMixin] = {}
+            self.layers: Dict[str, layer.Layer] = {}
+            self.projns: Dict[str, projn.Projn] = {}
+            self.loggers: List[log.Logger] = []
+        else:
+            loaded_net = pickle.load(open(filename, "rb"))
+            self.objs = loaded_net.objs
+            self.layers = loaded_net.layers
+            self.projns = loaded_net.projns
+            self.loggers = loaded_net.loggers
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -80,6 +97,10 @@ class Net(events.EventListenerMixin):
                 self.loggers.append(logger)
                 self.objs["{0}_{1}_logger".format(obj.name,
                                                   freq_name)] = logger
+
+    def save(self, filename: str = "net.p") -> None:
+        """Saves network as pickle file."""
+        pickle.dump(self, open(filename, "wb"))
 
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:

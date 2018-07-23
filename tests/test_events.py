@@ -44,13 +44,14 @@ def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
     with pytest.raises(ValueError):
         ev.Frequency.from_name("whales")
 
-@given(s = st.sampled_from(["cycle", "trial", "epoch", "batch"]))
+
+@given(s=st.sampled_from(["cycle", "trial", "epoch", "batch"]))
 def test_equality_check_for_frequencies(s) -> None:
-    if s =="cycle":
+    if s == "cycle":
         new_freq = ev.Frequency(name="cycle", end_event_type=ev.Cycle)
     elif s == "trial":
         new_freq = ev.Frequency(name="trial", end_event_type=ev.EndPlusPhase)
-    elif s== "epoch":
+    elif s == "epoch":
         new_freq = ev.Frequency(name="epoch", end_event_type=ev.EndEpoch)
     elif s == "batch":
         new_freq = ev.Frequency(name="batch", end_event_type=ev.EndBatch)
@@ -65,7 +66,9 @@ def test_equality_check_for_frequencies(s) -> None:
         assert new_freq != ev.BatchFreq
 
 
-@given(s = st.one_of(st.none(), st.text(), st.integers(), st.booleans(), st.floats()))
+@given(
+    s=st.one_of(st.none(), st.text(), st.integers(), st.booleans(),
+                st.floats()))
 def test_non_equality_for_non_frequencies(s) -> None:
     assert not s == ev.CycleFreq
     assert not s == ev.TrialFreq
