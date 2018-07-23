@@ -52,6 +52,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Ignore pickle
+tests/*.p
+
 # Translations
 *.mo
 *.pot
