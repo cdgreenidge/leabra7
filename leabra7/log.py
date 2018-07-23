@@ -120,7 +120,7 @@ class ObservableMixin(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def spec(self) -> specs.Spec:
+    def spec(self) -> specs.ObservableSpec:
         """Returns the object spec."""
 
     def validate_attr(self, attr: str) -> None:
@@ -170,6 +170,27 @@ class ObservableMixin(metaclass=abc.ABCMeta):
           ValueError: If the attr is not a parts attribute.
 
         """
+
+    def observe(self, attr: str) -> pd.DataFrame:
+        """Observes an attribute, returning a dataframe.
+
+        This supports the Net.observe() method.
+
+        Args:
+          attr: The attribute to observe.
+
+        Returns:
+          A Pandas Dataframe containing the observation.
+
+        Raises:
+          ValueError: If the attr is not observable.
+
+        """
+        self.validate_attr(attr)
+        if attr in self.parts_attrs:
+            return pd.DataFrame(self.observe_parts_attr(attr))
+        name, val = self.observe_whole_attr(attr)
+        return pd.DataFrame({name: (val, )})
 
 
 def merge_parts_observations(observations: Iterable[PartsObs]) -> pd.DataFrame:

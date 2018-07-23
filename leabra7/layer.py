@@ -89,9 +89,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.wt_scale_rel_sum = 0.0
 
         # When adding any loggable attribute or property to these lists, update
-        # layer.LayerSpec._valid_log_on_cycle (we represent in two places to
+        # specs.LayerSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
-        whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
+        whole_attrs: List[str] = ["avg_act", "avg_net", "cos_diff_avg", "fbi"]
         parts_attrs: List[str] = [
             "unit_net", "unit_net_raw", "unit_gc_i", "unit_act", "unit_i_net",
             "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
