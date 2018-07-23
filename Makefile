@@ -22,8 +22,8 @@ clean:
 notebooks/%.py : notebooks/%.ipynb
 	python scripts/notebook_to_python.py < $< > $@
 
-notebooks/%.ipynb : notebooks/%.py
-	python scripts/python_to_notebook.py < $< > $@
+# notebooks/%.ipynb : notebooks/%.py
+# 	python scripts/python_to_notebook.py < $< > $@
 
 distclean: clean
 	rm -rf $(VIRTUALENV_DIR)/$(PROJECT)
