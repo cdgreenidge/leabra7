@@ -1,6 +1,5 @@
 """Test net.py"""
 import math
-import os
 
 import numpy as np
 import pandas as pd
@@ -14,7 +13,7 @@ from leabra7 import specs
 
 def test_network_can_be_saved() -> None:
     n = net.Net()
-    location = os.path.abspath(".") + "/.pytest_cache/mynet.p"
+    location = "tests/mynet.p"
     n.save(location)
 
 
@@ -31,7 +30,7 @@ def test_network_can_be_retrieved_and_continue_logging() -> None:
         n.cycle()
     n.pause_logging()
 
-    location = os.path.abspath(".") + "/.pytest_cache/mynet.p"
+    location = "tests/mynet.p"
     n.save(location)
     m = net.Net(filename=location)
 
