@@ -53,7 +53,7 @@ coverage.xml
 .pytest_cache/
 
 # Ignore pickle
-tests/*.p
+tests/*.pkl
 
 # Translations
 *.mo
