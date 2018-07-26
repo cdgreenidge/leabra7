@@ -66,6 +66,35 @@ class Net(events.EventListenerMixin):
         self._validate_layer_name(name)
         return self.layers[name]
 
+    def _validate_projn_name(self, name: str) -> None:
+        """Checks if a projection name exists.
+
+        Args:
+          name: The name of the projection.
+
+        Raises:
+          ValueError: If no projection with such a name exists.
+
+        """
+        if name not in self.projns:
+            raise ValueError(
+                "Name {0} does not refer to a projection.".format(name))
+
+    def _get_projn(self, name: str) -> projn.Projn:
+        """Gets a projection by name.
+
+        Args:
+            name: The name of the projection.
+
+        Raises:
+            ValueError: If the name does not refer to a projection.
+                This is not AssertionError because it is intended to be called
+                within user-facing methods.
+
+        """
+        self._validate_projn_name(name)
+        return self.projns[name]
+
     def _add_loggers(self, obj: log.ObservableMixin) -> None:
         """Instantiates loggers for an observable object.
 
@@ -160,6 +189,40 @@ class Net(events.EventListenerMixin):
         self.projns[name] = pr
         self.objs[name] = pr
         self._add_loggers(pr)
+
+    def inhibit_projns(self, *projn_names: str) -> None:
+        """Inhibits the named projections.
+
+        Args:
+            projn_names: Names of projections to be inhibitted.
+
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+
+        """
+        for name in projn_names:
+            self._validate_projn_name(name)
+
+        for name in projn_names:
+            self._get_projn(name).inhibit()
+
+    def uninhibit_projns(self, *projn_names: str) -> None:
+        """Uninhibits the named projections.
+
+        Args:
+            projn_names: Names of projections to be uninhibitted.
+
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+
+        """
+        for name in projn_names:
+            self._validate_projn_name(name)
+
+        for name in projn_names:
+            self._get_projn(name).uninhibit()
 
     def _cycle(self) -> None:
         """Cycles the network (triggered by cycle event)."""

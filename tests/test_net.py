@@ -94,6 +94,27 @@ def test_unclamping_a_layer_validates_its_name() -> None:
         net.Net().unclamp_layer("abcd")
 
 
+def test_the_network_can_get_a_projn_by_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", 1)
+    n.new_layer("lr2", 1)
+    n.new_projn("pr1", "lr1", "lr2")
+
+    assert n._get_projn("pr1") is n.projns["pr1"]
+
+
+def test_the_network_can_validate_projn_names() -> None:
+    n = net.Net()
+    n.new_layer("lr1", 1)
+    n.new_layer("lr2", 1)
+    n.new_projn("pr1", "lr1", "lr2")
+
+    n._validate_projn_name("pr1")
+
+    with pytest.raises(ValueError):
+        n._validate_projn_name("whales")
+
+
 def test_a_new_projn_validates_its_spec() -> None:
     n = net.Net()
     n.new_layer("layer1", 3)
@@ -122,6 +143,62 @@ def test_projn_checks_if_the_receiving_layer_name_is_valid() -> None:
     n.new_layer("layer1", 3)
     with pytest.raises(ValueError):
         n.new_projn("projn1", "layer1", "layer2")
+
+
+def test_net_can_inhibit_projns() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    n.inhibit_projns("pr1", "pr2", "pr3")
+
+
+def test_net_catches_inhibit_bad_projn_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    with pytest.raises(ValueError):
+        n.inhibit_projns("pr4")
+
+    with pytest.raises(ValueError):
+        n.inhibit_projns("pr1", "pr5", "pr3")
+
+
+def test_net_can_uninhibit_projns() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    n.uninhibit_projns("pr1", "pr2", "pr3")
+
+
+def test_net_catches_uninhibit_bad_projn_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    with pytest.raises(ValueError):
+        n.uninhibit_projns("pr4")
+
+    with pytest.raises(ValueError):
+        n.uninhibit_projns("pr1", "pr5", "pr3")
 
 
 # Right now, it's difficult to test net.cycle(), because it's the core of the
