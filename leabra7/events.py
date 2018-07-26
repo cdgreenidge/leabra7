@@ -41,6 +41,36 @@ class EndMinusPhase(Event):
     pass
 
 
+class BeginThetaTrough(Event):
+    """The event that begins the theta tough phase in a trial."""
+    pass
+
+
+class EndThetaTrough(Event):
+    """The event that ends the theta tough phase in a trial."""
+    pass
+
+
+class BeginThetaPeak(Event):
+    """The event that begins the theta peak phase in a trial."""
+    pass
+
+
+class EndThetaPeak(Event):
+    """The event that ends the theta peak phase in a trial."""
+    pass
+
+
+class BeginThetaPlus(Event):
+    """The event that begins the theta plus phase in a trial."""
+    pass
+
+
+class EndThetaPlus(Event):
+    """The event that ends the theta plus phase in a trial."""
+    pass
+
+
 class EndTrial(Event):
     """The event that signals the end of a trial."""
     pass
