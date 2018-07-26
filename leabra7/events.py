@@ -208,6 +208,76 @@ EpochFreq = Frequency(name="epoch", end_event_type=EndEpoch)
 BatchFreq = Frequency(name="batch", end_event_type=EndBatch)
 
 
+class Phase():
+    """Defines network phases.
+
+    Args:
+        begin_event_type: Event type that marks the beginning of a phase.
+        end_event_type: Event type that marks the end of a phase.
+
+    """
+    # Stores a reference to each created frequency object, keyed by name
+    registry: Dict[str, "Phase"] = {}
+
+    name: str
+    begin_event_type: Type[Event]
+    end_event_type: Type[Event]
+
+    def __init__(self, name: str, begin_event_type: Type[Event],
+                 end_event_type: Type[Event]) -> None:
+        if not inspect.isclass(begin_event_type):
+            raise TypeError("begin_event_type must be a class variable.")
+        if not inspect.isclass(end_event_type):
+            raise TypeError("end_event_type must be a class variable.")
+        self.name = name
+        self.begin_event_type = begin_event_type
+        self.end_event_type = end_event_type
+        Phase.registry[name] = self
+
+    @classmethod
+    def names(cls) -> Sequence[str]:
+        """Returns the names of all defined phases."""
+        return tuple(cls.registry.keys())
+
+    @classmethod
+    def from_name(cls, phase_name: str) -> "Phase":
+        """Gets a phase object by its name.
+
+        Args:
+          phase_name: The name of the phase.
+
+        Raises:
+          ValueError: If no phase exists with name `phase_name`.
+
+        """
+        try:
+            return cls.registry[phase_name]
+        except KeyError:
+            raise ValueError(
+                "No phase with name {0} exists.".format(phase_name))
+
+
+PlusPhase = Phase(
+    name="plus", begin_event_type=BeginPlusPhase, end_event_type=EndPlusPhase)
+MinusPhase = Phase(
+    name="minus",
+    begin_event_type=BeginMinusPhase,
+    end_event_type=EndMinusPhase)
+
+ThetaTrough = Phase(
+    name="theta_trough",
+    begin_event_type=BeginThetaTrough,
+    end_event_type=EndThetaTrough)
+ThetaPeak = Phase(
+    name="theta_peak",
+    begin_event_type=BeginThetaPeak,
+    end_event_type=EndThetaPeak)
+ThetaPlus = Phase(
+    name="theta_plus",
+    begin_event_type=BeginThetaPlus,
+    end_event_type=EndThetaPlus)
+
+
 class EventListenerMixin(metaclass=abc.ABCMeta):
     """Defines an interface for handling network events.
 
