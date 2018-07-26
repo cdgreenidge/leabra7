@@ -186,6 +186,8 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         self.pre = pre
         self.post = post
 
+        self.blocked = False
+
         if spec is None:
             self._spec = specs.ProjnSpec()
         else:
@@ -275,10 +277,19 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         layer makes it easier to compute the net input scaling factor.
 
         """
-        wt_scale_act = self.netin_scale()
-        self.post.add_input(
-            self.spec.wt_scale_abs * wt_scale_act *
-            (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
+        if not self.blocked:
+            wt_scale_act = self.netin_scale()
+            self.post.add_input(
+                self.spec.wt_scale_abs * wt_scale_act *
+                (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
+
+    def inhibit(self) -> None:
+        """Block sending layer activation to the recieving layer."""
+        self.blocked = True
+
+    def uninhibit(self) -> None:
+        """Unblock sending layer activation to the recieving layer."""
+        self.blocked = False
 
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
