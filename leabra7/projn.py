@@ -300,7 +300,6 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         dwts[~mask] *= self.fwts[~mask]
         self.fwts += dwts
         self.wts = sig(self.spec.sig_gain, self.spec.sig_offset, self.fwts)
-        return
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         """Overrides `log.ObservableMixin.observe_parts_attr()`."""
