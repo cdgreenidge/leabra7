@@ -13,7 +13,7 @@ from leabra7 import specs
 
 def test_network_can_be_saved() -> None:
     n = net.Net()
-    location = "tests/mynet.p"
+    location = "tests/mynet.pkl"
     n.save(location)
 
 
@@ -30,9 +30,10 @@ def test_network_can_be_retrieved_and_continue_logging() -> None:
         n.cycle()
     n.pause_logging()
 
-    location = "tests/mynet.p"
+    location = "tests/mynet.pkl"
     n.save(location)
-    m = net.Net(filename=location)
+    m = net.Net()
+    m.load(filename=location)
 
     before_parts_n = n.logs("cycle", "layer1").parts
     before_parts_m = m.logs("cycle", "layer1").parts
