@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Converts a python file on stdin to a Jupyter notebook on stdout."""
 import json
 from typing import Any
 from typing import Dict

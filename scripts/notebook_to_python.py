@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Converts an Jupyter notebook on stdin to a python file on stdout."""
 import json
 import sys
 
