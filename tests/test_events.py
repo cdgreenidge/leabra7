@@ -57,7 +57,7 @@ def test_initializing_phase_with_incorrect_type_raises_error() -> None:
 
 def test_you_can_get_the_names_of_all_defined_phases() -> None:
     actual = set(ev.Phase.names())
-    expected = set(("plus", "minus", "theta_trough", "theta_peak",
+    expected = set(("none", "plus", "minus", "theta_trough", "theta_peak",
                     "theta_plus"))
     assert actual == expected
 

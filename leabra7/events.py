@@ -16,6 +16,11 @@ class Event():
     pass
 
 
+class BlankEvent(Event):
+    """Empty event that does not trigger anything."""
+    pass
+
+
 class Cycle(Event):
     """The event that cycles the network."""
     pass
@@ -257,6 +262,8 @@ class Phase():
                 "No phase with name {0} exists.".format(phase_name))
 
 
+NonePhase = Phase(
+    name="none", begin_event_type=BlankEvent, end_event_type=BlankEvent)
 PlusPhase = Phase(
     name="plus", begin_event_type=BeginPlusPhase, end_event_type=EndPlusPhase)
 MinusPhase = Phase(
