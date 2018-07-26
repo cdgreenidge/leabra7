@@ -387,6 +387,48 @@ def test_projn_spec_validates_sig_offset(f) -> None:
         sp.ProjnSpec(sig_offset=f).validate()
 
 
+@given(st.text())
+@example("none")
+@example("minus")
+@example("plus")
+@example("theta_trough")
+@example("theta_peak")
+@example("theta_plus")
+def test_projn_spec_validates_minus_phase(t) -> None:
+    if t in ev.Phase.names():
+        if t == "plus":
+            sp.ProjnSpec(minus_phase=t, plus_phase="theta_plus").validate()
+        else:
+            sp.ProjnSpec(minus_phase=t).validate()
+    else:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(minus_phase=t).validate()
+
+
+@given(st.text())
+@example("none")
+@example("minus")
+@example("plus")
+@example("theta_trough")
+@example("theta_peak")
+@example("theta_plus")
+def test_projn_spec_validates_plus_phase(t) -> None:
+    if t in ev.Phase.names() and t != "none":
+        if t == "minus":
+            sp.ProjnSpec(minus_phase="theta_trough", plus_phase=t).validate()
+        else:
+            sp.ProjnSpec(plus_phase=t).validate()
+    else:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(plus_phase=t).validate()
+
+
+@given(st.sampled_from(ev.Phase.names()))
+def test_projn_spec_checks_plus_and_minus_phases_are_not_the_same(t) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(minus_phase=t, plus_phase=t).validate()
+
+
 def test_projn_spec_validates_attrs_to_log() -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(log_on_cycle=("whales", )).validate()

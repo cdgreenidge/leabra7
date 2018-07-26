@@ -328,6 +328,10 @@ class ProjnSpec(ObservableSpec):
     sig_gain = 6
     # Offset for sigmoidal weight contrast enhancement
     sig_offset = 1
+    # Minus phase
+    minus_phase = "minus"
+    # Plus phase
+    plus_phase = "plus"
 
     @property
     def _valid_attrs_to_log(self) -> Iterable[str]:
@@ -358,3 +362,17 @@ class ProjnSpec(ObservableSpec):
         self.assert_in_range("lrate", 0, float("Inf"))
         self.assert_in_range("sig_gain", 0, float("Inf"))
         self.assert_sane_float("sig_offset")
+
+        if self.minus_phase not in events.Phase.names():
+            raise ValidationError("{0} is not a valid minus phase.".format(
+                self.minus_phase))
+
+        if (self.plus_phase not in events.Phase.names()
+                or self.plus_phase == "none"):
+            raise ValidationError("{0} is not a valid plus phase.".format(
+                self.plus_phase))
+
+        if self.minus_phase == self.plus_phase:
+            raise ValidationError(
+                "Minus phase ({0}) and plus phase ({1}) cannot be identical.".
+                format(self.minus_phase, self.plus_phase))
