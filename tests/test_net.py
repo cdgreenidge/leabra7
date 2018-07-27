@@ -143,9 +143,7 @@ def test_a_new_projn_validates_its_spec() -> None:
             "projn1", "layer1", "layer2", spec=specs.ProjnSpec(integ=-1))
 
 
-@given(
-    t=st.sampled_from(
-        ["minus", "plus", "theta_trough", "theta_peak", "theta_plus"]))
+@given(t=st.sampled_from(["minus", "plus"]))
 def test_network_rejects_a_new_projn_that_has_the_same_minus_phase_as_network_plus_phase(
         t) -> None:
     n = net.Net(plus_phase=t)

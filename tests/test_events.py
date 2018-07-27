@@ -44,17 +44,13 @@ def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
 
 def test_you_can_get_the_names_of_all_defined_phases() -> None:
     actual = set(ev.Phase.names())
-    expected = set(("none", "plus", "minus", "theta_trough", "theta_peak",
-                    "theta_plus"))
+    expected = set(("none", "plus", "minus"))
     assert actual == expected
 
 
 def test_you_can_get_phase_objects_by_name() -> None:
     assert ev.Phase.from_name("plus") is ev.PlusPhase
     assert ev.Phase.from_name("minus") is ev.MinusPhase
-    assert ev.Phase.from_name("theta_trough") is ev.ThetaTrough
-    assert ev.Phase.from_name("theta_peak") is ev.ThetaPeak
-    assert ev.Phase.from_name("theta_plus") is ev.ThetaPlus
 
 
 def test_getting_a_phase_with_undefined_name_raises_error() -> None:

@@ -249,10 +249,6 @@ NonePhase = Phase(name="none")
 PlusPhase = Phase(name="plus")
 MinusPhase = Phase(name="minus")
 
-ThetaTrough = Phase(name="theta_trough")
-ThetaPeak = Phase(name="theta_peak")
-ThetaPlus = Phase(name="theta_plus")
-
 
 class EventListenerMixin(metaclass=abc.ABCMeta):
     """Defines an interface for handling network events.
