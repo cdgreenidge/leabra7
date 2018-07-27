@@ -12,6 +12,7 @@ from leabra7 import specs
 from leabra7 import layer
 from leabra7 import log
 from leabra7 import events
+from leabra7 import utils
 
 T = TypeVar('T')
 
@@ -179,12 +180,16 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
     def __init__(self,
                  name: str,
-                 pre: layer.Layer,
-                 post: layer.Layer,
+                 layers: Tuple[layer.Layer, layer.Layer],
+                 plus_phase: events.Phase = events.PlusPhase,
                  spec: specs.ProjnSpec = None) -> None:
         self._name = name
-        self.pre = pre
-        self.post = post
+        self.pre = layers[0]
+        self.post = layers[1]
+
+        self.plus_phase = plus_phase
+
+        self.cos_diff_avg = 0.0
 
         self.blocked = False
 
@@ -291,6 +296,15 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         """Unblock sending layer activation to the recieving layer."""
         self.blocked = False
 
+    def update_trial_learning_cos_diff(self) -> None:
+        cos_diff = torch.nn.functional.cosine_similarity(
+            self.post.phase_acts[self.plus_phase.name],
+            self.post.phase_acts[self.spec.minus_phase],
+            dim=0)
+        cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
+        self.cos_diff_avg = self.post.spec.avg_dt * (
+            cos_diff - self.cos_diff_avg)
+
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
         # Compute weight changes
@@ -299,9 +313,9 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
         thr_l_mix = 0.05
-        lthr = thr_l_mix * self.post.cos_diff_avg * torch.ger(
+        lthr = thr_l_mix * self.cos_diff_avg * torch.ger(
             self.post.avg_m, self.pre.avg_l)
-        mthr = (1 - thr_l_mix * self.post.cos_diff_avg) * srm
+        mthr = (1 - thr_l_mix * self.cos_diff_avg) * srm
         dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
         dwts[~self.mask] = 0
 
@@ -335,3 +349,5 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         """Overrides `event.EventListenerMixin.handle()`."""
         if isinstance(event, events.Learn):
             self.learn()
+        elif isinstance(event, self.plus_phase.end_event_type):
+            self.update_trial_learning_cos_diff()

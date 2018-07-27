@@ -330,8 +330,6 @@ class ProjnSpec(ObservableSpec):
     sig_offset = 1
     # Minus phase
     minus_phase = "minus"
-    # Plus phase
-    plus_phase = "plus"
 
     @property
     def _valid_attrs_to_log(self) -> Iterable[str]:
@@ -366,13 +364,3 @@ class ProjnSpec(ObservableSpec):
         if self.minus_phase not in events.Phase.names():
             raise ValidationError("{0} is not a valid minus phase.".format(
                 self.minus_phase))
-
-        if (self.plus_phase not in events.Phase.names()
-                or self.plus_phase == "none"):
-            raise ValidationError("{0} is not a valid plus phase.".format(
-                self.plus_phase))
-
-        if self.minus_phase == self.plus_phase:
-            raise ValidationError(
-                "Minus phase ({0}) and plus phase ({1}) cannot be identical.".
-                format(self.minus_phase, self.plus_phase))

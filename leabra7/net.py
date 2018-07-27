@@ -15,12 +15,20 @@ from leabra7 import specs
 class Net(events.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
-    def __init__(self) -> None:
+    def __init__(self, plus_phase: str = "plus") -> None:
         # Each of the following dicts is keyed by the name of the object
         self.objs: Dict[str, events.EventListenerMixin] = {}
         self.layers: Dict[str, layer.Layer] = {}
         self.projns: Dict[str, projn.Projn] = {}
         self.loggers: List[log.Logger] = []
+        if plus_phase != "none" and plus_phase in events.Phase.names():
+            self.plus_phase = events.Phase.from_name(plus_phase)
+        else:
+            raise ValueError(
+                "{0} is not a valid plus phase. Possible plus phases: {1}".
+                format(plus_phase, [
+                    phase for phase in events.Phase.names() if phase != "none"
+                ]))
 
     def _validate_obj_name(self, name: str) -> None:
         """Checks if a name exists within the objects dict.
@@ -126,7 +134,7 @@ class Net(events.EventListenerMixin):
         """
         if spec is not None:
             spec.validate()
-        lr = layer.Layer(name, size, spec)
+        lr = layer.Layer(name, size, plus_phase=self.plus_phase, spec=spec)
         self.layers[name] = lr
         self.objs[name] = lr
         self._add_loggers(lr)
@@ -183,9 +191,22 @@ class Net(events.EventListenerMixin):
         if spec is not None:
             spec.validate()
 
+            if self.plus_phase.name == spec.minus_phase:
+                raise ValueError(
+                    """Minus phase of projection ({0}) cannot be identical to
+                    plus phase of network ({1})""".format(
+                        spec.minus_phase, self.plus_phase))
+        else:
+            if self.plus_phase.name == specs.ProjnSpec().minus_phase:
+                raise ValueError(
+                    """Minus phase of projection ({0}) cannot be identical to
+                    plus phase of network ({1})""".format(
+                        specs.ProjnSpec().minus_phase, self.plus_phase.name))
+
         pre_lr = self._get_layer(pre)
         post_lr = self._get_layer(post)
-        pr = projn.Projn(name, pre_lr, post_lr, spec)
+        pr = projn.Projn(
+            name, (pre_lr, post_lr), plus_phase=self.plus_phase, spec=spec)
         self.projns[name] = pr
         self.objs[name] = pr
         self._add_loggers(pr)

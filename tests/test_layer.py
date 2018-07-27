@@ -169,10 +169,3 @@ def test_end_plus_phase_event_saves_activations() -> None:
     layer.hard_clamp([1, 0, 1])
     layer.handle(ev.EndPlusPhase())
     assert (layer.acts_p == torch.Tensor([1, 0, 1])).all()
-
-
-def test_end_minus_phase_event_saves_activations() -> None:
-    layer = lr.Layer("lr1", 3)
-    layer.hard_clamp([1, 0, 0.5])
-    layer.handle(ev.EndMinusPhase())
-    assert (layer.acts_m == torch.Tensor([1, 0, 0.5])).all()

@@ -1,5 +1,6 @@
 """A layer, or group, of units."""
 import itertools
+from typing import Dict
 from typing import List
 from typing import Iterable
 
@@ -9,7 +10,6 @@ from leabra7 import log
 from leabra7 import specs
 from leabra7 import events
 from leabra7 import unit
-from leabra7 import utils
 
 
 def _parse_unit_attr(attr: str) -> str:
@@ -45,7 +45,10 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
     """
 
-    def __init__(self, name: str, size: int,
+    def __init__(self,
+                 name: str,
+                 size: int,
+                 plus_phase: events.Phase = events.PlusPhase,
                  spec: specs.LayerSpec = None) -> None:
         self._name = name
         self.size = size
@@ -54,6 +57,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
             self._spec = specs.LayerSpec()
         else:
             self._spec = spec
+
+        self.plus_phase = plus_phase
 
         self.units = unit.UnitGroup(size=size, spec=self.spec.unit_spec)
 
@@ -68,10 +73,10 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         # Desired clamping values
         self.act_ext = torch.Tensor(self.size).zero_()
-        # Last plus phase activation
-        self.acts_p = torch.Tensor(self.size).zero_()
-        # Last minus phase activation
-        self.acts_m = torch.Tensor(self.size).zero_()
+        # Phase activation
+        self.phase_acts: Dict[str, torch.Tensor] = dict()
+        for phase in events.Phase.names():
+            self.phase_acts[phase] = torch.Tensor(self.size).zero_()
         # Cosine similiarity between acts_p and acts_m, integrated over trials
         self.cos_diff_avg = 0.0
 
@@ -199,12 +204,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
     def update_trial_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each trial."""
-        cos_diff = torch.nn.functional.cosine_similarity(
-            self.acts_p, self.acts_m, dim=0)
-        cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
-        self.cos_diff_avg = self.spec.avg_dt * (cos_diff - self.cos_diff_avg)
 
-        acts_p_avg_eff = self.acts_p.mean()
+        acts_p_avg_eff = self.phase_acts[self.plus_phase.name].mean()
         self.units.update_trial_learning_averages(acts_p_avg_eff)
 
     @property
@@ -221,6 +222,11 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def avg_l(self) -> torch.Tensor:
         """The long learning average for each unit."""
         return self.units.avg_l
+
+    @property
+    def acts_p(self) -> torch.Tensor:
+        """The plus phase activation."""
+        return self.phase_acts[self.plus_phase.name]
 
     def hard_clamp(self, act_ext: Iterable[float]) -> None:
         """Forces the layer's activations.
@@ -254,11 +260,11 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         if isinstance(event, events.HardClamp):
             if event.layer_name == self.name:
                 self.hard_clamp(event.acts)
-        elif isinstance(event, events.EndPlusPhase):
-            self.acts_p.copy_(self.units.act)
-            self.update_trial_learning_averages()
-        elif isinstance(event, events.EndMinusPhase):
-            self.acts_m.copy_(self.units.act)
         elif isinstance(event, events.Unclamp):
             if event.layer_name == self.name:
                 self.unclamp()
+        for phase in events.Phase.phases():
+            if isinstance(event, phase.end_event_type):
+                self.phase_acts[phase.name].copy_(self.units.act)
+        if isinstance(event, self.plus_phase.end_event_type):
+            self.update_trial_learning_averages()
