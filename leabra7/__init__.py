@@ -1,4 +1,5 @@
 """Implements the LEABRA algorithm, v7.0"""
+
 from leabra7.events import Phase
 from leabra7.events import PlusPhase
 from leabra7.events import MinusPhase

@@ -49,6 +49,7 @@ def test_you_can_get_the_names_of_all_defined_phases() -> None:
 
 
 def test_you_can_get_phase_objects_by_name() -> None:
+    assert ev.Phase.from_name("none") is ev.NonePhase
     assert ev.Phase.from_name("plus") is ev.PlusPhase
     assert ev.Phase.from_name("minus") is ev.MinusPhase
 

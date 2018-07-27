@@ -17,9 +17,6 @@ from leabra7 import specs
 @example("none")
 @example("minus")
 @example("plus")
-@example("theta_trough")
-@example("theta_peak")
-@example("theta_plus")
 def test_network_checks_valid_plus_phase(t) -> None:
     if t in events.Phase.names() and t != "none":
         n = net.Net(t)

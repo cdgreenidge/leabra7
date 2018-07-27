@@ -391,9 +391,6 @@ def test_projn_spec_validates_sig_offset(f) -> None:
 @example("none")
 @example("minus")
 @example("plus")
-@example("theta_trough")
-@example("theta_peak")
-@example("theta_plus")
 def test_projn_spec_validates_minus_phase(t) -> None:
     if t in ev.Phase.names():
         sp.ProjnSpec(minus_phase=t).validate()
