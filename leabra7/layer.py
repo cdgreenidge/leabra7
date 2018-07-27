@@ -77,8 +77,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.phase_acts: Dict[str, torch.Tensor] = dict()
         for phase in events.Phase.names():
             self.phase_acts[phase] = torch.Tensor(self.size).zero_()
-        # Cosine similiarity between acts_p and acts_m, integrated over trials
-        self.cos_diff_avg = 0.0
 
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
@@ -96,7 +94,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         # When adding any loggable attribute or property to these lists, update
         # specs.LayerSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
-        whole_attrs: List[str] = ["avg_act", "avg_net", "cos_diff_avg", "fbi"]
+        whole_attrs: List[str] = ["avg_act", "avg_net", "fbi"]
         parts_attrs: List[str] = [
             "unit_net", "unit_net_raw", "unit_gc_i", "unit_act", "unit_i_net",
             "unit_i_net_r", "unit_v_m", "unit_v_m_eq", "unit_adapt",
@@ -205,7 +203,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def update_trial_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each trial."""
 
-        acts_p_avg_eff = self.phase_acts[self.plus_phase.name].mean()
+        acts_p_avg_eff = self.acts_p.mean()
         self.units.update_trial_learning_averages(acts_p_avg_eff)
 
     @property

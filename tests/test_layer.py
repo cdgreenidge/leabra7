@@ -1,6 +1,7 @@
 """Test layer.py"""
 import math
 
+from hypothesis import example
 from hypothesis import given
 import hypothesis.strategies as st
 import numpy as np

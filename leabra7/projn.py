@@ -233,7 +233,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         # When adding any loggable attribute or property to these lists, update
         # specs.ProjnSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
-        whole_attrs: List[str] = []
+        whole_attrs: List[str] = ["cos_diff_avg"]
         parts_attrs: List[str] = ["conn_wt", "conn_fwt"]
 
         super().__init__(whole_attrs=whole_attrs, parts_attrs=parts_attrs)
@@ -298,7 +298,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
     def update_trial_learning_cos_diff(self) -> None:
         cos_diff = torch.nn.functional.cosine_similarity(
-            self.post.phase_acts[self.plus_phase.name],
+            self.post.acts_p,
             self.post.phase_acts[self.spec.minus_phase],
             dim=0)
         cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)

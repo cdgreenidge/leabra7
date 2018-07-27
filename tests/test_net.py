@@ -244,8 +244,10 @@ def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
 def test_you_can_observe_unlogged_attributes() -> None:
     n = net.Net()
     n.new_layer("layer1", 1)
+    n.new_layer("layer2", 1)
+    n.new_projn("projn1", "layer1", "layer2")
     pd.util.testing.assert_frame_equal(
-        n.observe("layer1", "cos_diff_avg"),
+        n.observe("projn1", "cos_diff_avg"),
         pd.DataFrame({
             "cos_diff_avg": (0.0, )
         }),
