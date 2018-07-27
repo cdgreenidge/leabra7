@@ -182,62 +182,6 @@ def test_projn_checks_if_the_receiving_layer_name_is_valid() -> None:
         n.new_projn("projn1", "layer1", "layer2")
 
 
-def test_net_can_inhibit_projns() -> None:
-    n = net.Net()
-    n.new_layer("lr1", size=1)
-    n.new_layer("lr2", size=1)
-
-    n.new_projn("pr1", "lr1", "lr2")
-    n.new_projn("pr2", "lr1", "lr2")
-    n.new_projn("pr3", "lr1", "lr2")
-
-    n.inhibit_projns("pr1", "pr2", "pr3")
-
-
-def test_net_catches_inhibit_bad_projn_name() -> None:
-    n = net.Net()
-    n.new_layer("lr1", size=1)
-    n.new_layer("lr2", size=1)
-
-    n.new_projn("pr1", "lr1", "lr2")
-    n.new_projn("pr2", "lr1", "lr2")
-    n.new_projn("pr3", "lr1", "lr2")
-
-    with pytest.raises(ValueError):
-        n.inhibit_projns("pr4")
-
-    with pytest.raises(ValueError):
-        n.inhibit_projns("pr1", "pr5", "pr3")
-
-
-def test_net_can_uninhibit_projns() -> None:
-    n = net.Net()
-    n.new_layer("lr1", size=1)
-    n.new_layer("lr2", size=1)
-
-    n.new_projn("pr1", "lr1", "lr2")
-    n.new_projn("pr2", "lr1", "lr2")
-    n.new_projn("pr3", "lr1", "lr2")
-
-    n.uninhibit_projns("pr1", "pr2", "pr3")
-
-
-def test_net_catches_uninhibit_bad_projn_name() -> None:
-    n = net.Net()
-    n.new_layer("lr1", size=1)
-    n.new_layer("lr2", size=1)
-
-    n.new_projn("pr1", "lr1", "lr2")
-    n.new_projn("pr2", "lr1", "lr2")
-    n.new_projn("pr3", "lr1", "lr2")
-
-    with pytest.raises(ValueError):
-        n.uninhibit_projns("pr4")
-
-    with pytest.raises(ValueError):
-        n.uninhibit_projns("pr1", "pr5", "pr3")
-
-
 # Right now, it's difficult to test net.cycle(), because it's the core of the
 # stateful updates. Eventually, we'll add some regression tests for it.
 
