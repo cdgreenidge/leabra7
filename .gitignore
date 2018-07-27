@@ -1,6 +1,9 @@
 # My own custom script
 activate.sh
 
+# Converted Python notebooks
+notebooks/*.py
+
 # OS X
 .DS_Store
 
