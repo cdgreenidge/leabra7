@@ -292,6 +292,10 @@ class Net(events.EventListenerMixin):
         self.handle(events.EndPlusPhase())
         self.handle(events.EndTrial())
 
+    def end_trial(self) -> None:
+        """Signals to the network the end of a trial."""
+        self.handle(events.EndTrial())
+
     def end_epoch(self) -> None:
         """Signals to the network that an epoch has ended."""
         self.handle(events.EndEpoch())

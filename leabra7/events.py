@@ -232,7 +232,7 @@ class Frequency():
 
 
 CycleFreq = Frequency(name="cycle", end_event_type=Cycle)
-TrialFreq = Frequency(name="trial", end_event_type=EndPlusPhase)
+TrialFreq = Frequency(name="trial", end_event_type=EndTrial)
 EpochFreq = Frequency(name="epoch", end_event_type=EndEpoch)
 BatchFreq = Frequency(name="batch", end_event_type=EndBatch)
 

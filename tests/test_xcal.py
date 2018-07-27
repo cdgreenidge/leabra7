@@ -15,6 +15,7 @@ def trial(network: lb.Net, input_pattern: Iterable[float],
     network.unclamp_layer("input")
     network.unclamp_layer("output")
     network.learn()
+    network.end_trial()
 
 
 def epoch(network: lb.Net, input_patterns: Iterable[Iterable[float]],
