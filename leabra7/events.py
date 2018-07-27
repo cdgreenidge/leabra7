@@ -1,5 +1,6 @@
 """Components for the AST that a leabra7 network can run."""
 import abc
+from enum import Enum
 import inspect
 from typing import Dict
 from typing import Sequence
@@ -196,6 +197,12 @@ EpochFreq = Frequency(name="epoch", end_event_type=EndEpoch)
 BatchFreq = Frequency(name="batch", end_event_type=EndBatch)
 
 
+class PhaseType(Enum):
+    plus = 1
+    minus = 2
+    none = 3
+
+
 class Phase():
     """Defines network phases.
 
@@ -211,8 +218,9 @@ class Phase():
     begin_event_type: Type[Event]
     end_event_type: Type[Event]
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, phase_type: PhaseType) -> None:
         self.name = name
+        self.type = phase_type
         self.begin_event = BeginPhase(name)
         self.end_event = EndPhase(name)
         Phase.registry[name] = self
@@ -240,9 +248,9 @@ class Phase():
                 "No phase with name {0} exists.".format(phase_name))
 
 
-NonePhase = Phase(name="none")
-PlusPhase = Phase(name="plus")
-MinusPhase = Phase(name="minus")
+NonePhase = Phase(name="none", phase_type=PhaseType.none)
+PlusPhase = Phase(name="plus", phase_type=PhaseType.plus)
+MinusPhase = Phase(name="minus", phase_type=PhaseType.minus)
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):

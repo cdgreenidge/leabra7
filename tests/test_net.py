@@ -209,59 +209,47 @@ def test_net_catches_uninhibit_bad_projn_name() -> None:
 # stateful updates. Eventually, we'll add some regression tests for it.
 
 
-def test_running_a_minus_phase_raises_error_if_num_cycles_less_than_one(
-) -> None:
-    with pytest.raises(ValueError):
-        net.Net().phase_cycle(phase=events.MinusPhase, num_cycles=-1)
-
-
-def test_running_a_minus_phase_broadcasts_minus_phase_event_markers(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.phase_cycle(phase=events.MinusPhase, num_cycles=1)
-    assert n.handle.call_args_list[0][0][0] == events.MinusPhase.begin_event
-    assert n.handle.call_args_list[2][0][0] == events.MinusPhase.end_event
-
-
-def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.phase_cycle(phase=events.MinusPhase, num_cycles=42)
-    assert all(
-        isinstance(i, events.Cycle)
-        for i in n.handle.call_args_list[1:43][0][0])
-
-
-def test_running_a_plus_phase_raises_error_if_num_cycles_less_than_one(
-) -> None:
+def test_running_a_phase_raises_error_if_num_cycles_less_than_one() -> None:
     with pytest.raises(ValueError):
         net.Net().phase_cycle(phase=events.PlusPhase, num_cycles=-1)
 
 
-def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.phase_cycle(phase=events.PlusPhase, num_cycles=1)
-    assert n.handle.call_args_list[0][0][0] == events.PlusPhase.begin_event
-    assert isinstance(n.handle.call_args_list[1][0][0], events.Cycle)
-    assert n.handle.call_args_list[2][0][0] == events.PlusPhase.end_event
+def test_running_a_phase_broadcasts_phase_event_markers(mocker) -> None:
+    for phase_name in events.Phase.names():
+        phase = events.Phase.from_name(phase_name)
+
+        n = net.Net()
+        mocker.spy(n, "handle")
+
+        if phase.type == events.PhaseType.none:
+            with pytest.raises(ValueError):
+                n.phase_cycle(phase=phase, num_cycles=1)
+            return
+
+        else:
+            n.phase_cycle(phase=phase, num_cycles=1)
+
+            assert n.handle.call_args_list[0][0][0] == phase.begin_event
+            assert isinstance(n.handle.call_args_list[1][0][0], events.Cycle)
+            assert n.handle.call_args_list[2][0][0] == phase.end_event
 
 
-def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.phase_cycle(phase=events.PlusPhase, num_cycles=42)
-    assert all(
-        isinstance(i, events.Cycle)
-        for i in n.handle.call_args_list[1:43][0][0])
+def test_running_a_phase_runs_the_correct_number_of_cycles(mocker) -> None:
+    for phase_name in events.Phase.names():
+        phase = events.Phase.from_name(phase_name)
+        n = net.Net()
+        mocker.spy(n, "handle")
+
+        if phase.type == events.PhaseType.none:
+            with pytest.raises(ValueError):
+                n.phase_cycle(phase=phase, num_cycles=42)
+
+        else:
+            n.phase_cycle(phase=phase, num_cycles=42)
+
+            assert all(
+                isinstance(i, events.Cycle)
+                for i in n.handle.call_args_list[1:43][0][0])
 
 
 def test_you_can_observe_unlogged_attributes() -> None:
