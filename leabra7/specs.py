@@ -4,6 +4,7 @@ import math
 
 from typing import Any
 from typing import Iterable
+from typing import Set
 
 from leabra7 import events
 from leabra7 import rand
@@ -330,6 +331,8 @@ class ProjnSpec(ObservableSpec):
     sig_offset = 1
     # Minus phase
     minus_phase = "minus"
+    # Inhibition phases
+    inhibition_phases: Set[str] = set()
 
     @property
     def _valid_attrs_to_log(self) -> Iterable[str]:
@@ -364,3 +367,8 @@ class ProjnSpec(ObservableSpec):
         if self.minus_phase not in events.Phase.names():
             raise ValidationError("{0} is not a valid minus phase.".format(
                 self.minus_phase))
+
+        for phase in self.inhibition_phases:
+            if phase not in events.Phase.names():
+                raise ValidationError(
+                    """{0} is not a valid inhibition phase.""".format(phase))

@@ -402,6 +402,22 @@ def test_projn_spec_validates_minus_phase(t) -> None:
             sp.ProjnSpec(minus_phase=t).validate()
 
 
+@given(st.text())
+@example("none")
+@example("minus")
+@example("plus")
+@example("theta_trough")
+@example("theta_peak")
+@example("theta_plus")
+def test_projn_spec_validates_inhibition_phases(t) -> None:
+    if t in ev.Phase.names():
+        sp.ProjnSpec(inhibition_phases={t}).validate()
+        sp.ProjnSpec(inhibition_phases={t, "plus"})
+    else:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(inhibition_phases={t}).validate()
+
+
 def test_projn_spec_validates_attrs_to_log() -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(log_on_cycle=("whales", )).validate()
