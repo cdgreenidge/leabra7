@@ -261,8 +261,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         elif isinstance(event, events.Unclamp):
             if event.layer_name == self.name:
                 self.unclamp()
-        for phase in events.Phase.phases():
-            if isinstance(event, phase.end_event_type):
-                self.phase_acts[phase.name].copy_(self.units.act)
-        if isinstance(event, self.plus_phase.end_event_type):
-            self.update_trial_learning_averages()
+        elif isinstance(event, events.EndPhase):
+            for phase in events.Phase.phases():
+                if event.phase == phase.name:
+                    self.phase_acts[phase.name].copy_(self.units.act)
+            if event.phase == self.plus_phase.name:
+                self.update_trial_learning_averages()

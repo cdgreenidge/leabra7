@@ -245,7 +245,7 @@ def test_net_catches_uninhibit_bad_projn_name() -> None:
 def test_running_a_minus_phase_raises_error_if_num_cycles_less_than_one(
 ) -> None:
     with pytest.raises(ValueError):
-        net.Net().minus_phase_cycle(-1)
+        net.Net().phase_cycle(phase=events.MinusPhase, num_cycles=-1)
 
 
 def test_running_a_minus_phase_broadcasts_minus_phase_event_markers(
@@ -253,9 +253,9 @@ def test_running_a_minus_phase_broadcasts_minus_phase_event_markers(
     n = net.Net()
     n.new_layer("layer1", 1)
     mocker.spy(n, "handle")
-    n.minus_phase_cycle(num_cycles=1)
-    assert isinstance(n.handle.call_args_list[0][0][0], events.BeginMinusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndMinusPhase)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=1)
+    assert n.handle.call_args_list[0][0][0] == events.MinusPhase.begin_event
+    assert n.handle.call_args_list[2][0][0] == events.MinusPhase.end_event
 
 
 def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
@@ -263,7 +263,7 @@ def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
     n = net.Net()
     n.new_layer("layer1", 1)
     mocker.spy(n, "handle")
-    n.minus_phase_cycle(num_cycles=42)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=42)
     assert all(
         isinstance(i, events.Cycle)
         for i in n.handle.call_args_list[1:43][0][0])
@@ -272,7 +272,7 @@ def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
 def test_running_a_plus_phase_raises_error_if_num_cycles_less_than_one(
 ) -> None:
     with pytest.raises(ValueError):
-        net.Net().plus_phase_cycle(-1)
+        net.Net().phase_cycle(phase=events.PlusPhase, num_cycles=-1)
 
 
 def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
@@ -280,10 +280,10 @@ def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
     n = net.Net()
     n.new_layer("layer1", 1)
     mocker.spy(n, "handle")
-    n.plus_phase_cycle(num_cycles=1)
-    assert isinstance(n.handle.call_args_list[0][0][0], events.BeginPlusPhase)
-    assert isinstance(n.handle.call_args_list[-2][0][0], events.EndPlusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndTrial)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=1)
+    assert n.handle.call_args_list[0][0][0] == events.PlusPhase.begin_event
+    assert isinstance(n.handle.call_args_list[1][0][0], events.Cycle)
+    assert n.handle.call_args_list[2][0][0] == events.PlusPhase.end_event
 
 
 def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
@@ -291,7 +291,7 @@ def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
     n = net.Net()
     n.new_layer("layer1", 1)
     mocker.spy(n, "handle")
-    n.plus_phase_cycle(num_cycles=42)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=42)
     assert all(
         isinstance(i, events.Cycle)
         for i in n.handle.call_args_list[1:43][0][0])
@@ -352,7 +352,8 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
             log_on_trial=("avg_act", ),
             log_on_epoch=("avg_act", ),
             log_on_batch=("avg_act", )))
-    n.plus_phase_cycle(1)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=1)
+    n.end_trial()
     n.end_epoch()
     n.end_batch()
     for freq in ("cycle", "trial", "epoch", "batch"):
@@ -396,18 +397,21 @@ def test_net_trial_log_pausing_and_resuming() -> None:
             "avg_act",
         )))
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     n.pause_logging("trial")
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     n.resume_logging("trial")
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     partsTime = torch.Tensor(n.logs("trial", "layer1").parts["time"])
     wholeTime = torch.Tensor(n.logs("trial", "layer1").whole["time"])
@@ -487,7 +491,7 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
     for _, obj in n.objs.items():
         mocker.spy(obj, "handle")
 
-    n.handle(events.BeginPlusPhase)
+    n.handle(events.PlusPhase.begin_event)
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1

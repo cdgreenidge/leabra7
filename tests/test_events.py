@@ -42,19 +42,6 @@ def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
         ev.Frequency.from_name("whales")
 
 
-def test_initializing_phase_with_incorrect_type_raises_error() -> None:
-    with pytest.raises(TypeError):
-        ev.Phase(
-            name="plus_cycle",
-            begin_event_type=ev.BeginPlusPhase,
-            end_event_type=ev.Cycle())
-    with pytest.raises(TypeError):
-        ev.Phase(
-            name="plus_cycle",
-            begin_event_type=ev.BeginPlusPhase(),
-            end_event_type=ev.Cycle)
-
-
 def test_you_can_get_the_names_of_all_defined_phases() -> None:
     actual = set(ev.Phase.names())
     expected = set(("none", "plus", "minus", "theta_trough", "theta_peak",

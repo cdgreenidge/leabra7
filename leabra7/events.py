@@ -16,64 +16,23 @@ class Event():
     pass
 
 
-class BlankEvent(Event):
-    """Empty event that does not trigger anything."""
-    pass
-
-
 class Cycle(Event):
     """The event that cycles the network."""
     pass
 
 
-class BeginPlusPhase(Event):
-    """The event that begins the plus phase in a trial."""
-    pass
+class BeginPhase(Event):
+    """The event that ends a phase."""
+
+    def __init__(self, phase: str) -> None:
+        self.phase = phase
 
 
-class EndPlusPhase(Event):
-    """The event that ends the plus phase in a trial."""
-    pass
+class EndPhase(Event):
+    """The event that begins a phase."""
 
-
-class BeginMinusPhase(Event):
-    """The event that begins the minus phase in a trial."""
-    pass
-
-
-class EndMinusPhase(Event):
-    """The event that ends the minus phase in a trial."""
-    pass
-
-
-class BeginThetaTrough(Event):
-    """The event that begins the theta tough phase in a trial."""
-    pass
-
-
-class EndThetaTrough(Event):
-    """The event that ends the theta tough phase in a trial."""
-    pass
-
-
-class BeginThetaPeak(Event):
-    """The event that begins the theta peak phase in a trial."""
-    pass
-
-
-class EndThetaPeak(Event):
-    """The event that ends the theta peak phase in a trial."""
-    pass
-
-
-class BeginThetaPlus(Event):
-    """The event that begins the theta plus phase in a trial."""
-    pass
-
-
-class EndThetaPlus(Event):
-    """The event that ends the theta plus phase in a trial."""
-    pass
+    def __init__(self, phase: str) -> None:
+        self.phase = phase
 
 
 class EndTrial(Event):
@@ -252,15 +211,10 @@ class Phase():
     begin_event_type: Type[Event]
     end_event_type: Type[Event]
 
-    def __init__(self, name: str, begin_event_type: Type[Event],
-                 end_event_type: Type[Event]) -> None:
-        if not inspect.isclass(begin_event_type):
-            raise TypeError("begin_event_type must be a class variable.")
-        if not inspect.isclass(end_event_type):
-            raise TypeError("end_event_type must be a class variable.")
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.begin_event_type = begin_event_type
-        self.end_event_type = end_event_type
+        self.begin_event = BeginPhase(name)
+        self.end_event = EndPhase(name)
         Phase.registry[name] = self
 
     @classmethod
@@ -291,27 +245,13 @@ class Phase():
         return tuple(cls.registry.values())
 
 
-NonePhase = Phase(
-    name="none", begin_event_type=BlankEvent, end_event_type=BlankEvent)
-PlusPhase = Phase(
-    name="plus", begin_event_type=BeginPlusPhase, end_event_type=EndPlusPhase)
-MinusPhase = Phase(
-    name="minus",
-    begin_event_type=BeginMinusPhase,
-    end_event_type=EndMinusPhase)
+NonePhase = Phase(name="none")
+PlusPhase = Phase(name="plus")
+MinusPhase = Phase(name="minus")
 
-ThetaTrough = Phase(
-    name="theta_trough",
-    begin_event_type=BeginThetaTrough,
-    end_event_type=EndThetaTrough)
-ThetaPeak = Phase(
-    name="theta_peak",
-    begin_event_type=BeginThetaPeak,
-    end_event_type=EndThetaPeak)
-ThetaPlus = Phase(
-    name="theta_plus",
-    begin_event_type=BeginThetaPlus,
-    end_event_type=EndThetaPlus)
+ThetaTrough = Phase(name="theta_trough")
+ThetaPeak = Phase(name="theta_peak")
+ThetaPlus = Phase(name="theta_plus")
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):
