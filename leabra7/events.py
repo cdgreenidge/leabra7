@@ -121,6 +121,30 @@ class ResumeLogging(Event):
         self.freq = Frequency.from_name(freq_name)
 
 
+class InhibitProjns(Event):
+    """The event that inhibits projections in the network.
+
+    Args:
+        projn_names: The names of projections to inhibit.
+
+    """
+
+    def __init__(self, *projn_names: str) -> None:
+        self.projn_names = projn_names
+
+
+class UninhibitProjns(Event):
+    """The event that uninhibits projections in the network.
+
+    Args:
+        projn_names: The names of projections to uninhibit.
+
+    """
+
+    def __init__(self, *projn_names: str) -> None:
+        self.projn_names = projn_names
+
+
 class HardClamp(Event):
     """The event that hard clamps a layer.
 

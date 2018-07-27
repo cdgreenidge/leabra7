@@ -211,6 +211,32 @@ class Net(events.EventListenerMixin):
         self.objs[name] = pr
         self._add_loggers(pr)
 
+    def inhibit_projns(self, *projn_names: str) -> None:
+        """Inhibits the named projections.
+        Args:
+            projn_names: Names of projections to be inhibitted.
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+        """
+        for name in projn_names:
+            self._validate_projn_name(name)
+
+        self.handle(events.InhibitProjns(*projn_names))
+
+    def uninhibit_projns(self, *projn_names: str) -> None:
+        """Uninhibits the named projections.
+        Args:
+            projn_names: Names of projections to be uninhibitted.
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+        """
+        for name in projn_names:
+            self._validate_projn_name(name)
+
+        self.handle(events.UninhibitProjns(*projn_names))
+
     def _cycle(self) -> None:
         """Cycles the network (triggered by cycle event)."""
         for _, lr in self.layers.items():

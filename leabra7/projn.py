@@ -351,9 +351,9 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
             self.learn()
         elif isinstance(event, self.plus_phase.end_event_type):
             self.update_trial_learning_cos_diff()
-        for phase_name in self.spec.inhibition_phases:
-            phase = events.Phase.from_name(phase_name)
-            if isinstance(event, phase.begin_event_type):
+        elif isinstance(event, events.InhibitProjns):
+            if self.name in event.projn_names:
                 self.inhibit()
-            elif isinstance(event, phase.end_event_type):
+        elif isinstance(event, events.UninhibitProjns):
+            if self.name in event.projn_names:
                 self.uninhibit()
