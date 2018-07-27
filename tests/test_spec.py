@@ -390,13 +390,29 @@ def test_projn_spec_validates_sig_offset(f) -> None:
 @given(st.text())
 @example("none")
 @example("minus")
-@example("plus")
 def test_projn_spec_validates_minus_phase(t) -> None:
-    if t in ev.Phase.names():
+    if t in ev.Phase.names() and t != "plus":
         sp.ProjnSpec(minus_phase=t).validate()
     else:
         with pytest.raises(sp.ValidationError):
             sp.ProjnSpec(minus_phase=t).validate()
+
+
+@given(st.text())
+@example("none")
+@example("plus")
+def test_projn_spec_validates_plus_phase(t) -> None:
+    if t in ev.Phase.names() and t != "minus":
+        sp.ProjnSpec(plus_phase=t).validate()
+    else:
+        with pytest.raises(sp.ValidationError):
+            sp.ProjnSpec(plus_phase=t).validate()
+
+
+@given(t=st.sampled_from(["none", "minus", "plus"]))
+def test_projn_spec_validates_different_plus_and_minus_phases(t) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(minus_phase=t, plus_phase=t).validate()
 
 
 def test_projn_spec_validates_attrs_to_log() -> None:

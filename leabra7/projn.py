@@ -180,14 +180,12 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
     def __init__(self,
                  name: str,
-                 layers: Tuple[layer.Layer, layer.Layer],
-                 plus_phase: events.Phase = events.PlusPhase,
+                 pre: layer.Layer,
+                 post: layer.Layer,
                  spec: specs.ProjnSpec = None) -> None:
         self._name = name
-        self.pre = layers[0]
-        self.post = layers[1]
-
-        self.plus_phase = plus_phase
+        self.pre = pre
+        self.post = post
 
         self.cos_diff_avg = 0.0
 
@@ -197,6 +195,9 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
             self._spec = specs.ProjnSpec()
         else:
             self._spec = spec
+
+        self.minus_phase = self._spec.minus_phase
+        self.plus_phase = self._spec.plus_phase
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
@@ -298,8 +299,8 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
     def update_trial_learning_cos_diff(self) -> None:
         cos_diff = torch.nn.functional.cosine_similarity(
-            self.post.acts_p,
-            self.post.phase_acts[self.spec.minus_phase],
+            self.post.phase_acts[self.plus_phase],
+            self.post.phase_acts[self.minus_phase],
             dim=0)
         cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
         self.cos_diff_avg = self.post.spec.avg_dt * (
@@ -350,7 +351,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         if isinstance(event, events.Learn):
             self.learn()
         elif isinstance(event, events.EndPhase):
-            if event.phase == self.plus_phase.name:
+            if event.phase == self.plus_phase:
                 self.update_trial_learning_cos_diff()
         elif isinstance(event, events.InhibitProjns):
             if self.name in event.projn_names:

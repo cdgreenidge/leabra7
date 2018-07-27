@@ -329,6 +329,8 @@ class ProjnSpec(ObservableSpec):
     sig_offset = 1
     # Minus phase
     minus_phase = "minus"
+    # Plus phase
+    plus_phase = "plus"
 
     @property
     def _valid_attrs_to_log(self) -> Iterable[str]:
@@ -361,5 +363,14 @@ class ProjnSpec(ObservableSpec):
         self.assert_sane_float("sig_offset")
 
         if self.minus_phase not in events.Phase.names():
-            raise ValidationError("{0} is not a valid minus phase.".format(
+            raise ValidationError("{0} is not a valid phase.".format(
                 self.minus_phase))
+
+        if self.plus_phase not in events.Phase.names():
+            raise ValidationError("{0} is not a valid phase.".format(
+                self.plus_phase))
+
+        if self.minus_phase == self.plus_phase:
+            raise ValidationError(
+                "Minus and plus phase cannot both be {0}".format(
+                    self.minus_phase))

@@ -14,42 +14,42 @@ from leabra7 import specs as sp
 def test_projn_has_a_name() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     assert projn.name == "proj"
 
 
 def test_projn_has_a_sending_layer() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     assert projn.pre == pre
 
 
 def test_projn_has_a_receiving_layer() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     assert projn.post == post
 
 
 def test_projn_can_specify_its_weight_distribution() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
-    projn = pr.Projn("proj", (pre, post), spec=sp.ProjnSpec(dist=rn.Scalar(7)))
+    projn = pr.Projn("proj", pre, post, spec=sp.ProjnSpec(dist=rn.Scalar(7)))
     assert (projn.wts == 7).all()
 
 
 def test_projn_can_flush() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     projn.flush()
 
 
 def test_projn_can_inhibit_flush() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
 
     pre.hard_clamp(act_ext=[1])
     projn.inhibit()
@@ -62,7 +62,7 @@ def test_projn_can_inhibit_flush() -> None:
 def test_projn_can_uninhibit_flush() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
 
     pre.hard_clamp(act_ext=[1])
 
@@ -77,7 +77,7 @@ def test_projn_can_uninhibit_flush() -> None:
 def test_projn_inhibit_handling_event() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
 
     pre.hard_clamp(act_ext=[1])
     projn.handle(ev.InhibitProjns("proj"))
@@ -90,7 +90,7 @@ def test_projn_inhibit_handling_event() -> None:
 def test_projn_can_uninhibit_flush() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
 
     pre.hard_clamp(act_ext=[1])
 
@@ -107,7 +107,7 @@ def test_projn_can_mask_pre_layer_units() -> None:
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(pre_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[j]:
@@ -121,7 +121,7 @@ def test_projn_pre_mask_tiles_if_it_is_too_short() -> None:
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(pre_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[j % 2]:
@@ -134,7 +134,7 @@ def test_projn_pre_mask_truncates_if_it_is_too_long() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
     spec = sp.ProjnSpec(pre_mask=(True, False), dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
 
@@ -144,7 +144,7 @@ def test_projn_can_mask_post_layer_units() -> None:
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(post_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[i]:
@@ -200,7 +200,9 @@ def test_projn_one_to_one_connectivity_pattern_is_correct() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
     projn = pr.Projn(
-        "proj", (pre, post),
+        "proj",
+        pre,
+        post,
         spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
     assert (projn.wts == torch.eye(3)).all()
 
@@ -219,7 +221,7 @@ def test_projn_post_mask_tiles_if_it_is_too_short() -> None:
     post = lr.Layer("lr2", size=4)
     mask = (True, False)
     spec = sp.ProjnSpec(post_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[i % 2]:
@@ -232,7 +234,7 @@ def test_projn_post_mask_truncates_if_it_is_too_long() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
     spec = sp.ProjnSpec(post_mask=(True, False), dist=rn.Scalar(1))
-    projn = pr.Projn("proj", (pre, post), spec=spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
 
@@ -251,8 +253,8 @@ def test_projn_can_calculate_netin_scale_with_full_connectivity(x, y, z,
     pre_a.hard_clamp(torch.ones(x) * f)
     pre_b.hard_clamp(torch.ones(y) * f)
 
-    projn_a = pr.Projn("proj1", (pre_a, post))
-    projn_b = pr.Projn("proj2", (pre_b, post))
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post)
 
     projn_a_scale = projn_a.netin_scale()
     projn_b_scale = projn_b.netin_scale()
@@ -285,8 +287,8 @@ def test_projn_can_calculate_netin_scale_with_partial_connectivity(
     pre_a.hard_clamp(torch.ones(x) * f)
     pre_b.hard_clamp(torch.ones(x) * f)
 
-    projn_a = pr.Projn("proj1", (pre_a, post))
-    projn_b = pr.Projn("proj2", (pre_b, post), spec)
+    projn_a = pr.Projn("proj1", pre_a, post)
+    projn_b = pr.Projn("proj2", pre_b, post, spec)
 
     projn_a_scale = projn_a.netin_scale()
     projn_b_scale = projn_b.netin_scale()
@@ -298,7 +300,7 @@ def test_projns_can_be_sparse() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
     spec = sp.ProjnSpec(dist=rn.Scalar(1.0), sparsity=0.5)
-    projn = pr.Projn("proj", (pre, post), spec)
+    projn = pr.Projn("proj", pre, post, spec)
     num_on = projn.wts.sum()
     assert num_on == 2.0
 
@@ -306,14 +308,14 @@ def test_projns_can_be_sparse() -> None:
 def test_projn_can_learn() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     projn.learn()
 
 
 def test_projn_can_handle_learn_events(mocker) -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     mocker.spy(projn, "learn")
     projn.handle(ev.Learn())
     projn.learn.assert_called_once()
@@ -323,7 +325,9 @@ def test_you_can_log_projection_weights() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
     projn = pr.Projn(
-        "proj", (pre, post),
+        "proj",
+        pre,
+        post,
         spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(0.5)))
     expected = {"pre_unit": [0, 1], "post_unit": [0, 1], "conn_wt": [0.5, 0.5]}
     assert projn.observe_parts_attr("conn_wt") == expected
@@ -333,7 +337,9 @@ def test_you_can_log_projection_fast_weights() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
     projn = pr.Projn(
-        "proj", (pre, post),
+        "proj",
+        pre,
+        post,
         spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(0.5)))
     expected = {
         "pre_unit": [0, 1],
@@ -346,6 +352,6 @@ def test_you_can_log_projection_fast_weights() -> None:
 def test_observing_invalid_parts_attr_raises_value_error() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
-    projn = pr.Projn("proj", (pre, post))
+    projn = pr.Projn("proj", pre, post)
     with pytest.raises(ValueError):
         projn.observe_parts_attr("whales")

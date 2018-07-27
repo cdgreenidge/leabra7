@@ -78,6 +78,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         for phase in events.Phase.names():
             self.phase_acts[phase] = torch.Tensor(self.size).zero_()
 
+        # Trial activations
+        self.acts_t = torch.Tensor(self.size).zero_()
+
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
 
@@ -203,8 +206,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def update_trial_learning_averages(self) -> None:
         """Updates the learning averages computed at the end of each trial."""
 
-        acts_p_avg_eff = self.acts_p.mean()
-        self.units.update_trial_learning_averages(acts_p_avg_eff)
+        self.acts_t = self.units.act
+        acts_t_avg_eff = self.acts_t.mean()
+        self.units.update_trial_learning_averages(acts_t_avg_eff)
 
     @property
     def avg_s(self) -> torch.Tensor:
@@ -220,11 +224,6 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
     def avg_l(self) -> torch.Tensor:
         """The long learning average for each unit."""
         return self.units.avg_l
-
-    @property
-    def acts_p(self) -> torch.Tensor:
-        """The plus phase activation."""
-        return self.phase_acts[self.plus_phase.name]
 
     def hard_clamp(self, act_ext: Iterable[float]) -> None:
         """Forces the layer's activations.
@@ -262,8 +261,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
             if event.layer_name == self.name:
                 self.unclamp()
         elif isinstance(event, events.EndPhase):
-            for phase in events.Phase.phases():
-                if event.phase == phase.name:
-                    self.phase_acts[phase.name].copy_(self.units.act)
-            if event.phase == self.plus_phase.name:
-                self.update_trial_learning_averages()
+            for phase in events.Phase.names():
+                if event.phase == phase:
+                    self.phase_acts[phase].copy_(self.units.act)
+        elif isinstance(event, events.EndTrial):
+            self.update_trial_learning_averages()

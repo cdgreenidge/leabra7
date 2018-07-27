@@ -13,18 +13,6 @@ from leabra7 import net
 from leabra7 import specs
 
 
-@given(st.text())
-@example("none")
-@example("minus")
-@example("plus")
-def test_network_checks_valid_plus_phase(t) -> None:
-    if t in events.Phase.names() and t != "none":
-        n = net.Net(t)
-    else:
-        with pytest.raises(ValueError):
-            n = net.Net(t)
-
-
 def test_the_network_can_check_if_an_object_exists_within_it() -> None:
     n = net.Net()
     n.new_layer("layer1", 3)
@@ -138,22 +126,6 @@ def test_a_new_projn_validates_its_spec() -> None:
     with pytest.raises(specs.ValidationError):
         n.new_projn(
             "projn1", "layer1", "layer2", spec=specs.ProjnSpec(integ=-1))
-
-
-@given(t=st.sampled_from(["minus", "plus"]))
-def test_network_rejects_a_new_projn_that_has_the_same_minus_phase_as_network_plus_phase(
-        t) -> None:
-    n = net.Net(plus_phase=t)
-    n.new_layer("layer1", 3)
-    n.new_layer("layer2", 3)
-
-    if t == "minus":
-        with pytest.raises(ValueError):
-            n.new_projn("projn1", "layer1", "layer2")
-
-    with pytest.raises(ValueError):
-        n.new_projn(
-            "projn1", "layer1", "layer2", spec=specs.ProjnSpec(minus_phase=t))
 
 
 def test_you_can_create_a_projn_with_a_default_spec() -> None:

@@ -239,11 +239,6 @@ class Phase():
             raise ValueError(
                 "No phase with name {0} exists.".format(phase_name))
 
-    @classmethod
-    def phases(cls) -> Sequence["Phase"]:
-        """Returns all the defines phases."""
-        return tuple(cls.registry.values())
-
 
 NonePhase = Phase(name="none")
 PlusPhase = Phase(name="plus")
