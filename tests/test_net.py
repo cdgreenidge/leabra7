@@ -4,6 +4,7 @@ import math
 from hypothesis import example
 from hypothesis import given
 import hypothesis.strategies as st
+import numpy as np
 import pandas as pd
 import pytest
 import torch
@@ -11,6 +12,55 @@ import torch
 from leabra7 import events
 from leabra7 import net
 from leabra7 import specs
+
+
+def test_network_can_be_saved() -> None:
+    n = net.Net()
+    location = "tests/mynet.pkl"
+    n.save(location)
+
+
+def test_network_can_be_retrieved_and_continue_logging() -> None:
+    n = net.Net()
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(log_on_cycle=(
+            "unit_act",
+            "avg_act",
+        )))
+    for i in range(2):
+        n.cycle()
+    n.pause_logging()
+
+    location = "tests/mynet.pkl"
+    n.save(location)
+    m = net.Net()
+    m.load(filename=location)
+
+    before_parts_n = n.logs("cycle", "layer1").parts
+    before_parts_m = m.logs("cycle", "layer1").parts
+
+    before_whole_n = n.logs("cycle", "layer1").whole
+    before_whole_m = m.logs("cycle", "layer1").whole
+
+    assert np.all((before_parts_n == before_parts_m).values)
+    assert np.all((before_whole_n == before_whole_m).values)
+
+    for i in range(2):
+        m.cycle()
+    m.resume_logging()
+    for i in range(2):
+        m.cycle()
+
+    after_parts_time = torch.Tensor(m.logs("cycle", "layer1").parts["time"])
+    after_whole_time = torch.Tensor(m.logs("cycle", "layer1").whole["time"])
+
+    assert list(after_parts_time.size()) == [8]
+    assert list(after_whole_time.size()) == [4]
+
+    assert (after_parts_time == torch.Tensor([0, 0, 1, 1, 4, 4, 5, 5])).all()
+    assert (after_whole_time == torch.Tensor([0, 1, 4, 5])).all()
 
 
 def test_the_network_can_check_if_an_object_exists_within_it() -> None:
@@ -333,13 +383,13 @@ def test_net_can_pause_and_resume_logging() -> None:
     for i in range(2):
         n.cycle()
 
-    partsTime = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
-    wholeTime = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
-    assert list(partsTime.size()) == [8]
-    assert list(wholeTime.size()) == [4]
+    parts_time = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
+    assert list(parts_time.size()) == [8]
+    assert list(whole_time.size()) == [4]
 
-    assert (partsTime == torch.Tensor([0, 0, 1, 1, 4, 4, 5, 5])).all()
-    assert (wholeTime == torch.Tensor([0, 1, 4, 5])).all()
+    assert (parts_time == torch.Tensor([0, 0, 1, 1, 4, 4, 5, 5])).all()
+    assert (whole_time == torch.Tensor([0, 1, 4, 5])).all()
 
 
 def test_net_trial_log_pausing_and_resuming() -> None:
@@ -368,14 +418,14 @@ def test_net_trial_log_pausing_and_resuming() -> None:
     n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
     n.end_trial()
 
-    partsTime = torch.Tensor(n.logs("trial", "layer1").parts["time"])
-    wholeTime = torch.Tensor(n.logs("trial", "layer1").whole["time"])
+    parts_time = torch.Tensor(n.logs("trial", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("trial", "layer1").whole["time"])
 
-    assert list(partsTime.size()) == [4]
-    assert list(wholeTime.size()) == [2]
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
 
-    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
-    assert (wholeTime == torch.Tensor([0, 2])).all()
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
 
 
 def test_net_epoch_log_pausing_and_resuming() -> None:
@@ -394,14 +444,14 @@ def test_net_epoch_log_pausing_and_resuming() -> None:
     n.resume_logging("epoch")
     n.end_epoch()
 
-    partsTime = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
-    wholeTime = torch.Tensor(n.logs("epoch", "layer1").whole["time"])
+    parts_time = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("epoch", "layer1").whole["time"])
 
-    assert list(partsTime.size()) == [4]
-    assert list(wholeTime.size()) == [2]
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
 
-    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
-    assert (wholeTime == torch.Tensor([0, 2])).all()
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
 
 
 def test_net_batch_log_pausing_and_resuming() -> None:
@@ -420,14 +470,14 @@ def test_net_batch_log_pausing_and_resuming() -> None:
     n.resume_logging("batch")
     n.end_batch()
 
-    partsTime = torch.Tensor(n.logs("batch", "layer1").parts["time"])
-    wholeTime = torch.Tensor(n.logs("batch", "layer1").whole["time"])
+    parts_time = torch.Tensor(n.logs("batch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("batch", "layer1").whole["time"])
 
-    assert list(partsTime.size()) == [4]
-    assert list(wholeTime.size()) == [2]
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
 
-    assert (partsTime == torch.Tensor([0, 0, 2, 2])).all()
-    assert (wholeTime == torch.Tensor([0, 2])).all()
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
 
 
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:

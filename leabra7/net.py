@@ -3,6 +3,7 @@ from typing import Dict
 from typing import List
 from typing import Sequence
 
+import pickle
 import pandas as pd  # type: ignore
 
 from leabra7 import layer
@@ -16,6 +17,7 @@ class Net(events.EventListenerMixin):
     """A leabra7 network. This is the main class."""
 
     def __init__(self) -> None:
+        """Initializes network object."""
         # Each of the following dicts is keyed by the name of the object
         self.objs: Dict[str, events.EventListenerMixin] = {}
         self.layers: Dict[str, layer.Layer] = {}
@@ -109,6 +111,31 @@ class Net(events.EventListenerMixin):
                 self.loggers.append(logger)
                 self.objs["{0}_{1}_logger".format(obj.name,
                                                   freq_name)] = logger
+
+    def save(self, filename: str) -> None:
+        """Saves network as pickle file.
+
+        Args:
+            filename: Location of where to save pickle file.
+
+        """
+        pickle.dump(self, open(filename, "wb"))
+
+    def load(self, filename: str) -> None:
+        """Loads network from file.
+
+        Args:
+            filename: Location of pickle file storing the network.
+
+
+        **Be careful not to load malicious or untrusted files.**
+
+        """
+        loaded_net = pickle.load(open(filename, "rb"))
+        self.objs = loaded_net.objs
+        self.layers = loaded_net.layers
+        self.projns = loaded_net.projns
+        self.loggers = loaded_net.loggers
 
     def new_layer(self, name: str, size: int,
                   spec: specs.LayerSpec = None) -> None:

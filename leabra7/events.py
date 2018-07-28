@@ -2,6 +2,7 @@
 import abc
 from enum import Enum
 import inspect
+from typing import Any
 from typing import Dict
 from typing import Sequence
 from typing import Type
@@ -167,6 +168,12 @@ class Frequency():
         self.name = name
         self.end_event_type = end_event_type
         Frequency.registry[name] = self
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, Frequency):
+            return (self.name == other.name
+                    and self.end_event_type == other.end_event_type)
+        return False
 
     @classmethod
     def names(cls) -> Sequence[str]:

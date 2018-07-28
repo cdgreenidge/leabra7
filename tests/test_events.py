@@ -1,4 +1,7 @@
 """Tests events.py"""
+from hypothesis import example
+from hypothesis import given
+import hypothesis.strategies as st
 import pytest
 
 from leabra7 import events as ev
