@@ -74,8 +74,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         # Desired clamping values
         self.act_ext = torch.Tensor(self.size).zero_()
         # Phase activation
-        self.phase_acts: Dict[str, torch.Tensor] = dict()
-        for phase in events.Phase.names():
+        self.phase_acts: Dict[events.Phase, torch.Tensor] = dict()
+        for phase in events.Phase.phases():
             self.phase_acts[phase] = torch.Tensor(self.size).zero_()
 
         # Trial activations
@@ -261,7 +261,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
             if event.layer_name == self.name:
                 self.unclamp()
         elif isinstance(event, events.EndPhase):
-            for phase in events.Phase.names():
+            for phase in events.Phase.phases():
                 if event.phase == phase:
                     self.phase_acts[phase].copy_(self.units.act)
         elif isinstance(event, events.EndTrial):

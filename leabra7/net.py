@@ -271,10 +271,10 @@ class Net(events.EventListenerMixin):
                 phase.name))
         if num_cycles < 1:
             raise ValueError("Number of cycles must be >= 1.")
-        self.handle(phase.begin_event)
+        self.handle(events.BeginPhase(phase))
         for _ in range(num_cycles):
             self.handle(events.Cycle())
-        self.handle(phase.end_event)
+        self.handle(events.EndPhase(phase))
 
     def end_trial(self) -> None:
         """Signals to the network the end of a trial."""

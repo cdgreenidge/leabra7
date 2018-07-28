@@ -1,10 +1,11 @@
 """Components for the AST that a leabra7 network can run."""
 import abc
+from enum import auto
 from enum import Enum
 import inspect
-from typing import Any
 from typing import Dict
 from typing import Sequence
+from typing import Tuple
 from typing import Type
 
 
@@ -21,20 +22,6 @@ class Event():
 class Cycle(Event):
     """The event that cycles the network."""
     pass
-
-
-class BeginPhase(Event):
-    """The event that ends a phase."""
-
-    def __init__(self, phase: str) -> None:
-        self.phase = phase
-
-
-class EndPhase(Event):
-    """The event that begins a phase."""
-
-    def __init__(self, phase: str) -> None:
-        self.phase = phase
 
 
 class EndTrial(Event):
@@ -169,16 +156,21 @@ class Frequency():
         self.end_event_type = end_event_type
         Frequency.registry[name] = self
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Frequency):
             return (self.name == other.name
                     and self.end_event_type == other.end_event_type)
-        return False
+        return NotImplemented
 
     @classmethod
     def names(cls) -> Sequence[str]:
         """Returns the names of all defined frequencies."""
         return tuple(cls.registry.keys())
+
+    @classmethod
+    def freqs(cls) -> Sequence["Frequency"]:
+        """Returns all defined frequencies."""
+        return tuple(cls.registry.values())
 
     @classmethod
     def from_name(cls, freq_name: str) -> "Frequency":
@@ -205,9 +197,9 @@ BatchFreq = Frequency(name="batch", end_event_type=EndBatch)
 
 
 class PhaseType(Enum):
-    PLUS = 1
-    MINUS = 2
-    NONE = 3
+    PLUS = auto()
+    MINUS = auto()
+    NONE = auto()
 
 
 class Phase():
@@ -228,14 +220,31 @@ class Phase():
     def __init__(self, name: str, phase_type: PhaseType) -> None:
         self.name = name
         self.type = phase_type
-        self.begin_event = BeginPhase(name)
-        self.end_event = EndPhase(name)
         Phase.registry[name] = self
+
+    def __key(self) -> Tuple[str, PhaseType]:
+        return (self.name, self.type)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Phase):
+            return self.__key() == other.__key()  #pylint: disable=protected-access
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.__key())
+
+    def get_name(self) -> str:
+        return self.name
 
     @classmethod
     def names(cls) -> Sequence[str]:
         """Returns the names of all defined phases."""
         return tuple(cls.registry.keys())
+
+    @classmethod
+    def phases(cls) -> Sequence["Phase"]:
+        """Returns all defined phases."""
+        return tuple(cls.registry.values())
 
     @classmethod
     def from_name(cls, phase_name: str) -> "Phase":
@@ -258,6 +267,20 @@ class Phase():
 NonePhase = Phase(name="none", phase_type=PhaseType.NONE)
 PlusPhase = Phase(name="plus", phase_type=PhaseType.PLUS)
 MinusPhase = Phase(name="minus", phase_type=PhaseType.MINUS)
+
+
+class BeginPhase(Event):
+    """The event that ends a phase."""
+
+    def __init__(self, phase: Phase) -> None:
+        self.phase = phase
+
+
+class EndPhase(Event):
+    """The event that begins a phase."""
+
+    def __init__(self, phase: Phase) -> None:
+        self.phase = phase
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):

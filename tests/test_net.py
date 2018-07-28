@@ -496,7 +496,7 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
     for _, obj in n.objs.items():
         mocker.spy(obj, "handle")
 
-    n.handle(events.PlusPhase.begin_event)
+    n.handle(events.BeginPhase(events.PlusPhase))
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1

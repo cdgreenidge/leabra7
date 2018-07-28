@@ -40,6 +40,12 @@ def test_you_can_get_frequency_objects_by_name() -> None:
     assert ev.Frequency.from_name("batch") is ev.BatchFreq
 
 
+@given(st.one_of(st.integers(), st.floats(), st.text()))
+def test_freq_object_inequality_with_non_freq(t) -> None:
+    for freq in ev.Frequency.freqs():
+        assert freq != t
+
+
 def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
     with pytest.raises(ValueError):
         ev.Frequency.from_name("whales")
@@ -55,6 +61,17 @@ def test_you_can_get_phase_objects_by_name() -> None:
     assert ev.Phase.from_name("none") is ev.NonePhase
     assert ev.Phase.from_name("plus") is ev.PlusPhase
     assert ev.Phase.from_name("minus") is ev.MinusPhase
+
+
+@given(st.one_of(st.integers(), st.floats(), st.text()))
+def test_phase_object_inequality_with_non_phase(t) -> None:
+    for phase in ev.Phase.phases():
+        assert phase != t
+
+
+def test_can_retrive_phase_names() -> None:
+    for phase in ev.Phase.phases():
+        assert phase.name == phase.get_name()
 
 
 def test_getting_a_phase_with_undefined_name_raises_error() -> None:
