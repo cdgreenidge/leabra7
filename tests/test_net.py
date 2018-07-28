@@ -271,7 +271,7 @@ def test_running_a_phase_broadcasts_phase_event_markers(mocker) -> None:
         n = net.Net()
         mocker.spy(n, "handle")
 
-        if phase.type == events.PhaseType.none:
+        if phase.type == events.PhaseType.NONE:
             with pytest.raises(ValueError):
                 n.phase_cycle(phase=phase, num_cycles=1)
             return
@@ -290,7 +290,7 @@ def test_running_a_phase_runs_the_correct_number_of_cycles(mocker) -> None:
         n = net.Net()
         mocker.spy(n, "handle")
 
-        if phase.type == events.PhaseType.none:
+        if phase.type == events.PhaseType.NONE:
             with pytest.raises(ValueError):
                 n.phase_cycle(phase=phase, num_cycles=42)
 

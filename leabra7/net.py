@@ -266,7 +266,7 @@ class Net(events.EventListenerMixin):
           ValueError: If num_cycles is less than 1.
 
         """
-        if phase.type == events.PhaseType.none:
+        if phase.type == events.PhaseType.NONE:
             raise ValueError("Cannot cycle 'none' phase {0}.".format(
                 phase.name))
         if num_cycles < 1:

@@ -367,7 +367,7 @@ class ProjnSpec(ObservableSpec):
                 self.minus_phase))
 
         if events.Phase.from_name(
-                self.minus_phase).type == events.PhaseType.plus:
+                self.minus_phase).type == events.PhaseType.PLUS:
             raise ValidationError(
                 "Plus phase {0} is not a valid minus phase.".format(
                     self.minus_phase))
@@ -377,7 +377,7 @@ class ProjnSpec(ObservableSpec):
                 self.plus_phase))
 
         if events.Phase.from_name(
-                self.plus_phase).type == events.PhaseType.minus:
+                self.plus_phase).type == events.PhaseType.MINUS:
             raise ValidationError(
                 "Minus phase {0} is not a valid plus phase.".format(
                     self.plus_phase))

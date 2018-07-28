@@ -205,9 +205,9 @@ BatchFreq = Frequency(name="batch", end_event_type=EndBatch)
 
 
 class PhaseType(Enum):
-    plus = 1
-    minus = 2
-    none = 3
+    PLUS = 1
+    MINUS = 2
+    NONE = 3
 
 
 class Phase():
@@ -255,9 +255,9 @@ class Phase():
                 "No phase with name {0} exists.".format(phase_name))
 
 
-NonePhase = Phase(name="none", phase_type=PhaseType.none)
-PlusPhase = Phase(name="plus", phase_type=PhaseType.plus)
-MinusPhase = Phase(name="minus", phase_type=PhaseType.minus)
+NonePhase = Phase(name="none", phase_type=PhaseType.NONE)
+PlusPhase = Phase(name="plus", phase_type=PhaseType.PLUS)
+MinusPhase = Phase(name="minus", phase_type=PhaseType.MINUS)
 
 
 class EventListenerMixin(metaclass=abc.ABCMeta):
