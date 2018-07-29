@@ -69,9 +69,9 @@ def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
         ev.Frequency.from_name("whales")
 
 
-def test_you_can_get_the_names_of_all_defined_phases() -> None:
-    actual = set(ev.Phase.names())
-    expected = set(("none", "plus", "minus"))
+def test_you_can_get_all_defined_phases() -> None:
+    actual = set(ev.Phase.phases())
+    expected = set((ev.NonePhase, ev.PlusPhase, ev.MinusPhase))
     assert actual == expected
 
 
@@ -107,11 +107,6 @@ def test_you_can_get_phase_objects_by_name() -> None:
 def test_phase_object_inequality_with_non_phase(t) -> None:
     for phase in ev.Phase.phases():
         assert phase != t
-
-
-def test_can_retrive_phase_names() -> None:
-    for phase in ev.Phase.phases():
-        assert phase.name == phase.get_name()
 
 
 def test_getting_a_phase_with_undefined_name_raises_error() -> None:

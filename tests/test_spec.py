@@ -387,57 +387,34 @@ def test_projn_spec_validates_sig_offset(f) -> None:
         sp.ProjnSpec(sig_offset=f).validate()
 
 
-@given(st.text())
-@example("none")
-@example("minus")
-def test_projn_spec_validates_minus_phase(t) -> None:
-    if t in ev.Phase.names() and t != "plus":
-        sp.ProjnSpec(minus_phase=t).validate()
-    else:
-        with pytest.raises(sp.ValidationError):
-            sp.ProjnSpec(minus_phase=t).validate()
-
-
 def test_projn_spec_validates_minus_phase_type() -> None:
     PhaseNone = ev.Phase(name="phase_none", phase_type="none")
-    sp.ProjnSpec(minus_phase=PhaseNone.name).validate()
+    sp.ProjnSpec(minus_phase=PhaseNone).validate()
 
     PhaseMinus = ev.Phase(name="phase_minus", phase_type="minus")
-    sp.ProjnSpec(minus_phase=PhaseMinus.name).validate()
+    sp.ProjnSpec(minus_phase=PhaseMinus).validate()
 
     PhasePlus = ev.Phase(name="phase_plus", phase_type="plus")
     with pytest.raises(sp.ValidationError):
-        sp.ProjnSpec(
-            minus_phase=PhasePlus.name, plus_phase=PhaseNone.name).validate()
-
-
-@given(st.text())
-@example("none")
-@example("plus")
-def test_projn_spec_validates_plus_phase(t) -> None:
-    if t in ev.Phase.names() and t != "minus":
-        sp.ProjnSpec(plus_phase=t).validate()
-    else:
-        with pytest.raises(sp.ValidationError):
-            sp.ProjnSpec(plus_phase=t).validate()
+        sp.ProjnSpec(minus_phase=PhasePlus, plus_phase=PhaseNone).validate()
 
 
 def test_projn_spec_validates_plus_phase_type() -> None:
     PhaseNone = ev.Phase(name="phase_none", phase_type="none")
-    sp.ProjnSpec(plus_phase=PhaseNone.name).validate()
+    sp.ProjnSpec(plus_phase=PhaseNone).validate()
 
     PhasePlus = ev.Phase(name="phase_plus", phase_type="plus")
-    sp.ProjnSpec(plus_phase=PhasePlus.name).validate()
+    sp.ProjnSpec(plus_phase=PhasePlus).validate()
 
     PhaseMinus = ev.Phase(name="phase_minus", phase_type="minus")
     with pytest.raises(sp.ValidationError):
-        sp.ProjnSpec(
-            minus_phase=PhaseNone.name, plus_phase=PhaseMinus.name).validate()
+        sp.ProjnSpec(minus_phase=PhaseNone, plus_phase=PhaseMinus).validate()
 
 
 def test_projn_spec_validates_different_plus_and_minus_phases() -> None:
     with pytest.raises(sp.ValidationError):
-        sp.ProjnSpec(minus_phase="none", plus_phase="none").validate()
+        sp.ProjnSpec(
+            minus_phase=ev.NonePhase, plus_phase=ev.NonePhase).validate()
 
 
 def test_projn_spec_validates_attrs_to_log() -> None:

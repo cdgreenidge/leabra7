@@ -264,13 +264,8 @@ class Phase():
     def __hash__(self) -> int:
         return hash(self.__key())
 
-    def get_name(self) -> str:
-        return self.name
-
-    @classmethod
-    def names(cls) -> Sequence[str]:
-        """Returns the names of all defined phases."""
-        return tuple(cls.registry.keys())
+    def __str__(self) -> str:
+        return str(self.name)
 
     @classmethod
     def phases(cls) -> Sequence["Phase"]:

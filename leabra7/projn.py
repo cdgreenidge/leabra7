@@ -195,8 +195,8 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         else:
             self._spec = spec
 
-        self.minus_phase = events.Phase.from_name(self._spec.minus_phase)
-        self.plus_phase = events.Phase.from_name(self._spec.plus_phase)
+        self.minus_phase = self._spec.minus_phase
+        self.plus_phase = self._spec.plus_phase
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the

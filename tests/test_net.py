@@ -288,9 +288,7 @@ def test_running_a_phase_raises_error_if_num_cycles_less_than_one() -> None:
 
 
 def test_running_a_phase_broadcasts_phase_event_markers(mocker) -> None:
-    for phase_name in events.Phase.names():
-        phase = events.Phase.from_name(phase_name)
-
+    for phase in events.Phase.phases():
         n = net.Net()
         mocker.spy(n, "handle")
 
@@ -308,8 +306,7 @@ def test_running_a_phase_broadcasts_phase_event_markers(mocker) -> None:
 
 
 def test_running_a_phase_runs_the_correct_number_of_cycles(mocker) -> None:
-    for phase_name in events.Phase.names():
-        phase = events.Phase.from_name(phase_name)
+    for phase in events.Phase.phases():
         n = net.Net()
         mocker.spy(n, "handle")
 
