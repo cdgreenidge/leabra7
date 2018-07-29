@@ -387,6 +387,36 @@ def test_projn_spec_validates_sig_offset(f) -> None:
         sp.ProjnSpec(sig_offset=f).validate()
 
 
+def test_projn_spec_validates_minus_phase_type() -> None:
+    PhaseNone = ev.Phase(name="phase_none", phase_type="none")
+    sp.ProjnSpec(minus_phase=PhaseNone).validate()
+
+    PhaseMinus = ev.Phase(name="phase_minus", phase_type="minus")
+    sp.ProjnSpec(minus_phase=PhaseMinus).validate()
+
+    PhasePlus = ev.Phase(name="phase_plus", phase_type="plus")
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(minus_phase=PhasePlus, plus_phase=PhaseNone).validate()
+
+
+def test_projn_spec_validates_plus_phase_type() -> None:
+    PhaseNone = ev.Phase(name="phase_none", phase_type="none")
+    sp.ProjnSpec(plus_phase=PhaseNone).validate()
+
+    PhasePlus = ev.Phase(name="phase_plus", phase_type="plus")
+    sp.ProjnSpec(plus_phase=PhasePlus).validate()
+
+    PhaseMinus = ev.Phase(name="phase_minus", phase_type="minus")
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(minus_phase=PhaseNone, plus_phase=PhaseMinus).validate()
+
+
+def test_projn_spec_validates_different_plus_and_minus_phases() -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(
+            minus_phase=ev.NonePhase, plus_phase=ev.NonePhase).validate()
+
+
 def test_projn_spec_validates_attrs_to_log() -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(log_on_cycle=("whales", )).validate()

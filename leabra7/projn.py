@@ -12,6 +12,7 @@ from leabra7 import specs
 from leabra7 import layer
 from leabra7 import log
 from leabra7 import events
+from leabra7 import utils
 
 T = TypeVar('T')
 
@@ -186,10 +187,16 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         self.pre = pre
         self.post = post
 
+        self.cos_diff_avg = 0.0
+        self.blocked = False
+
         if spec is None:
             self._spec = specs.ProjnSpec()
         else:
             self._spec = spec
+
+        self.minus_phase = self._spec.minus_phase
+        self.plus_phase = self._spec.plus_phase
 
         # A matrix where each element is the weight of a connection.
         # Rows encode the postsynaptic units, and columns encode the
@@ -226,7 +233,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         # When adding any loggable attribute or property to these lists, update
         # specs.ProjnSpec._valid_log_on_cycle (we represent in two places to
         # avoid a circular dependency)
-        whole_attrs: List[str] = []
+        whole_attrs: List[str] = ["cos_diff_avg"]
         parts_attrs: List[str] = ["conn_wt", "conn_fwt"]
 
         super().__init__(whole_attrs=whole_attrs, parts_attrs=parts_attrs)
@@ -275,10 +282,28 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         layer makes it easier to compute the net input scaling factor.
 
         """
-        wt_scale_act = self.netin_scale()
-        self.post.add_input(
-            self.spec.wt_scale_abs * wt_scale_act *
-            (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
+        if not self.blocked:
+            wt_scale_act = self.netin_scale()
+            self.post.add_input(
+                self.spec.wt_scale_abs * wt_scale_act *
+                (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
+
+    def inhibit(self) -> None:
+        """Block sending layer activation to the recieving layer."""
+        self.blocked = True
+
+    def uninhibit(self) -> None:
+        """Unblock sending layer activation to the recieving layer."""
+        self.blocked = False
+
+    def update_trial_learning_cos_diff(self) -> None:
+        cos_diff = torch.nn.functional.cosine_similarity(
+            self.post.phase_acts[self.plus_phase],
+            self.post.phase_acts[self.minus_phase],
+            dim=0)
+        cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
+        self.cos_diff_avg = self.post.spec.avg_dt * (
+            cos_diff - self.cos_diff_avg)
 
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
@@ -288,9 +313,9 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
         thr_l_mix = 0.05
-        lthr = thr_l_mix * self.post.cos_diff_avg * torch.ger(
+        lthr = thr_l_mix * self.cos_diff_avg * torch.ger(
             self.post.avg_m, self.pre.avg_l)
-        mthr = (1 - thr_l_mix * self.post.cos_diff_avg) * srm
+        mthr = (1 - thr_l_mix * self.cos_diff_avg) * srm
         dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
         dwts[~self.mask] = 0
 
@@ -300,7 +325,6 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         dwts[~mask] *= self.fwts[~mask]
         self.fwts += dwts
         self.wts = sig(self.spec.sig_gain, self.spec.sig_offset, self.fwts)
-        return
 
     def observe_parts_attr(self, attr: str) -> log.PartsObs:
         """Overrides `log.ObservableMixin.observe_parts_attr()`."""
@@ -325,3 +349,12 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         """Overrides `event.EventListenerMixin.handle()`."""
         if isinstance(event, events.Learn):
             self.learn()
+        elif isinstance(event, events.EndPhase):
+            if event.phase == self.plus_phase:
+                self.update_trial_learning_cos_diff()
+        elif isinstance(event, events.InhibitProjns):
+            if self.name in event.projn_names:
+                self.inhibit()
+        elif isinstance(event, events.UninhibitProjns):
+            if self.name in event.projn_names:
+                self.uninhibit()

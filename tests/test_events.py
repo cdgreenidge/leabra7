@@ -12,14 +12,32 @@ def test_clamp_checks_if_acts_contains_values_outside_0_1() -> None:
         ev.HardClamp(layer_name="lr1", acts=(1, 2))
 
 
-def test_pause_logging_checks_for_valid_frequency_name() -> None:
+def test_pause_logging_checks_for_valid_frequency_names() -> None:
     with pytest.raises(ValueError):
-        ev.PauseLogging(freq_name="whales")
+        ev.PauseLogging("whales")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("cycle", "whales")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("whales", "cycle")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("cycle", "whales", "cycle")
 
 
 def test_resume_logging_checks_for_valid_frequency_name() -> None:
     with pytest.raises(ValueError):
-        ev.ResumeLogging(freq_name="whales")
+        ev.ResumeLogging("whales")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("cycle", "whales")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("whales", "cycle")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("cycle", "whales", "cycle")
 
 
 def test_initializing_frequency_with_incorrect_type_raises_error() -> None:
@@ -40,37 +58,57 @@ def test_you_can_get_frequency_objects_by_name() -> None:
     assert ev.Frequency.from_name("batch") is ev.BatchFreq
 
 
+@given(st.one_of(st.integers(), st.floats(), st.text()))
+def test_freq_object_inequality_with_non_freq(t) -> None:
+    for freq in ev.Frequency.freqs():
+        assert freq != t
+
+
 def test_getting_a_frequency_with_undefined_name_raises_error() -> None:
     with pytest.raises(ValueError):
         ev.Frequency.from_name("whales")
 
 
-@given(s=st.sampled_from(["cycle", "trial", "epoch", "batch"]))
-def test_equality_check_for_frequencies(s) -> None:
-    if s == "cycle":
-        new_freq = ev.Frequency(name="cycle", end_event_type=ev.Cycle)
-    elif s == "trial":
-        new_freq = ev.Frequency(name="trial", end_event_type=ev.EndPlusPhase)
-    elif s == "epoch":
-        new_freq = ev.Frequency(name="epoch", end_event_type=ev.EndEpoch)
-    elif s == "batch":
-        new_freq = ev.Frequency(name="batch", end_event_type=ev.EndBatch)
-
-    if s != "cycle":
-        assert new_freq != ev.CycleFreq
-    if s != "trial":
-        assert new_freq != ev.TrialFreq
-    if s != "epoch":
-        assert new_freq != ev.EpochFreq
-    if s != "batch":
-        assert new_freq != ev.BatchFreq
+def test_you_can_get_all_defined_phases() -> None:
+    actual = set(ev.Phase.phases())
+    expected = set((ev.NonePhase, ev.PlusPhase, ev.MinusPhase))
+    assert actual == expected
 
 
-@given(
-    s=st.one_of(st.none(), st.text(), st.integers(), st.booleans(),
-                st.floats()))
-def test_non_equality_for_non_frequencies(s) -> None:
-    assert not s == ev.CycleFreq
-    assert not s == ev.TrialFreq
-    assert not s == ev.EpochFreq
-    assert not s == ev.BatchFreq
+def test_phase_type_non_equality() -> None:
+    assert ev.PhaseType.PLUS != ev.PhaseType.MINUS
+    assert ev.PhaseType.PLUS != ev.PhaseType.NONE
+    assert ev.PhaseType.MINUS != ev.PhaseType.NONE
+
+
+@given(t=st.text())
+@example("plus")
+@example("minus")
+@example("none")
+def test_phase_type_retrieval(t) -> None:
+    if t == "plus":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.PLUS
+    elif t == "minus":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.MINUS
+    elif t == "none":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.NONE
+    else:
+        with pytest.raises(ValueError):
+            ev.PhaseType.get_phase_type(t)
+
+
+def test_you_can_get_phase_objects_by_name() -> None:
+    assert ev.Phase.from_name("none") is ev.NonePhase
+    assert ev.Phase.from_name("plus") is ev.PlusPhase
+    assert ev.Phase.from_name("minus") is ev.MinusPhase
+
+
+@given(st.one_of(st.integers(), st.floats(), st.text()))
+def test_phase_object_inequality_with_non_phase(t) -> None:
+    for phase in ev.Phase.phases():
+        assert phase != t
+
+
+def test_getting_a_phase_with_undefined_name_raises_error() -> None:
+    with pytest.raises(ValueError):
+        ev.Phase.from_name("whales")

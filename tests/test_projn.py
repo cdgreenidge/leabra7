@@ -35,7 +35,7 @@ def test_projn_has_a_receiving_layer() -> None:
 def test_projn_can_specify_its_weight_distribution() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
-    projn = pr.Projn("proj", pre, post, sp.ProjnSpec(dist=rn.Scalar(7)))
+    projn = pr.Projn("proj", pre, post, spec=sp.ProjnSpec(dist=rn.Scalar(7)))
     assert (projn.wts == 7).all()
 
 
@@ -46,12 +46,68 @@ def test_projn_can_flush() -> None:
     projn.flush()
 
 
+def test_projn_can_inhibit_flush() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+
+    pre.hard_clamp(act_ext=[1])
+    projn.inhibit()
+
+    projn.flush()
+
+    assert post.input_buffer == 0.0
+
+
+def test_projn_can_uninhibit_flush() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+
+    pre.hard_clamp(act_ext=[1])
+
+    projn.inhibit()
+    projn.flush()
+    projn.uninhibit()
+    projn.flush()
+
+    assert post.input_buffer == 0.5
+
+
+def test_projn_inhibit_handling_event() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+
+    pre.hard_clamp(act_ext=[1])
+    projn.handle(ev.InhibitProjns("proj"))
+
+    projn.flush()
+
+    assert post.input_buffer == 0.0
+
+
+def test_projn_can_uninhibit_flush() -> None:
+    pre = lr.Layer("lr1", size=1)
+    post = lr.Layer("lr2", size=1)
+    projn = pr.Projn("proj", pre, post)
+
+    pre.hard_clamp(act_ext=[1])
+
+    projn.handle(ev.InhibitProjns("proj"))
+    projn.flush()
+    projn.handle(ev.UninhibitProjns("proj"))
+    projn.flush()
+
+    assert post.input_buffer == 0.5
+
+
 def test_projn_can_mask_pre_layer_units() -> None:
     pre = lr.Layer("lr1", size=2)
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(pre_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[j]:
@@ -65,7 +121,7 @@ def test_projn_pre_mask_tiles_if_it_is_too_short() -> None:
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(pre_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[j % 2]:
@@ -78,7 +134,7 @@ def test_projn_pre_mask_truncates_if_it_is_too_long() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
     spec = sp.ProjnSpec(pre_mask=(True, False), dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
 
@@ -88,7 +144,7 @@ def test_projn_can_mask_post_layer_units() -> None:
     post = lr.Layer("lr2", size=2)
     mask = (True, False)
     spec = sp.ProjnSpec(post_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[i]:
@@ -144,8 +200,10 @@ def test_projn_one_to_one_connectivity_pattern_is_correct() -> None:
     pre = lr.Layer("lr1", size=3)
     post = lr.Layer("lr2", size=3)
     projn = pr.Projn(
-        "proj", pre, post,
-        sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
+        "proj",
+        pre,
+        post,
+        spec=sp.ProjnSpec(projn_type="one_to_one", dist=rn.Scalar(1.0)))
     assert (projn.wts == torch.eye(3)).all()
 
 
@@ -163,7 +221,7 @@ def test_projn_post_mask_tiles_if_it_is_too_short() -> None:
     post = lr.Layer("lr2", size=4)
     mask = (True, False)
     spec = sp.ProjnSpec(post_mask=mask, dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     for i in range(post.size):
         for j in range(pre.size):
             if mask[i % 2]:
@@ -176,7 +234,7 @@ def test_projn_post_mask_truncates_if_it_is_too_long() -> None:
     pre = lr.Layer("lr1", size=1)
     post = lr.Layer("lr2", size=1)
     spec = sp.ProjnSpec(post_mask=(True, False), dist=rn.Scalar(1))
-    projn = pr.Projn("proj", pre, post, spec)
+    projn = pr.Projn("proj", pre, post, spec=spec)
     assert projn.wts[0, 0] == 1
     assert projn.wts.shape == (1, 1)
 

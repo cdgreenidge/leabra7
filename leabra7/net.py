@@ -24,34 +24,36 @@ class Net(events.EventListenerMixin):
         self.projns: Dict[str, projn.Projn] = {}
         self.loggers: List[log.Logger] = []
 
-    def _validate_obj_name(self, name: str) -> None:
+    def _validate_obj_name(self, *names: str) -> None:
         """Checks if a name exists within the objects dict.
 
         Args:
-            name: The name to check.
+            names: The names to check.
 
         Raises:
-            ValueError: If the name does not exist within the objects dict.
+            ValueError: If a name does not exist within the objects dict.
                 This is not AssertionError because it is intended to be called
                 within user-facing methods.
 
         """
-        if name not in self.objs:
-            raise ValueError("No object found with name {0}".format(name))
+        for name in names:
+            if name not in self.objs:
+                raise ValueError("No object found with name {0}".format(name))
 
-    def _validate_layer_name(self, name: str) -> None:
+    def _validate_layer_name(self, *names: str) -> None:
         """Checks if a layer name exists.
 
         Args:
-          name: The name of the layer.
+          names: The names of the layers.
 
         Raises:
           ValueError: If no layer with such a name exists.
 
         """
-        if name not in self.layers:
-            raise ValueError(
-                "Name {0} does not refer to a layer.".format(name))
+        for name in names:
+            if name not in self.layers:
+                raise ValueError(
+                    "Name {0} does not refer to a layer.".format(name))
 
     def _get_layer(self, name: str) -> layer.Layer:
         """Gets a layer by name.
@@ -67,6 +69,36 @@ class Net(events.EventListenerMixin):
         """
         self._validate_layer_name(name)
         return self.layers[name]
+
+    def _validate_projn_name(self, *names: str) -> None:
+        """Checks if a projection name exists.
+
+        Args:
+          names: The names of the projections.
+
+        Raises:
+          ValueError: If no projection with such a name exists.
+
+        """
+        for name in names:
+            if name not in self.projns:
+                raise ValueError(
+                    "Name {0} does not refer to a projection.".format(name))
+
+    def _get_projn(self, name: str) -> projn.Projn:
+        """Gets a projection by name.
+
+        Args:
+            name: The name of the projection.
+
+        Raises:
+            ValueError: If the name does not refer to a projection.
+                This is not AssertionError because it is intended to be called
+                within user-facing methods.
+
+        """
+        self._validate_projn_name(name)
+        return self.projns[name]
 
     def _add_loggers(self, obj: log.ObservableMixin) -> None:
         """Instantiates loggers for an observable object.
@@ -124,7 +156,7 @@ class Net(events.EventListenerMixin):
         """
         if spec is not None:
             spec.validate()
-        lr = layer.Layer(name, size, spec)
+        lr = layer.Layer(name, size, spec=spec)
         self.layers[name] = lr
         self.objs[name] = lr
         self._add_loggers(lr)
@@ -148,15 +180,18 @@ class Net(events.EventListenerMixin):
         self._validate_layer_name(name)
         self.handle(events.HardClamp(name, acts))
 
-    def unclamp_layer(self, name: str) -> None:
-        """Unclamps the layer's activations.
+    def unclamp_layer(self, *layer_names: str) -> None:
+        """Unclamps the layers' activations.
+
+        Args:
+            layer_names: Names of layers to be unclamped.
 
         After unclamping, the layer's activations will be
         updated each cycle.
 
         """
-        self._validate_layer_name(name)
-        self.handle(events.Unclamp(name))
+        self._validate_layer_name(*layer_names)
+        self.handle(events.Unclamp(*layer_names))
 
     def new_projn(self,
                   name: str,
@@ -183,10 +218,32 @@ class Net(events.EventListenerMixin):
 
         pre_lr = self._get_layer(pre)
         post_lr = self._get_layer(post)
-        pr = projn.Projn(name, pre_lr, post_lr, spec)
+        pr = projn.Projn(name, pre_lr, post_lr, spec=spec)
         self.projns[name] = pr
         self.objs[name] = pr
         self._add_loggers(pr)
+
+    def inhibit_projns(self, *projn_names: str) -> None:
+        """Inhibits the named projections.
+        Args:
+            projn_names: Names of projections to be inhibitted.
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+        """
+        self._validate_projn_name(*projn_names)
+        self.handle(events.InhibitProjns(*projn_names))
+
+    def uninhibit_projns(self, *projn_names: str) -> None:
+        """Uninhibits the named projections.
+        Args:
+            projn_names: Names of projections to be uninhibitted.
+        Raises:
+            ValueError: if projn_names don't match any existing projection
+                names.
+        """
+        self._validate_projn_name(*projn_names)
+        self.handle(events.UninhibitProjns(*projn_names))
 
     def _cycle(self) -> None:
         """Cycles the network (triggered by cycle event)."""
@@ -200,47 +257,29 @@ class Net(events.EventListenerMixin):
         """Cycles the network."""
         self.handle(events.Cycle())
 
-    def minus_phase_cycle(self, num_cycles: int = 50) -> None:
-        """Runs a series of cycles for the trial minus phase.
-
-        A minus phase is the trial phase where target values are not clamped
-        output layers. Clamping the values on the output layers is the user's
-        responsibility.
+    def phase_cycle(self, phase: events.Phase, num_cycles: int = 50) -> None:
+        """Runs a series of cycles for the trial phase.
 
         Args:
+          phase: The type of phase to cycle.
           num_cycles: The number of cycles to run.
 
         Raises:
           ValueError: If num_cycles is less than 1.
 
         """
+        if phase.type == events.PhaseType.NONE:
+            raise ValueError("Cannot cycle 'none' phase {0}.".format(
+                phase.name))
         if num_cycles < 1:
             raise ValueError("Number of cycles must be >= 1.")
-        self.handle(events.BeginMinusPhase())
+        self.handle(events.BeginPhase(phase))
         for _ in range(num_cycles):
             self.handle(events.Cycle())
-        self.handle(events.EndMinusPhase())
+        self.handle(events.EndPhase(phase))
 
-    def plus_phase_cycle(self, num_cycles: int = 50) -> None:
-        """Runs a series of cycles for the trial plus phase.
-
-        A plus phase is the trial phase where target values are clamped on
-        output layers. Clamping the values on the output layers is the user's
-        responsibility.
-
-        Args:
-          num_cycles: The number of cycles to run.
-
-        Raises:
-          ValueError: If num_cycles is less than 1.
-
-        """
-        if num_cycles < 1:
-            raise ValueError("Number of cycles must be >= 1.")
-        self.handle(events.BeginPlusPhase())
-        for _ in range(num_cycles):
-            self.handle(events.Cycle())
-        self.handle(events.EndPlusPhase())
+    def end_trial(self) -> None:
+        """Signals to the network the end of a trial."""
         self.handle(events.EndTrial())
 
     def end_epoch(self) -> None:
@@ -251,39 +290,37 @@ class Net(events.EventListenerMixin):
         """Signals to the network that a batch has ended."""
         self.handle(events.EndBatch())
 
-    def pause_logging(self, freq: str = None) -> None:
+    def pause_logging(self, *freq_names: str) -> None:
         """Pauses logging in the network.
 
         Args:
-          freq: The frequency for which to pause logging. If None, pauses
-            all frequencies.
+          freq_names: The frequencies for which to pause logging.
+            If blank, pauses all frequencies.
 
         Raises:
-          ValueError: if no freq with name `freq` exists.
+          ValueError: if name in freq_names does not exist.
 
         """
-        if freq is None:
-            for i in events.Frequency.names():
-                self.handle(events.PauseLogging(i))
+        if freq_names == ():
+            self.handle(events.PauseLogging(*events.Frequency.names()))
         else:
-            self.handle(events.PauseLogging(freq))
+            self.handle(events.PauseLogging(*freq_names))
 
-    def resume_logging(self, freq: str = None) -> None:
+    def resume_logging(self, *freq_names: str) -> None:
         """Resumes logging in the network.
 
         Args:
-          freq: The frequency for which to resume logging. If None, resumes
-            all frequencies.
+          freq_names: The frequencies for which to resume logging.
+            If blank, resumes all frequencies.
 
         Raises:
-          ValueError: if no freq with name `freq` exists.
+          ValueError: if name in freq_names does not exist.
 
         """
-        if freq is None:
-            for i in events.Frequency.names():
-                self.handle(events.ResumeLogging(i))
+        if freq_names == ():
+            self.handle(events.ResumeLogging(*events.Frequency.names()))
         else:
-            self.handle(events.ResumeLogging(freq))
+            self.handle(events.ResumeLogging(*freq_names))
 
     def learn(self) -> None:
         """Updates projection weights with XCAL learning equation."""

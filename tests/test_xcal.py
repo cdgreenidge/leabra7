@@ -9,12 +9,12 @@ def trial(network: lb.Net, input_pattern: Iterable[float],
           output_pattern: Iterable[float]) -> None:
     """Runs a trial."""
     network.clamp_layer("input", input_pattern)
-    network.minus_phase_cycle(num_cycles=50)
+    network.phase_cycle(phase=lb.MinusPhase, num_cycles=50)
     network.clamp_layer("output", output_pattern)
-    network.plus_phase_cycle(num_cycles=25)
-    network.unclamp_layer("input")
-    network.unclamp_layer("output")
+    network.phase_cycle(phase=lb.PlusPhase, num_cycles=25)
+    network.unclamp_layer("input", "output")
     network.learn()
+    network.end_trial()
 
 
 def epoch(network: lb.Net, input_patterns: Iterable[Iterable[float]],

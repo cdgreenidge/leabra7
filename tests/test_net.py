@@ -1,6 +1,9 @@
 """Test net.py"""
 import math
 
+from hypothesis import example
+from hypothesis import given
+import hypothesis.strategies as st
 import numpy as np
 import pandas as pd
 import pytest
@@ -117,11 +120,12 @@ def test_you_can_hard_clamp_a_layer() -> None:
             n.objs["layer1"].units.act[i], expected[i], abs_tol=1e-6)
 
 
-def test_you_can_unclamp_a_layer() -> None:
+def test_you_can_unclamp_layers() -> None:
     n = net.Net()
     n.new_layer("layer1", 1)
     n.new_layer("layer2", 2)
     n.new_projn("projn1", pre="layer1", post="layer2")
+    n.new_projn("projn2", pre="layer2", post="layer1")
 
     n.clamp_layer("layer2", [0])
     n.clamp_layer("layer1", [0.7])
@@ -133,21 +137,65 @@ def test_you_can_unclamp_a_layer() -> None:
 
     assert (n.layers["layer2"].units.act > 0).all()
 
+    n.clamp_layer("layer1", [0])
+    n.unclamp_layer("layer1", "layer2")
+
+    for _ in range(50):
+        n.cycle()
+
+    assert (n.layers["layer1"].units.act > 0).all()
+    assert (n.layers["layer2"].units.act > 0).all()
+
 
 def test_clamping_a_layer_validates_its_name() -> None:
     with pytest.raises(ValueError):
         net.Net().clamp_layer("abcd", [0])
 
 
-def test_unclamping_a_layer_validates_its_name() -> None:
+def test_unclamping_layers_validates_its_name() -> None:
+    n = net.Net()
+
     with pytest.raises(ValueError):
-        net.Net().unclamp_layer("abcd")
+        n.unclamp_layer("abcd")
+
+    n.new_layer("abcd", size=2)
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("abcd", "g")
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("g", "abcd")
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("abcd", "g", "abcd")
+
+
+def test_the_network_can_get_a_projn_by_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", 1)
+    n.new_layer("lr2", 1)
+    n.new_projn("pr1", "lr1", "lr2")
+
+    assert n._get_projn("pr1") is n.projns["pr1"]
+
+
+def test_the_network_can_validate_projn_names() -> None:
+    n = net.Net()
+    n.new_layer("lr1", 1)
+    n.new_layer("lr2", 1)
+    n.new_projn("pr1", "lr1", "lr2")
+
+    n._validate_projn_name("pr1")
+
+    with pytest.raises(ValueError):
+        n._validate_projn_name("whales")
 
 
 def test_a_new_projn_validates_its_spec() -> None:
     n = net.Net()
     n.new_layer("layer1", 3)
     n.new_layer("layer2", 3)
+
     with pytest.raises(specs.ValidationError):
         n.new_projn(
             "projn1", "layer1", "layer2", spec=specs.ProjnSpec(integ=-1))
@@ -174,70 +222,113 @@ def test_projn_checks_if_the_receiving_layer_name_is_valid() -> None:
         n.new_projn("projn1", "layer1", "layer2")
 
 
+def test_net_can_inhibit_projns() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    n.inhibit_projns("pr1", "pr2", "pr3")
+
+
+def test_net_catches_inhibit_bad_projn_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    with pytest.raises(ValueError):
+        n.inhibit_projns("pr4")
+
+    with pytest.raises(ValueError):
+        n.inhibit_projns("pr1", "pr5", "pr3")
+
+
+def test_net_can_uninhibit_projns() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    n.uninhibit_projns("pr1", "pr2", "pr3")
+
+
+def test_net_catches_uninhibit_bad_projn_name() -> None:
+    n = net.Net()
+    n.new_layer("lr1", size=1)
+    n.new_layer("lr2", size=1)
+
+    n.new_projn("pr1", "lr1", "lr2")
+    n.new_projn("pr2", "lr1", "lr2")
+    n.new_projn("pr3", "lr1", "lr2")
+
+    with pytest.raises(ValueError):
+        n.uninhibit_projns("pr4")
+
+    with pytest.raises(ValueError):
+        n.uninhibit_projns("pr1", "pr5", "pr3")
+
+
 # Right now, it's difficult to test net.cycle(), because it's the core of the
 # stateful updates. Eventually, we'll add some regression tests for it.
 
 
-def test_running_a_minus_phase_raises_error_if_num_cycles_less_than_one(
-) -> None:
+def test_running_a_phase_raises_error_if_num_cycles_less_than_one() -> None:
     with pytest.raises(ValueError):
-        net.Net().minus_phase_cycle(-1)
+        net.Net().phase_cycle(phase=events.PlusPhase, num_cycles=-1)
 
 
-def test_running_a_minus_phase_broadcasts_minus_phase_event_markers(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.minus_phase_cycle(num_cycles=1)
-    assert isinstance(n.handle.call_args_list[0][0][0], events.BeginMinusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndMinusPhase)
+def test_running_a_phase_broadcasts_phase_event_markers(mocker) -> None:
+    for phase in events.Phase.phases():
+        n = net.Net()
+        mocker.spy(n, "handle")
+
+        if phase.type == events.PhaseType.NONE:
+            with pytest.raises(ValueError):
+                n.phase_cycle(phase=phase, num_cycles=1)
+            return
+
+        else:
+            n.phase_cycle(phase=phase, num_cycles=1)
+
+            assert n.handle.call_args_list[0][0][0] == phase.begin_event
+            assert isinstance(n.handle.call_args_list[1][0][0], events.Cycle)
+            assert n.handle.call_args_list[2][0][0] == phase.end_event
 
 
-def test_running_a_minus_phase_runs_the_correct_number_of_cycles(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.minus_phase_cycle(num_cycles=42)
-    assert all(
-        isinstance(i, events.Cycle)
-        for i in n.handle.call_args_list[1:43][0][0])
+def test_running_a_phase_runs_the_correct_number_of_cycles(mocker) -> None:
+    for phase in events.Phase.phases():
+        n = net.Net()
+        mocker.spy(n, "handle")
 
+        if phase.type == events.PhaseType.NONE:
+            with pytest.raises(ValueError):
+                n.phase_cycle(phase=phase, num_cycles=42)
 
-def test_running_a_plus_phase_raises_error_if_num_cycles_less_than_one(
-) -> None:
-    with pytest.raises(ValueError):
-        net.Net().plus_phase_cycle(-1)
+        else:
+            n.phase_cycle(phase=phase, num_cycles=42)
 
-
-def test_running_a_plus_phase_broadcasts_plus_phase_event_markers(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.plus_phase_cycle(num_cycles=1)
-    assert isinstance(n.handle.call_args_list[0][0][0], events.BeginPlusPhase)
-    assert isinstance(n.handle.call_args_list[-2][0][0], events.EndPlusPhase)
-    assert isinstance(n.handle.call_args_list[-1][0][0], events.EndTrial)
-
-
-def test_running_a_plus_phase_runs_the_correct_number_of_cycles(
-        mocker) -> None:
-    n = net.Net()
-    n.new_layer("layer1", 1)
-    mocker.spy(n, "handle")
-    n.plus_phase_cycle(num_cycles=42)
-    assert all(
-        isinstance(i, events.Cycle)
-        for i in n.handle.call_args_list[1:43][0][0])
+            assert all(
+                isinstance(i, events.Cycle)
+                for i in n.handle.call_args_list[1:43][0][0])
 
 
 def test_you_can_observe_unlogged_attributes() -> None:
     n = net.Net()
     n.new_layer("layer1", 1)
+    n.new_layer("layer2", 1)
+    n.new_projn("projn1", "layer1", "layer2")
     pd.util.testing.assert_frame_equal(
-        n.observe("layer1", "cos_diff_avg"),
+        n.observe("projn1", "cos_diff_avg"),
         pd.DataFrame({
             "cos_diff_avg": (0.0, )
         }),
@@ -286,7 +377,8 @@ def test_you_can_retrieve_the_logs_for_a_layer() -> None:
             log_on_trial=("avg_act", ),
             log_on_epoch=("avg_act", ),
             log_on_batch=("avg_act", )))
-    n.plus_phase_cycle(1)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=1)
+    n.end_trial()
     n.end_epoch()
     n.end_batch()
     for freq in ("cycle", "trial", "epoch", "batch"):
@@ -330,18 +422,21 @@ def test_net_trial_log_pausing_and_resuming() -> None:
             "avg_act",
         )))
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     n.pause_logging("trial")
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     n.resume_logging("trial")
 
-    n.minus_phase_cycle(num_cycles=5)
-    n.plus_phase_cycle(num_cycles=5)
+    n.phase_cycle(phase=events.MinusPhase, num_cycles=5)
+    n.phase_cycle(phase=events.PlusPhase, num_cycles=5)
+    n.end_trial()
 
     parts_time = torch.Tensor(n.logs("trial", "layer1").parts["time"])
     whole_time = torch.Tensor(n.logs("trial", "layer1").whole["time"])
@@ -405,6 +500,76 @@ def test_net_batch_log_pausing_and_resuming() -> None:
     assert (whole_time == torch.Tensor([0, 2])).all()
 
 
+def test_net_multiple_freq_log_pausing_and_resuming() -> None:
+    n = net.Net()
+
+    loggables = ("unit_act", "avg_act")
+
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(
+            log_on_cycle=loggables,
+            log_on_epoch=loggables,
+            log_on_trial=loggables,
+            log_on_batch=loggables))
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    n.pause_logging("cycle", "trial", "epoch", "batch")
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    n.resume_logging("cycle", "trial", "epoch", "batch")
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    parts_time = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+    parts_time = torch.Tensor(n.logs("trial", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("trial", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+    parts_time = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("epoch", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+    parts_time = torch.Tensor(n.logs("batch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("batch", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+
 def test_network_triggers_cycle_on_cycle_event(mocker) -> None:
     n = net.Net()
     mocker.spy(n, "_cycle")
@@ -421,7 +586,7 @@ def test_network_passes_non_cycle_events_to_every_object(mocker) -> None:
     for _, obj in n.objs.items():
         mocker.spy(obj, "handle")
 
-    n.handle(events.BeginPlusPhase)
+    n.handle(events.BeginPhase(events.PlusPhase))
 
     for _, obj in n.objs.items():
         assert obj.handle.call_count == 1

@@ -302,8 +302,8 @@ class Logger(events.EventListenerMixin):
         if isinstance(event, self.freq.end_event_type):
             self.record()
         elif isinstance(event, events.PauseLogging):
-            if event.freq == self.freq:
+            if self.freq in event.freqs:
                 self.paused = True
         elif isinstance(event, events.ResumeLogging):
-            if event.freq == self.freq:
+            if self.freq in event.freqs:
                 self.paused = False
