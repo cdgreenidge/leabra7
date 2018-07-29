@@ -12,14 +12,32 @@ def test_clamp_checks_if_acts_contains_values_outside_0_1() -> None:
         ev.HardClamp(layer_name="lr1", acts=(1, 2))
 
 
-def test_pause_logging_checks_for_valid_frequency_name() -> None:
+def test_pause_logging_checks_for_valid_frequency_names() -> None:
     with pytest.raises(ValueError):
-        ev.PauseLogging(freq_name="whales")
+        ev.PauseLogging("whales")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("cycle", "whales")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("whales", "cycle")
+
+    with pytest.raises(ValueError):
+        ev.PauseLogging("cycle", "whales", "cycle")
 
 
 def test_resume_logging_checks_for_valid_frequency_name() -> None:
     with pytest.raises(ValueError):
-        ev.ResumeLogging(freq_name="whales")
+        ev.ResumeLogging("whales")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("cycle", "whales")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("whales", "cycle")
+
+    with pytest.raises(ValueError):
+        ev.ResumeLogging("cycle", "whales", "cycle")
 
 
 def test_initializing_frequency_with_incorrect_type_raises_error() -> None:

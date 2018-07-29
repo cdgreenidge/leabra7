@@ -258,7 +258,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
             if event.layer_name == self.name:
                 self.hard_clamp(event.acts)
         elif isinstance(event, events.Unclamp):
-            if event.layer_name == self.name:
+            if self.name in event.layer_names:
                 self.unclamp()
         elif isinstance(event, events.EndPhase):
             for phase in events.Phase.phases():

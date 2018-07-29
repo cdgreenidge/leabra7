@@ -12,8 +12,7 @@ def trial(network: lb.Net, input_pattern: Iterable[float],
     network.phase_cycle(phase=lb.MinusPhase, num_cycles=50)
     network.clamp_layer("output", output_pattern)
     network.phase_cycle(phase=lb.PlusPhase, num_cycles=25)
-    network.unclamp_layer("input")
-    network.unclamp_layer("output")
+    network.unclamp_layer("input", "output")
     network.learn()
     network.end_trial()
 

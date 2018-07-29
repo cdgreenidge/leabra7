@@ -120,11 +120,12 @@ def test_you_can_hard_clamp_a_layer() -> None:
             n.objs["layer1"].units.act[i], expected[i], abs_tol=1e-6)
 
 
-def test_you_can_unclamp_a_layer() -> None:
+def test_you_can_unclamp_layers() -> None:
     n = net.Net()
     n.new_layer("layer1", 1)
     n.new_layer("layer2", 2)
     n.new_projn("projn1", pre="layer1", post="layer2")
+    n.new_projn("projn2", pre="layer2", post="layer1")
 
     n.clamp_layer("layer2", [0])
     n.clamp_layer("layer1", [0.7])
@@ -136,15 +137,37 @@ def test_you_can_unclamp_a_layer() -> None:
 
     assert (n.layers["layer2"].units.act > 0).all()
 
+    n.clamp_layer("layer1", [0])
+    n.unclamp_layer("layer1", "layer2")
+
+    for _ in range(50):
+        n.cycle()
+
+    assert (n.layers["layer1"].units.act > 0).all()
+    assert (n.layers["layer2"].units.act > 0).all()
+
 
 def test_clamping_a_layer_validates_its_name() -> None:
     with pytest.raises(ValueError):
         net.Net().clamp_layer("abcd", [0])
 
 
-def test_unclamping_a_layer_validates_its_name() -> None:
+def test_unclamping_layers_validates_its_name() -> None:
+    n = net.Net()
+
     with pytest.raises(ValueError):
-        net.Net().unclamp_layer("abcd")
+        n.unclamp_layer("abcd")
+
+    n.new_layer("abcd", size=2)
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("abcd", "g")
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("g", "abcd")
+
+    with pytest.raises(ValueError):
+        n.unclamp_layer("abcd", "g", "abcd")
 
 
 def test_the_network_can_get_a_projn_by_name() -> None:
@@ -469,6 +492,76 @@ def test_net_batch_log_pausing_and_resuming() -> None:
     n.end_batch()
     n.resume_logging("batch")
     n.end_batch()
+
+    parts_time = torch.Tensor(n.logs("batch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("batch", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+
+def test_net_multiple_freq_log_pausing_and_resuming() -> None:
+    n = net.Net()
+
+    loggables = ("unit_act", "avg_act")
+
+    n.new_layer(
+        "layer1",
+        2,
+        spec=specs.LayerSpec(
+            log_on_cycle=loggables,
+            log_on_epoch=loggables,
+            log_on_trial=loggables,
+            log_on_batch=loggables))
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    n.pause_logging("cycle", "trial", "epoch", "batch")
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    n.resume_logging("cycle", "trial", "epoch", "batch")
+
+    n.cycle()
+    n.end_trial()
+    n.end_epoch()
+    n.end_batch()
+
+    parts_time = torch.Tensor(n.logs("cycle", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("cycle", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+    parts_time = torch.Tensor(n.logs("trial", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("trial", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
+
+    parts_time = torch.Tensor(n.logs("epoch", "layer1").parts["time"])
+    whole_time = torch.Tensor(n.logs("epoch", "layer1").whole["time"])
+
+    assert list(parts_time.size()) == [4]
+    assert list(whole_time.size()) == [2]
+
+    assert (parts_time == torch.Tensor([0, 0, 2, 2])).all()
+    assert (whole_time == torch.Tensor([0, 2])).all()
 
     parts_time = torch.Tensor(n.logs("batch", "layer1").parts["time"])
     whole_time = torch.Tensor(n.logs("batch", "layer1").whole["time"])

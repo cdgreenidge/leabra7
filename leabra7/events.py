@@ -4,6 +4,7 @@ from enum import auto
 from enum import Enum
 import inspect
 from typing import Dict
+from typing import Set
 from typing import Sequence
 from typing import Tuple
 from typing import Type
@@ -43,30 +44,42 @@ class PauseLogging(Event):
     """The event that pauses logging in the network.
 
     Args:
-      freq_name: The name of the frequency for which to pause logging.
+      freq_names: The names of the frequencies for which to pause logging.
 
     Raises:
-      ValueError: If no frequency exists with name `freq_name`.
+      ValueError: If no frequency exists with name in freq_names.
 
     """
 
-    def __init__(self, freq_name: str) -> None:
-        self.freq = Frequency.from_name(freq_name)
+    def __init__(self, *freq_names: str) -> None:
+        for name in freq_names:
+            Frequency.from_name(name)
+
+        self.freqs: Set["Frequency"] = set()
+
+        for name in freq_names:
+            self.freqs.add(Frequency.from_name(name))
 
 
 class ResumeLogging(Event):
     """The event that resumes logging in the network.
 
     Args:
-      freq_name: The name of the frequency for which to resume logging.
+      freq_names: The names of the frequencies for which to resume logging.
 
     Raises:
-      ValueError: If no frequency exists with name `freq_name`.
+      ValueError: If no frequency exists with name in freq_names.
 
     """
 
-    def __init__(self, freq_name: str) -> None:
-        self.freq = Frequency.from_name(freq_name)
+    def __init__(self, *freq_names: str) -> None:
+        for name in freq_names:
+            Frequency.from_name(name)
+
+        self.freqs: Set["Frequency"] = set()
+
+        for name in freq_names:
+            self.freqs.add(Frequency.from_name(name))
 
 
 class InhibitProjns(Event):
@@ -100,7 +113,6 @@ class HardClamp(Event):
       layer_name: The name of the layer to hard clamp.
       acts: A sequence of the activations to clamp the layer to. If there are
         fewer values than the number of units in the layer, it will be tiled.
-      name: The name of the node.
 
     Raises:
       ValueError: If any value of acts is outside the range [0, 1].
@@ -118,13 +130,12 @@ class Unclamp(Event):
     """The event that unclamps a layer.
 
     Args:
-      layer_name: The name of the layer to unclamp.
-      name: The name of the node.
+      layer_names: The names of the layers to unclamp.
 
     """
 
-    def __init__(self, layer_name: str) -> None:
-        self.layer_name = layer_name
+    def __init__(self, *layer_names: str) -> None:
+        self.layer_names = layer_names
 
 
 class Learn(Event):
@@ -156,11 +167,16 @@ class Frequency():
         self.end_event_type = end_event_type
         Frequency.registry[name] = self
 
+    def __key(self) -> Tuple[str, Type[Event]]:
+        return (self.name, self.end_event_type)
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Frequency):
-            return (self.name == other.name
-                    and self.end_event_type == other.end_event_type)
+            return self.__key() == other.__key()  #pylint: disable=protected-access
         return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.__key())
 
     @classmethod
     def names(cls) -> Sequence[str]:
