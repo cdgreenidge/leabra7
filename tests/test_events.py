@@ -75,6 +75,28 @@ def test_you_can_get_the_names_of_all_defined_phases() -> None:
     assert actual == expected
 
 
+def test_phase_type_non_equality() -> None:
+    assert ev.PhaseType.PLUS != ev.PhaseType.MINUS
+    assert ev.PhaseType.PLUS != ev.PhaseType.NONE
+    assert ev.PhaseType.MINUS != ev.PhaseType.NONE
+
+
+@given(t=st.text())
+@example("plus")
+@example("minus")
+@example("none")
+def test_phase_type_retrieval(t) -> None:
+    if t == "plus":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.PLUS
+    elif t == "minus":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.MINUS
+    elif t == "none":
+        assert ev.PhaseType.get_phase_type(t) == ev.PhaseType.NONE
+    else:
+        with pytest.raises(ValueError):
+            ev.PhaseType.get_phase_type(t)
+
+
 def test_you_can_get_phase_objects_by_name() -> None:
     assert ev.Phase.from_name("none") is ev.NonePhase
     assert ev.Phase.from_name("plus") is ev.PlusPhase

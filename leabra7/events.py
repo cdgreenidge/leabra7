@@ -217,13 +217,28 @@ class PhaseType(Enum):
     MINUS = auto()
     NONE = auto()
 
+    @classmethod
+    def get_phase_type(cls, name: str) -> "PhaseType":
+        if name == "plus":
+            return PhaseType.PLUS
+        elif name == "minus":
+            return PhaseType.MINUS
+        elif name == "none":
+            return PhaseType.NONE
+
+        raise ValueError("""Invalid: Phase type '{0}' is not one of
+            'plus', 'minus', or 'none'""".format(name))
+
 
 class Phase():
     """Defines network phases.
 
     Args:
-        begin_event_type: Event type that marks the beginning of a phase.
-        end_event_type: Event type that marks the end of a phase.
+        name: Name of phase.
+        phase_type: Type of phase ('plus', 'minus', or 'none').
+
+    Raises:
+        ValueError: If phase_type not one of 'plus', 'minus', or 'none'.
 
     """
     # Stores a reference to each created frequency object, keyed by name
@@ -233,9 +248,9 @@ class Phase():
     begin_event_type: Type[Event]
     end_event_type: Type[Event]
 
-    def __init__(self, name: str, phase_type: PhaseType) -> None:
+    def __init__(self, name: str, phase_type: str) -> None:
         self.name = name
-        self.type = phase_type
+        self.type = PhaseType.get_phase_type(phase_type)
         Phase.registry[name] = self
 
     def __key(self) -> Tuple[str, PhaseType]:
@@ -280,9 +295,9 @@ class Phase():
                 "No phase with name {0} exists.".format(phase_name))
 
 
-NonePhase = Phase(name="none", phase_type=PhaseType.NONE)
-PlusPhase = Phase(name="plus", phase_type=PhaseType.PLUS)
-MinusPhase = Phase(name="minus", phase_type=PhaseType.MINUS)
+NonePhase = Phase(name="none", phase_type="none")
+PlusPhase = Phase(name="plus", phase_type="plus")
+MinusPhase = Phase(name="minus", phase_type="minus")
 
 
 class BeginPhase(Event):

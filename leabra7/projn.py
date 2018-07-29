@@ -188,7 +188,6 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         self.post = post
 
         self.cos_diff_avg = 0.0
-
         self.blocked = False
 
         if spec is None:
