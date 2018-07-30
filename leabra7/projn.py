@@ -284,6 +284,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         """
         if not self.blocked:
             wt_scale_act = self.netin_scale()
+            wt_scale_act[wt_scale_act == float("inf")] = 0
             self.post.add_input(
                 self.spec.wt_scale_abs * wt_scale_act *
                 (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
