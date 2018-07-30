@@ -9,8 +9,8 @@ dependencies:
   - conda-build>=3.10
   - hypothesis>=3.57
   - ipykernel>=4.8.2
-  - mypy>=0.6
   - matplotlib>=2.2.2
+  - mypy>=0.6
   - numpy>=1.14
   - pandas>=0.23
   - pylint>=1.9
