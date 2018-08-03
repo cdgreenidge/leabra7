@@ -2,7 +2,7 @@
 
 import torch  # type: ignore
 
-use_cuda = torch.cuda.is_available()
+using_cuda = torch.cuda.is_available()
 
 
 def clip_float(low: float, high: float, x: float) -> float:
@@ -29,4 +29,4 @@ def cuda(tensor: torch.Tensor) -> torch.Tensor:
       Cuda-fied tensor or just same tensor as before.
 
     """
-    return tensor.cuda() if use_cuda else tensor
+    return tensor.cuda() if using_cuda else tensor
