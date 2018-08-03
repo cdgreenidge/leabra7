@@ -53,9 +53,9 @@ def expand_layer_mask_full(pre_mask: List[bool],
     """
     # In the full connectivity case, it can be concisely calculated with an
     # outer product
-    return torch.ger(
+    return utils.cuda(torch.ger(
         utils.cuda(torch.ByteTensor(post_mask)),
-        utils.cuda(torch.ByteTensor(pre_mask)))
+        utils.cuda(torch.ByteTensor(pre_mask))))
 
 
 def expand_layer_mask_one_to_one(pre_mask: List[bool],
