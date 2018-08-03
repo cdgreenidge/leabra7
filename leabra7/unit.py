@@ -91,8 +91,8 @@ def nxx1_table() -> Any:
 
 def clip(vals: torch.Tensor, minimum: float, maximum: float) -> torch.Tensor:
     """Clips values to fit within range."""
-    clipped = torch.max(vals, minimum * torch.ones(vals.shape))
-    return torch.min(clipped, maximum * torch.ones(vals.shape))
+    clipped = torch.max(vals, minimum * utils.to_cuda(torch.ones(vals.shape)))
+    return torch.min(clipped, maximum * utils.to_cuda(torch.ones(vals.shape)))
 
 
 class UnitGroup:
