@@ -225,7 +225,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         self.mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
-        rand_nums = torch.Tensor(num_nonzero)
+        rand_nums = utils.cuda(torch.Tensor(num_nonzero))
         self.spec.dist.fill(rand_nums)
         self.wts[self.mask] = rand_nums
 
