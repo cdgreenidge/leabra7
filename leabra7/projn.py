@@ -267,14 +267,12 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
         pre_act_avg = self.pre.avg_act
         pre_act_n = max(1, round(pre_act_avg * self.pre.units.size))
-        post_act_n_avg = utils.to_cuda(
-            torch.max(
-                torch.Tensor([1]),
-                (pre_act_avg * self.num_recv_conns).round()))
-        post_act_n_max = utils.to_cuda(
-            torch.min(self.num_recv_conns, torch.Tensor([pre_act_n])))
-        post_act_n_exp = utils.to_cuda(
-            torch.min(post_act_n_max, post_act_n_avg + sem_extra))
+        post_act_n_avg = torch.max(
+            utils.to_cuda(torch.Tensor([1])),
+            (pre_act_avg * self.num_recv_conns).round())
+        post_act_n_max = torch.min(self.num_recv_conns,
+                                   utils.to_cuda(torch.Tensor([pre_act_n])))
+        post_act_n_exp = torch.min(post_act_n_max, post_act_n_avg + sem_extra)
 
         scaling_factors = 1.0 / post_act_n_exp
         full_connectivity = pre_act_n == post_act_n_avg
