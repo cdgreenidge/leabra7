@@ -10,6 +10,7 @@ from leabra7 import log
 from leabra7 import specs
 from leabra7 import events
 from leabra7 import unit
+from leabra7 import utils
 
 
 def _parse_unit_attr(attr: str) -> str:
@@ -72,14 +73,15 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
         # Desired clamping values
-        self.act_ext = torch.Tensor(self.size).zero_()
+        self.act_ext = utils.cuda(torch.Tensor(self.size).zero_())
         # Phase activation
         self.phase_acts: Dict[events.Phase, torch.Tensor] = dict()
         for phase in events.Phase.phases():
-            self.phase_acts[phase] = torch.Tensor(self.size).zero_()
+            self.phase_acts[phase] = utils.cuda(
+                torch.Tensor(self.size).zero_())
 
         # Trial activations
-        self.acts_t = torch.Tensor(self.size).zero_()
+        self.acts_t = utils.cuda(torch.Tensor(self.size).zero_())
 
         # The following two buffers are filled every time self.add_input() is
         # called, and reset at the end of self.activation_cycle()
@@ -87,7 +89,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         # Net input (excitation) input buffer. For every cycle, we
         # store the layer inputs here. Once we have all the inputs, we
         # normalize by wt_scale_rel_sum and send to the unit group.
-        self.input_buffer = torch.Tensor(self.size).zero_()
+        self.input_buffer = utils.cuda(torch.Tensor(self.size).zero_())
 
         # Sum of the wt_scale_rel parameters for each projection terminating in
         # this layer. We use this to normalize the inputs before propagating to
@@ -175,7 +177,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         if self.k == self.size:
             self.gc_i = 0
             return
-        g_i_thr, _ = torch.sort(self.units.group_g_i_thr(), descending=True)
+        g_i_thr, _ = utils.cuda(
+            torch.sort(self.units.group_g_i_thr(), descending=True))
         g_i_thr_k = torch.mean(g_i_thr[0:self.k])
         g_i_thr_n_k = torch.mean(g_i_thr[self.k:])
         self.gc_i = g_i_thr_n_k + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_n_k)
@@ -189,7 +192,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         elif self.spec.inhibition_type == "kwta_avg":
             self.calc_kwta_avg_inhibition()
 
-        self.units.update_inhibition(torch.Tensor(self.size).fill_(self.gc_i))
+        self.units.update_inhibition(
+            utils.cuda(torch.Tensor(self.size).fill_(self.gc_i)))
 
     def activation_cycle(self) -> None:
         """Runs one complete activation cycle of the layer."""
@@ -239,8 +243,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         """
         self.clamped = True
-        self.act_ext = torch.Tensor(
-            list(itertools.islice(itertools.cycle(act_ext), self.size)))
+        self.act_ext = utils.cuda(
+            torch.Tensor(
+                list(itertools.islice(itertools.cycle(act_ext), self.size))))
         self.units.hard_clamp(self.act_ext)
 
     def unclamp(self) -> None:

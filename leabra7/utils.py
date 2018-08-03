@@ -1,5 +1,9 @@
 """Utilities."""
 
+import torch  # type: ignore
+
+use_cuda = torch.cuda.is_available()
+
 
 def clip_float(low: float, high: float, x: float) -> float:
     """Clips a float to a range.
@@ -13,3 +17,16 @@ def clip_float(low: float, high: float, x: float) -> float:
 
     """
     return max(min(x, high), low)
+
+
+def cuda(tensor: torch.Tensor) -> torch.Tensor:
+    """Converts torch tensor to cuda tensor if available.
+
+    Args:
+      tensor: Tensor to be converted to cuda tensor (if possible).
+
+    Returns:
+      Cuda-fied tensor or just same tensor as before.
+
+    """
+    return tensor.cuda() if use_cuda else tensor
