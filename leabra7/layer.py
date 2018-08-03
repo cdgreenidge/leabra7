@@ -177,8 +177,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         if self.k == self.size:
             self.gc_i = 0
             return
-        g_i_thr, _ = utils.to_cuda(
-            torch.sort(self.units.group_g_i_thr(), descending=True))
+        g_i_thr, _ = torch.sort(self.units.group_g_i_thr(), descending=True)
         g_i_thr_k = torch.mean(g_i_thr[0:self.k])
         g_i_thr_n_k = torch.mean(g_i_thr[self.k:])
         self.gc_i = g_i_thr_n_k + self.spec.kwta_pt * (g_i_thr_k - g_i_thr_n_k)
