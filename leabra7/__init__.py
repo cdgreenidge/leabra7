@@ -13,6 +13,5 @@ from leabra7.rand import Gaussian
 from leabra7.rand import LogNormal
 from leabra7.rand import Scalar
 from leabra7.rand import Uniform
-from leabra7.utils import cuda
 from leabra7.utils import to_cuda
 from leabra7.utils import using_cuda
