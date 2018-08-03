@@ -130,37 +130,37 @@ class UnitGroup:
         # layer.LayerSpec._valid_log_on_cycle
 
         # Net input (excitation) without time integration
-        self.net_raw = utils.cuda(torch.Tensor(self.size).zero_())
+        self.net_raw = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Net inpput (excitation) with time integration
-        self.net = utils.cuda(torch.Tensor(self.size).zero_())
+        self.net = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Total (feedback + feedforward) inhibition
-        self.gc_i = utils.cuda(torch.Tensor(self.size).zero_())
+        self.gc_i = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Non depressed activation
-        self.act_nd = utils.cuda(torch.Tensor(self.size).zero_())
+        self.act_nd = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Activation
-        self.act = utils.cuda(torch.Tensor(self.size).zero_())
+        self.act = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Net current
-        self.i_net = utils.cuda(torch.Tensor(self.size).zero_())
+        self.i_net = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Net current, rate-coded (driven by v_m_eq)
-        self.i_net_r = utils.cuda(torch.Tensor(self.size).zero_())
+        self.i_net_r = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Membrane potential
-        self.v_m = utils.cuda(torch.Tensor(self.size).zero_())
+        self.v_m = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Equilibrium membrane potential (does not reset on spike)
-        self.v_m_eq = utils.cuda(torch.Tensor(self.size).zero_())
+        self.v_m_eq = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Adaption current
-        self.adapt = utils.cuda(torch.Tensor(self.size).zero_())
+        self.adapt = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Are we spiking? (0 or 1)
         # In the future, this could be a ByteTensor
-        self.spike = utils.cuda(torch.Tensor(self.size).zero_())
+        self.spike = utils.to_cuda(torch.Tensor(self.size).zero_())
 
         # Supershort learning average
-        self.avg_ss = utils.cuda(torch.Tensor(self.size).zero_())
+        self.avg_ss = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Short learning average
-        self.avg_s = utils.cuda(torch.Tensor(self.size).zero_())
+        self.avg_s = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Medium learning average
-        self.avg_m = utils.cuda(torch.Tensor(self.size).zero_())
+        self.avg_m = utils.to_cuda(torch.Tensor(self.size).zero_())
         # Long learning average
-        self.avg_l = utils.cuda(torch.Tensor(self.size).zero_())
+        self.avg_l = utils.to_cuda(torch.Tensor(self.size).zero_())
 
     def g_i_thr(self, unit_idx: int) -> float:
         """The inhibition that will place a unit at its spike threshold.
@@ -245,7 +245,7 @@ class UnitGroup:
             The value of the noisy X/(X + 1) function at `x`.
 
         """
-        return utils.cuda(torch.Tensor(self.nxx1_numpy(x)))
+        return utils.to_cuda(torch.Tensor(self.nxx1_numpy(x)))
 
     def update_activation(self) -> None:
         """Updates the unit activation.

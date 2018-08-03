@@ -53,9 +53,8 @@ def expand_layer_mask_full(pre_mask: List[bool],
     """
     # In the full connectivity case, it can be concisely calculated with an
     # outer product
-    return utils.cuda(torch.ger(
-        torch.ByteTensor(post_mask),
-        torch.ByteTensor(pre_mask)))
+    return utils.to_cuda(
+        torch.ger(torch.ByteTensor(post_mask), torch.ByteTensor(pre_mask)))
 
 
 def expand_layer_mask_one_to_one(pre_mask: List[bool],
@@ -84,7 +83,7 @@ def expand_layer_mask_one_to_one(pre_mask: List[bool],
             """Mismatched one-to-one projection. Pre_mask units: {0}.
             Post_mask units: {1}.""".format(sum(pre_mask), sum(post_mask)))
 
-    mask = utils.cuda(torch.zeros(len(pre_mask), len(post_mask)).byte())
+    mask = utils.to_cuda(torch.zeros(len(pre_mask), len(post_mask)).byte())
     i = 0
     j = 0
     while i < len(pre_mask):
@@ -120,8 +119,8 @@ def sparsify(sparsity: float,
     nonzero = tensor.nonzero()
     num_nonzero = nonzero.shape[0]
     num_to_keep = math.floor(sparsity * num_nonzero)
-    to_keep = nonzero[utils.cuda(torch.randperm(num_nonzero)[:num_to_keep])]
-    sparse = utils.cuda(torch.zeros_like(tensor))
+    to_keep = nonzero[utils.to_cuda(torch.randperm(num_nonzero)[:num_to_keep])]
+    sparse = utils.to_cuda(torch.zeros_like(tensor))
     # All we want to do is set the elements of sparse given by the
     # indices in to_keep to True. The list comprehension below is pretty hacky,
     # but I can't find a cleaner way to do it in torch 0.3
@@ -144,7 +143,7 @@ def xcal(x: torch.Tensor, thr: torch.Tensor) -> torch.Tensor:
     """
     d_thr = 0.0001
     d_rev = 0.1
-    result = utils.cuda(torch.zeros_like(x))
+    result = utils.to_cuda(torch.zeros_like(x))
 
     mask = x > (thr * d_rev)
     result[mask] = x[mask] - thr[mask]
@@ -204,10 +203,10 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         # Rows encode the postsynaptic units, and columns encode the
         # presynaptic units. These weights are sigmoidally contrast-enchanced,
         # and are used to send net input to other neurons.
-        self.wts = utils.cuda(
+        self.wts = utils.to_cuda(
             torch.Tensor(self.post.size, self.pre.size).zero_())
         # These weights ("fast weights") are linear and not contrast enhanced
-        self.fwts = utils.cuda(
+        self.fwts = utils.to_cuda(
             torch.Tensor(self.post.size, self.pre.size).zero_())
 
         # Only create the projection between the units selected by the masks
@@ -225,14 +224,15 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         self.mask, num_nonzero = sparsify(self.spec.sparsity, mask)
 
         # Fill the weight matrix with values
-        rand_nums = utils.cuda(torch.Tensor(num_nonzero))
+        rand_nums = utils.to_cuda(torch.Tensor(num_nonzero))
         self.spec.dist.fill(rand_nums)
         self.wts[self.mask] = rand_nums
 
         self.fwts = self.wts
 
         # Record the number of incoming connections for each unit
-        self.num_recv_conns = utils.cuda(torch.sum(self.mask, dim=1).float())
+        self.num_recv_conns = utils.to_cuda(
+            torch.sum(self.mask, dim=1).float())
 
         # When adding any loggable attribute or property to these lists, update
         # specs.ProjnSpec._valid_log_on_cycle (we represent in two places to
@@ -267,13 +267,13 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
         pre_act_avg = self.pre.avg_act
         pre_act_n = max(1, round(pre_act_avg * self.pre.units.size))
-        post_act_n_avg = utils.cuda(
+        post_act_n_avg = utils.to_cuda(
             torch.max(
                 torch.Tensor([1]),
                 (pre_act_avg * self.num_recv_conns).round()))
-        post_act_n_max = utils.cuda(
+        post_act_n_max = utils.to_cuda(
             torch.min(self.num_recv_conns, torch.Tensor([pre_act_n])))
-        post_act_n_exp = utils.cuda(
+        post_act_n_exp = utils.to_cuda(
             torch.min(post_act_n_max, post_act_n_avg + sem_extra))
 
         scaling_factors = 1.0 / post_act_n_exp
@@ -316,12 +316,12 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
         # Compute weight changes
-        srs = utils.cuda(torch.ger(self.post.avg_s, self.pre.avg_s))
-        srm = utils.cuda(torch.ger(self.post.avg_m, self.pre.avg_m))
+        srs = utils.to_cuda(torch.ger(self.post.avg_s, self.pre.avg_s))
+        srm = utils.to_cuda(torch.ger(self.post.avg_m, self.pre.avg_m))
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
         thr_l_mix = 0.05
-        lthr = thr_l_mix * self.cos_diff_avg * utils.cuda(
+        lthr = thr_l_mix * self.cos_diff_avg * utils.to_cuda(
             torch.ger(self.post.avg_m, self.pre.avg_l))
         mthr = (1 - thr_l_mix * self.cos_diff_avg) * srm
         dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
@@ -345,8 +345,8 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
                 "{0} is not a valid parts attribute for Projn.".format(attr))
 
         matrix = getattr(self, attr_to_get)
-        indices = utils.cuda(torch.nonzero(self.mask))
-        values = utils.cuda(torch.masked_select(matrix, self.mask))
+        indices = utils.to_cuda(torch.nonzero(self.mask))
+        values = utils.to_cuda(torch.masked_select(matrix, self.mask))
         return {
             "pre_unit": indices[:, 1].tolist(),
             "post_unit": indices[:, 0].tolist(),
