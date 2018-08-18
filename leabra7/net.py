@@ -311,9 +311,8 @@ class Net(events.EventListenerMixin):
             # We use isinstance instead of catching AttributeError for MyPy
             if isinstance(obj, log.ObservableMixin):
                 return obj.observe(attr)
-            else:
-                raise ValueError(
-                    "Object {0} does not support observations.".format(name))
+            raise ValueError(
+                "Object {0} does not support observations.".format(name))
         except KeyError:
             raise ValueError("No object with name {0} found.".format(name))
 
