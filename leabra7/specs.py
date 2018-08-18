@@ -265,6 +265,10 @@ class LayerSpec(ObservableSpec):
     gi = 1.8
     # cos_diff_avg integration time constant
     avg_dt = 0.01
+    # We typically clamp binary values (0 or 1). But units cannot support an
+    # activation of 1. Any value above clamp_max will be reduced to
+    # clamp_max prior to clamping.
+    clamp_max = 0.95
 
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
@@ -297,6 +301,7 @@ class LayerSpec(ObservableSpec):
         self.assert_sane_float("fb")
         self.assert_in_range("fb_dt", 0, float("Inf"))
         self.assert_sane_float("gi")
+        self.assert_in_range("clamp_max", 0.0, 1.0)
         self.unit_spec.validate()
 
 

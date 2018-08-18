@@ -328,6 +328,12 @@ def test_it_should_check_for_invalid_log_on_batch_attrs() -> None:
         sp.LayerSpec(log_on_batch=("whales", )).validate()
 
 
+@given(float_outside_range(0, 1.0))
+def test_it_should_check_for_invalid_clamp_max(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.LayerSpec(clamp_max=f).validate()
+
+
 # Test ProjnSpec validation
 @given(float_outside_range(0, float("Inf")))
 def test_projn_spec_validates_integ(f) -> None:
