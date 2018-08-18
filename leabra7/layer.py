@@ -236,8 +236,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         """
         self.clamped = True
+        trimmed = utils.clip_iterable(0.0, self.spec.clamp_max, act_ext)
         self.act_ext = torch.Tensor(
-            list(itertools.islice(itertools.cycle(act_ext), self.size)))
+            list(itertools.islice(itertools.cycle(trimmed), self.size)))
         self.units.hard_clamp(self.act_ext)
 
     def unclamp(self) -> None:
