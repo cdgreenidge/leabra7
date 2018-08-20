@@ -6,17 +6,17 @@ channels:
   - conda-forge
 
 dependencies:
+  - codecov>=2.0
   - conda-build>=3.10
-  - hypothesis>=3.57
-  - mypy>=0.6
-  - nbconvert>=5.3.1
-  - numpy>=1.14
+  - hypothesis>=3.59
+  - mypy>=0.62
+  - numpy>=1.15
   - pandas>=0.23
-  - pylint>=1.9
+  - pylint>=2.1
   - pytest-cov>=2.5
   - pytest-mock>=1.10
-  - pytest>=3.6
-  - python=3.6.*
+  - pytest>=3.7
+  - python>=3.7
   - pytorch>=0.4
   - scipy>=1.1
   - yapf>=0.22

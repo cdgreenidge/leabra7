@@ -11,6 +11,6 @@ dependencies:
   - matplotlib>=2.2.2
   - numpy>=1.14
   - pandas>=0.23
-  - python=3.6.*
+  - python>=3.7
   - pytorch>=0.4
   - scipy>=1.1
