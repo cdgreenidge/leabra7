@@ -7,6 +7,9 @@ notebooks/*.py
 # OS X
 .DS_Store
 
+# Sphinx
+docs/_build
+
 # Byte-compiled / optimized / DLL files
 *.py[cod]
 *$py.class
