@@ -329,6 +329,9 @@ class ProjnSpec(ObservableSpec):
     wt_scale_rel: float = 1.0
     # Learning rate
     lrate = 0.02
+    # Mixing constant determining how much learning is hebbian.
+    # See Emergent docs.
+    thr_l_mix = 1
     # Gain for sigmoidal weight contrast enhancement
     sig_gain = 6
     # Offset for sigmoidal weight contrast enhancement
@@ -363,3 +366,4 @@ class ProjnSpec(ObservableSpec):
         self.assert_in_range("lrate", 0, float("Inf"))
         self.assert_in_range("sig_gain", 0, float("Inf"))
         self.assert_sane_float("sig_offset")
+        self.assert_in_range("thr_l_mix", 0, float("Inf"))

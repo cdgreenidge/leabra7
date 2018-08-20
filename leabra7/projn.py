@@ -287,10 +287,9 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         srm = torch.ger(self.post.avg_m, self.pre.avg_m)
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
-        thr_l_mix = 0.05
-        lthr = thr_l_mix * self.post.cos_diff_avg * torch.ger(
+        lthr = self.spec.thr_l_mix * self.post.cos_diff_avg * torch.ger(
             self.post.avg_m, self.pre.avg_l)
-        mthr = (1 - thr_l_mix * self.post.cos_diff_avg) * srm
+        mthr = (1 - self.spec.thr_l_mix * self.post.cos_diff_avg) * srm
         dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
         dwts[~self.mask] = 0
 

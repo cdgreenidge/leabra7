@@ -393,6 +393,12 @@ def test_projn_spec_validates_sig_offset(f) -> None:
         sp.ProjnSpec(sig_offset=f).validate()
 
 
+@given(float_outside_range(0, float("Inf")))
+def test_projn_spec_validates_thr_l_mix(f) -> None:
+    with pytest.raises(sp.ValidationError):
+        sp.ProjnSpec(thr_l_mix=f).validate()
+
+
 def test_projn_spec_validates_attrs_to_log() -> None:
     with pytest.raises(sp.ValidationError):
         sp.ProjnSpec(log_on_cycle=("whales", )).validate()
