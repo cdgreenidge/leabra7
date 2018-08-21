@@ -173,6 +173,14 @@ def test_hard_clamp_event_does_nothing_if_the_names_do_not_match() -> None:
     assert not layer.clamped
 
 
+def test_hard_clamp_event_marks_layer_as_not_hidden() -> None:
+    clamp = ev.HardClamp(layer_name="lr1", acts=[0.7, 0.7])
+    layer = lr.Layer("lr1", 3)
+    assert layer.hidden
+    layer.handle(clamp)
+    assert not layer.hidden
+
+
 def test_end_plus_phase_event_saves_activations() -> None:
     layer = lr.Layer("lr1", 3)
     layer.hard_clamp([0.8, 0, 0.8])

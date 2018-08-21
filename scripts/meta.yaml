@@ -1,31 +1,31 @@
 package:
   name: leabra7
-  version: 0.0.23
+  version: 0.0.24
 
 source:
   path: ..
 
 requirements:
   host:
-    - python=3.6.*
+    - python>=3.7
 
   run:
     - python
-    - numpy
-    - pandas
-    - scipy
-    - pytorch
+    - numpy>=1.15
+    - pandas>=0.23
+    - scipy>=1.1
+    - pytorch>=0.4.1
 
 test:
   requires:
-    - codecov
-    - hypothesis
-    - mypy
-    - pylint
-    - pytest
-    - pytest-cov
-    - pytest-mock
-    - yapf
+    - codecov>=2.0
+    - hypothesis>=3.59
+    - mypy>=0.62
+    - pylint>=2.1
+    - pytest>=3.7
+    - pytest-cov>=2.5
+    - pytest-mock>=1.10
+    - yapf>=0.22
 
   source_files:
     - .git
