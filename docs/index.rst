@@ -10,7 +10,10 @@ Welcome to leabra7's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   distributions
+   specs
 
+Check out the tutorial.
 
 Indices and tables
 ==================
