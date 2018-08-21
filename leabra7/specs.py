@@ -331,7 +331,7 @@ class ProjnSpec(ObservableSpec):
     lrate = 0.02
     # Mixing constant determining how much learning is hebbian.
     # See Emergent docs.
-    thr_l_mix = 1
+    thr_l_mix = 0.1
     # Gain for sigmoidal weight contrast enhancement
     sig_gain = 6
     # Offset for sigmoidal weight contrast enhancement

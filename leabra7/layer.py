@@ -63,6 +63,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.gc_i = 0.0
         # Is the layer activation clamped?
         self.clamped = False
+        # Is this a hidden layer? (i.e. has never been clamped)
+        self.hidden = True
         # Set k units for inhibition
         self.k = max(1, int(round(self.size * self.spec.kwta_pct)))
 
@@ -236,6 +238,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
 
         """
         self.clamped = True
+        self.hidden = False
         trimmed = utils.clip_iterable(0.0, self.spec.clamp_max, act_ext)
         self.act_ext = torch.Tensor(
             list(itertools.islice(itertools.cycle(trimmed), self.size)))

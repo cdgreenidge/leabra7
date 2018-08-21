@@ -9,6 +9,7 @@ dependencies:
   - codecov>=2.0
   - conda-build>=3.10
   - hypothesis>=3.59
+  - matplotlib>=2.2
   - mypy>=0.62
   - numpy>=1.15
   - pandas>=0.23
