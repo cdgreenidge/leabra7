@@ -269,7 +269,9 @@ class LayerSpec(ObservableSpec):
     # activation of 1. Any value above clamp_max will be reduced to
     # clamp_max prior to clamping.
     clamp_max = 0.95
-
+    # Modulate the learning rate with the error signal (more error = higher
+    # learning rate, less error = lower learning rate)
+    cos_diff_lrate_mod = False
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
 
