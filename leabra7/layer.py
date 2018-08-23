@@ -204,9 +204,9 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         cos_diff = torch.nn.functional.cosine_similarity(
             self.acts_p, self.acts_m, dim=0)
         cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
-        self.cos_diff_avg = self.spec.avg_dt * (cos_diff - self.cos_diff_avg)
+        self.cos_diff_avg += self.spec.avg_dt * (cos_diff - self.cos_diff_avg)
 
-        acts_p_avg_eff = self.acts_p.mean()
+        acts_p_avg_eff = self.acts_p.mean().item()
         self.units.update_trial_learning_averages(acts_p_avg_eff)
 
     @property

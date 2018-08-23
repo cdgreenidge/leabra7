@@ -308,10 +308,11 @@ class UnitGroup:
             implemented.
 
         """
-        self.avg_l = self.spec.l_dn_dt * acts_p_avg_eff * (
-            self.avg_m - self.avg_l)
         mask = self.avg_m > 0.1
-        self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
+        not_mask = ~mask
+        self.avg_l[mask] += self.avg_m[mask] * self.spec.l_up_inc
+        self.avg_l[not_mask] += self.spec.l_dn_dt * acts_p_avg_eff * (
+            self.avg_m[not_mask] - self.avg_l[not_mask])
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.

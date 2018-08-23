@@ -287,19 +287,13 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         srm = torch.ger(self.post.avg_m, self.pre.avg_m)
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
-
-        post_cos_diff_avg = 1.0 - self.post.cos_diff_avg
-        if not self.post.hidden:  # clamped layers should not use cos_diff_avg
-            post_cos_diff_avg = 0.0
-
-        efflmix = self.spec.thr_l_mix * post_cos_diff_avg
-        effmmix = 1.0 - efflmix
-        su_act_mult = efflmix * self.pre.avg_m
-
-        lthr = torch.ger(self.post.avg_l, su_act_mult)
-        effthr = torch.min(effmmix * srm + lthr, torch.Tensor([1.0]))
-
-        dwts = self.spec.lrate * xcal(sm_mix, effthr)
+        cos_diff_avg = self.post.cos_diff_avg
+        if not self.post.hidden:
+            cos_diff_avg = 0  # Clamped layers should not use Hebbian learning
+        lthr = torch.ger(self.post.avg_l,
+                         self.pre.avg_m * self.spec.thr_l_mix * cos_diff_avg)
+        mthr = (1 - self.spec.thr_l_mix * cos_diff_avg) * srm
+        dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
         dwts[~self.mask] = 0
 
         # Apply weights
