@@ -74,6 +74,8 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         self.acts_p = torch.Tensor(self.size).zero_()
         # Last minus phase activation
         self.acts_m = torch.Tensor(self.size).zero_()
+        # Cosine similarity between acts_p and acts_m
+        self.cos_diff = 0.0
         # Cosine similiarity between acts_p and acts_m, integrated over trials
         self.cos_diff_avg = 0.0
 
@@ -203,7 +205,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         """Updates the learning averages computed at the end of each trial."""
         cos_diff = torch.nn.functional.cosine_similarity(
             self.acts_p, self.acts_m, dim=0)
-        cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
+        self.cos_diff = utils.clip_float(low=0.01, high=0.99, x=cos_diff)
         self.cos_diff_avg += self.spec.avg_dt * (cos_diff - self.cos_diff_avg)
 
         acts_p_avg_eff = self.acts_p.mean().item()
