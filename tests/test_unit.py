@@ -154,16 +154,6 @@ def test_unitgroup_sets_the_spec_you_provide() -> None:
     assert un.UnitGroup(size=3, spec=spec).spec is spec
 
 
-@given(st.lists(elements=st.floats(), min_size=5, max_size=5))
-def test_unitgroup_hard_clamp_in_range(act_ext) -> None:
-    spec = sp.UnitSpec(act_min=0.25, act_max=0.75)
-    group = un.UnitGroup(size=5, spec=spec)
-    group.hard_clamp(torch.Tensor(act_ext))
-    for i in range(5):
-        assert 0.25 <= group.act[i] <= 0.75
-        assert 0.25 <= group.act_nd[i] <= 0.75
-
-
 def test_unitgroup_can_return_the_top_k_net_input_values() -> None:
     group = un.UnitGroup(size=10)
     group.net = torch.Tensor([9, 8, 7, 6, 5, 4, 3, 2, 1, 0])

@@ -278,14 +278,13 @@ class UnitGroup:
 
     def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
         """Sets unit act, v_m, and i_net from external hard clamp."""
-        act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
-        self.act_nd = act_clip
-        self.act = act_clip
+        self.act_nd = act_ext
+        self.act = act_ext
 
-        mask = (-1e-6 < act_clip) & (act_clip < 1e-6)
+        mask = (-1e-6 < act_ext) & (act_ext < 1e-6)
         self.v_m[mask] = self.spec.e_rev_l
         self.v_m[~mask] = (
-            self.spec.spk_thr + act_clip[~mask] / self.spec.act_gain)
+            self.spec.spk_thr + act_ext[~mask] / self.spec.act_gain)
 
         self.i_net = torch.Tensor(self.size).zero_()
 
