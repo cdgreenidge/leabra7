@@ -305,6 +305,8 @@ class ProjnSpec(ObservableSpec):
     # Mixing constant determining how much learning is hebbian.
     # See Emergent docs.
     thr_l_mix = 0.1
+    # Flag controlling whether thr_l_mix is modulated by cos_diff_avg
+    cos_diff_thr_l_mix = False
     # Gain for sigmoidal weight contrast enhancement
     sig_gain = 6
     # Offset for sigmoidal weight contrast enhancement

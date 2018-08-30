@@ -287,9 +287,13 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         srm = torch.ger(self.post.avg_m, self.pre.avg_m)
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
+
         cos_diff_avg = self.post.cos_diff_avg
         if not self.post.hidden:
             cos_diff_avg = 0  # Clamped layers should not use Hebbian learning
+        if not self.spec.cos_diff_thr_l_mix:
+            cos_diff_avg = 1
+
         lthr = torch.ger(self.post.avg_l,
                          self.pre.avg_m * self.spec.thr_l_mix * cos_diff_avg)
         mthr = (1 - self.spec.thr_l_mix * cos_diff_avg) * srm
