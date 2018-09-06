@@ -220,14 +220,14 @@ class UnitGroup:
         self.i_net = (self.net * (self.spec.e_rev_e - self.v_m) +
                       self.spec.gc_l * (self.spec.e_rev_l - self.v_m) +
                       self.gc_i * (self.spec.e_rev_i - self.v_m))
-        self.v_m += self.spec.integ * self.spec.vm_dt * (
-            self.i_net - self.adapt)
+        self.v_m += (self.spec.integ * self.spec.vm_dt * (
+            self.i_net - self.adapt)).clamp(-100, 100)
 
         self.i_net_r = (self.net * (self.spec.e_rev_e - self.v_m_eq) +
                         self.spec.gc_l * (self.spec.e_rev_l - self.v_m_eq) +
                         self.gc_i * (self.spec.e_rev_i - self.v_m_eq))
-        self.v_m_eq += self.spec.integ * self.spec.vm_dt * (
-            self.i_net_r - self.adapt)
+        self.v_m_eq += (self.spec.integ * self.spec.vm_dt * (
+            self.i_net - self.adapt)).clamp_(-100, 100)
         # yapf: enable
 
     def nxx1(self, x: torch.Tensor) -> torch.Tensor:
@@ -253,7 +253,7 @@ class UnitGroup:
 
         """
         # yapf: disable
-        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) *
+        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) +
                    self.spec.gc_l * (self.spec.e_rev_l - self.spec.spk_thr) -
                    self.adapt) / (self.spec.spk_thr - self.spec.e_rev_e)
         # yapf: enable
@@ -278,14 +278,13 @@ class UnitGroup:
 
     def hard_clamp(self, act_ext: torch.Tensor = torch.zeros(0)) -> None:
         """Sets unit act, v_m, and i_net from external hard clamp."""
-        act_clip = clip(act_ext, self.spec.act_min, self.spec.act_max)
-        self.act_nd = act_clip
-        self.act = act_clip
+        self.act_nd = act_ext
+        self.act = act_ext
 
-        mask = (-1e-6 < act_clip) & (act_clip < 1e-6)
+        mask = (-1e-6 < act_ext) & (act_ext < 1e-6)
         self.v_m[mask] = self.spec.e_rev_l
         self.v_m[~mask] = (
-            self.spec.spk_thr + act_clip[~mask] / self.spec.act_gain)
+            self.spec.spk_thr + act_ext[~mask] / self.spec.act_gain)
 
         self.i_net = torch.Tensor(self.size).zero_()
 
@@ -308,10 +307,11 @@ class UnitGroup:
             implemented.
 
         """
-        self.avg_l = self.spec.l_dn_dt * acts_p_avg_eff * (
-            self.avg_m - self.avg_l)
         mask = self.avg_m > 0.1
-        self.avg_l[mask] = self.avg_m[mask] * self.spec.l_up_inc
+        not_mask = ~mask
+        self.avg_l[mask] += self.avg_m[mask] * self.spec.l_up_inc
+        self.avg_l[not_mask] += self.spec.l_dn_dt * acts_p_avg_eff * (
+            self.avg_m[not_mask] - self.avg_l[not_mask])
 
     def top_k_net_indices(self, k: int) -> torch.Tensor:
         """Returns the indices of the top k units, sorted by net input.

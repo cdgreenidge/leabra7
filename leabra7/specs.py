@@ -178,12 +178,6 @@ class UnitSpec(Spec):
     adapt_dt = 1 / 144
     # Short term plasticity
     syn_tr = 1.0
-    # Clamping activation limits
-    act_min = 0.0
-    act_max = 1.0
-    # Clamping potential limits
-    vm_min = 0.0
-    vm_max = 2.0
     # Clamping gain
     act_gain = 100.0
     # Supershort learning average integration time constant
@@ -211,10 +205,6 @@ class UnitSpec(Spec):
         self.assert_in_range("vm_dt", 0, float("Inf"))
         self.assert_in_range("adapt_dt", 0, float("Inf"))
         self.assert_in_range("syn_tr", 0, 1.0)
-        self.assert_in_range("act_min", 0, 1.0)
-        self.assert_in_range("act_max", 0, 1.0)
-        self.assert_sane_float("vm_min")
-        self.assert_sane_float("vm_max")
         self.assert_in_range("act_gain", 0, float("Inf"))
         self.assert_in_range("ss_dt", 0, float("Inf"))
         self.assert_in_range("s_dt", 0, float("Inf"))
@@ -226,22 +216,6 @@ class UnitSpec(Spec):
             raise ValidationError(
                 "v_m_r ({0}) cannot be >= spk_thr ({1}).".format(
                     self.v_m_r, self.spk_thr))
-
-        if self.act_min >= self.act_max:
-            raise ValidationError(
-                "act_min ({0}) cannot be >= act_max ({1}).".format(
-                    self.act_min, self.act_max))
-
-        if self.vm_min >= self.vm_max:
-            raise ValidationError(
-                "vm_min ({0}) cannot be >= vm_max ({1}).".format(
-                    self.vm_min, self.vm_max))
-
-        if self.vm_min > self.v_m_r or self.vm_max < self.v_m_r:
-            raise ValidationError(
-                """v_m_r ({0}) must be in range from vm_min ({1})
-                to vm_max ({2}).""".format(self.v_m_r, self.vm_min,
-                                           self.vm_max))
 
 
 class LayerSpec(ObservableSpec):
@@ -269,7 +243,6 @@ class LayerSpec(ObservableSpec):
     # activation of 1. Any value above clamp_max will be reduced to
     # clamp_max prior to clamping.
     clamp_max = 0.95
-
     # Layers need to know how to construct their units
     unit_spec = UnitSpec()
 
@@ -332,6 +305,10 @@ class ProjnSpec(ObservableSpec):
     # Mixing constant determining how much learning is hebbian.
     # See Emergent docs.
     thr_l_mix = 0.1
+    # Flag controlling whether thr_l_mix is modulated by cos_diff_avg
+    cos_diff_thr_l_mix = False
+    # Modulate the learn rate by cos_diff_avg?
+    cos_diff_lrate = False
     # Gain for sigmoidal weight contrast enhancement
     sig_gain = 6
     # Offset for sigmoidal weight contrast enhancement

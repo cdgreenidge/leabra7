@@ -280,6 +280,7 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
             self.spec.wt_scale_abs * wt_scale_act *
             (self.wts @ self.pre.units.act), self.spec.wt_scale_rel)
 
+    #pylint: disable=R0914
     def learn(self) -> None:
         """Updates weights with XCAL learning equation."""
         # Compute weight changes
@@ -288,18 +289,38 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
         s_mix = 0.9
         sm_mix = s_mix * srs + (1 - s_mix) * srm
 
-        post_cos_diff_avg = 1.0 - self.post.cos_diff_avg
-        if not self.post.hidden:  # clamped layers should not use cos_diff_avg
-            post_cos_diff_avg = 0.0
+        # Compute cos diff avg
+        cos_diff_avg = self.post.cos_diff_avg
+        if not self.spec.cos_diff_thr_l_mix:
+            cos_diff_avg = 1
+        if not self.post.hidden:
+            cos_diff_avg = 0  # Clamped layers should not use Hebbian learning
 
-        efflmix = self.spec.thr_l_mix * post_cos_diff_avg
-        effmmix = 1.0 - efflmix
-        su_act_mult = efflmix * self.pre.avg_m
+        # Compute the learning rate modifier, if enabled
+        lrate_mod = 1.0
+        if self.spec.cos_diff_lrate:
+            diff = self.post.cos_diff
+            diff_avg = self.post.cos_diff_avg
+            lo_diff = 0.0
+            lo_lrate = 0.01
+            hi_diff = 1.0
+            hi_lrate = 0.01
 
-        lthr = torch.ger(self.post.avg_l, su_act_mult)
-        effthr = torch.min(effmmix * srm + lthr, torch.Tensor([1.0]))
+            if diff <= lo_diff:
+                lrate_mod = lo_lrate
+            elif diff >= hi_diff:
+                lrate_mod = hi_lrate
+            elif diff < diff_avg:
+                lrate_mod = 1.0 - ((diff_avg - diff) / (diff_avg - lo_diff))
+                lrate_mod = lo_lrate + (1.0 - lo_lrate) * lrate_mod
+            else:
+                lrate_mod = 1.0 - ((diff - diff_avg) / (hi_diff - diff_avg))
+                lrate_mod = hi_lrate + (1.0 - hi_lrate) * lrate_mod
 
-        dwts = self.spec.lrate * xcal(sm_mix, effthr)
+        lthr = torch.ger(self.post.avg_l,
+                         self.pre.avg_m * self.spec.thr_l_mix * cos_diff_avg)
+        mthr = (1 - self.spec.thr_l_mix * cos_diff_avg) * srm
+        dwts = self.spec.lrate * xcal(sm_mix, lthr + mthr)
         dwts[~self.mask] = 0
 
         # Apply weights

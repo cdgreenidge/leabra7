@@ -163,51 +163,10 @@ def test_it_should_validate_syn_tr(f) -> None:
         sp.UnitSpec(syn_tr=f).validate()
 
 
-@given(float_outside_range(0, 1.0))
-def test_it_should_validate_act_min(f) -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(act_min=f).validate()
-
-
-@given(float_outside_range(0, 1.0))
-def test_it_should_validate_act_max(f) -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(act_max=f).validate()
-
-
-@given(insane_float)
-def test_it_should_validate_vm_min_sanity(f) -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(vm_min=f).validate()
-
-
-@given(insane_float)
-def test_it_should_validate_vm_max_sanity(f) -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(vm_max=f).validate()
-
-
 @given(float_outside_range(0, float("Inf")))
 def test_it_should_validate_act_gain_positive(f) -> None:
     with pytest.raises(sp.ValidationError):
         sp.UnitSpec(act_gain=f).validate()
-
-
-def test_it_should_validate_act_min_is_less_than_act_max() -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(act_min=1.0, act_max=0.5).validate()
-
-
-def test_it_should_validate_vm_min_is_less_than_vm_max() -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(vm_min=1.0, vm_max=0.5).validate()
-
-
-def test_it_should_validate_v_m_r_in_range() -> None:
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(vm_min=1.0, vm_max=1.5, v_m_r=0.3).validate()
-    with pytest.raises(sp.ValidationError):
-        sp.UnitSpec(vm_min=0.1, vm_max=0.15, v_m_r=0.3).validate()
 
 
 @given(float_outside_range(0, float("Inf")))
