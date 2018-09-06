@@ -12,7 +12,6 @@ def test_kwta_suppresses_all_but_k_units() -> None:
         lr2_spec = lb.LayerSpec(
             inhibition_type="kwta",
             kwta_pct=p,
-            log_on_cycle=("unit_act", ),
             unit_spec=lb.UnitSpec(adapt_dt=0, spike_gain=0))
         n.new_layer(name="lr2", size=10, spec=lr2_spec)
 
@@ -26,10 +25,8 @@ def test_kwta_suppresses_all_but_k_units() -> None:
         for i in range(50):
             n.cycle()
 
-        logs = n.logs("cycle", "lr2").parts
-        acts = logs[logs.time == 49]["act"]
-
-        assert (acts > 0.5).sum() == max(1, int(round(10 * p)))
+        v_m_eq = n.observe("lr2", "unit_v_m_eq")["v_m_eq"]
+        assert (v_m_eq > 0.5).sum() == max(1, int(round(10 * p)))
 
 
 # TODO: precisely define this
