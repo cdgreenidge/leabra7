@@ -291,10 +291,10 @@ class Projn(events.EventListenerMixin, log.ObservableMixin):
 
         # Compute cos diff avg
         cos_diff_avg = self.post.cos_diff_avg
-        if not self.post.hidden:
-            cos_diff_avg = 0  # Clamped layers should not use Hebbian learning
         if not self.spec.cos_diff_thr_l_mix:
             cos_diff_avg = 1
+        if not self.post.hidden:
+            cos_diff_avg = 0  # Clamped layers should not use Hebbian learning
 
         # Compute the learning rate modifier, if enabled
         lrate_mod = 1.0

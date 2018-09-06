@@ -220,14 +220,14 @@ class UnitGroup:
         self.i_net = (self.net * (self.spec.e_rev_e - self.v_m) +
                       self.spec.gc_l * (self.spec.e_rev_l - self.v_m) +
                       self.gc_i * (self.spec.e_rev_i - self.v_m))
-        self.v_m += self.spec.integ * self.spec.vm_dt * (
-            self.i_net - self.adapt)
+        self.v_m += (self.spec.integ * self.spec.vm_dt * (
+            self.i_net - self.adapt)).clamp(-100, 100)
 
         self.i_net_r = (self.net * (self.spec.e_rev_e - self.v_m_eq) +
                         self.spec.gc_l * (self.spec.e_rev_l - self.v_m_eq) +
                         self.gc_i * (self.spec.e_rev_i - self.v_m_eq))
-        self.v_m_eq += self.spec.integ * self.spec.vm_dt * (
-            self.i_net_r - self.adapt)
+        self.v_m_eq += (self.spec.integ * self.spec.vm_dt * (
+            self.i_net - self.adapt)).clamp_(-100, 100)
         # yapf: enable
 
     def nxx1(self, x: torch.Tensor) -> torch.Tensor:
@@ -253,7 +253,7 @@ class UnitGroup:
 
         """
         # yapf: disable
-        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) *
+        g_e_thr = (self.gc_i * (self.spec.e_rev_i - self.spec.spk_thr) +
                    self.spec.gc_l * (self.spec.e_rev_l - self.spec.spk_thr) -
                    self.adapt) / (self.spec.spk_thr - self.spec.e_rev_e)
         # yapf: enable

@@ -154,7 +154,7 @@ class Layer(log.ObservableMixin, events.EventListenerMixin):
         # Feedforward inhibition
         ffi = self.spec.ff * max(self.avg_net - self.spec.ff0, 0)
         # Feedback inhibition
-        self.fbi = self.spec.fb_dt * (self.spec.fb * self.avg_act - self.fbi)
+        self.fbi += self.spec.fb_dt * (self.spec.fb * self.avg_act - self.fbi)
         # Global inhibition
         self.gc_i = self.spec.gi * (ffi * self.fbi)
 
