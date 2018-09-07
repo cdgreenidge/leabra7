@@ -142,7 +142,7 @@ useful for tracking the progress of training):
 
 
 With this housekeeping out of the way, we can start to write the
-actual network training code.We will break down the task of training a
+actual network training code. We will break down the task of training a
 network into a series of functions that can be modified for any
 general network training task. First, define a function to load and
 preprocess the input and output data:
