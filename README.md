@@ -1,5 +1,5 @@
 # leabra7
-[![Anaconda-Server Badge](https://anaconda.org/cdg4/leabra7/badges/version.svg)](https://anaconda.org/cdg4/leabra7) [![Anaconda-Server Badge](https://anaconda.org/cdg4/leabra7/badges/platforms.svg)](https://anaconda.org/cdg4/leabra7) [![Anaconda-Server Badge](https://anaconda.org/cdg4/leabra7/badges/latest_release_date.svg)](https://anaconda.org/cdg4/leabra7) [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/cdgreenidge/leabra7/master?filepath=notebooks)
+[![Anaconda-Server Badge](https://anaconda.org/cdg4/leabra7/badges/version.svg)](https://anaconda.org/cdg4/leabra7) [![Documentation Status](https://readthedocs.org/projects/leabra7/badge/?version=latest)](https://leabra7.readthedocs.io/en/latest/?badge=latest) [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/cdgreenidge/leabra7/master?filepath=notebooks)
 
 | linux | windows | coverage |
 |-------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
@@ -18,21 +18,17 @@ between the hippocampus and neocortex during memory recall (see the
 [Princeton Computational Memory Lab](https://compmem.princeton.edu/) for more
 details).
 
-To see it in action, look at the IPython notebooks in `docs`. They're not very
-verbose but the docs will be fully written once the API stabilizes (0.1 release
-targeted in roughly 1 month).
+To get started, check out the
+**[documentation](https://leabra7.readthedocs.io/en/latest/?)** for an
+installation guide and tutorial.
 
-## Getting started
+
+## Quick install
 
 ### Prerequisites
 - Anaconda Distribution of Python 3. See the [Anaconda Installation Guide](https://conda.io/docs/user-guide/install/download.html)
   for installation instructions.
 - The [conda](https://www.anaconda.com/distribution/) package manager.
-
-*Note:* If you have Python 2 and Python 3 installed side-by-side, use the
-commands `python3` and `pip3` instead of `pip` and `python`.
-
-### Installation
 
 ### For users
 
