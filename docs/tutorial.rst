@@ -125,6 +125,7 @@ useful for tracking the progress of training):
 
 		import logging
 		import sys
+		from typing import *
 		import numpy as np
 		import pandas as pd
 
@@ -306,7 +307,7 @@ With these building blocks in place, we can write the main training function:
 			epoch(network, input_patterns, output_patterns)
 			pred = predict(network, input_patterns)
 			data["epoch"].append(i)
-			data["train_loss"].append(sse_thresh(output_patterns, pred))
+			data["train_loss"].append(mse_thresh(output_patterns, pred))
 
 			logging.info("Epoch %d/%d. Train loss: %.4f", i, num_epochs,
 			              data["train_loss"][-1])
@@ -331,15 +332,15 @@ end of training.
 
 The training function makes use of two housekeeping functions which we will now define:
 
-1. The thresholded sum-of-squared-error loss function, which measures the performance of the network.
+1. The thresholded mean-squared-error loss function, which measures the performance of the network.
 2. The prediction function, which calculates predictions for an array of input patterns.
 
-First, let's define the thresholded SSE loss function:
+First, let's define the thresholded MSE loss function:
 
 .. code-block:: python
 
-		def sse_thresh(expected: np.ndarray, actual: np.ndarray) -> float:
-		    """Calculates the thresholded sum of squared errors.
+		def mse_thresh(expected: np.ndarray, actual: np.ndarray) -> float:
+		    """Calculates the thresholded mean squared error.
 
 		    If the error is < 0.5, it is treated as 0 (i.e., we count < 0.5 as 0 and
 		    > 0.5 as 1).
@@ -349,7 +350,7 @@ First, let's define the thresholded SSE loss function:
 		      actual: The actual output patterns, with shape [n_samples, n_features].
 
 		    Returns:
-		      The thresholded sum of squared error.
+		      The thresholded mean square error.
 
 		    """
 		    diff = np.abs(expected - actual)
