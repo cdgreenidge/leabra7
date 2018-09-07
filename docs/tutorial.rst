@@ -180,8 +180,9 @@ In this case, we are loading the following pattern associations:
 We follow scikit-learn's convention of using the array
 shape :code:`[n_samples, n_features]`.
 
-Now, define a function to construct the network. We will use a simple
-feedforward architecture with one input layer and one output layer.
+Now, we will define a function to construct the network. We will use a
+simple feedforward architecture with one input layer and one output
+layer.
 
 .. code-block:: python
 
@@ -225,9 +226,8 @@ feedforward architecture with one input layer and one output layer.
 
 		    return net
 
-In this case, we have tweaked many of the parameters for improved
-performance. This is not strictly necessary, since the default
-parameters should work reasonably well.
+In this case, we have tweaked many of the parameters. This is not
+strictly necessary, but it helps this specific network train faster.
 
 Now, we will define a function to run a network *trial*, consisting of
 a minus and a plus phase. In the minus phase, the input pattern will

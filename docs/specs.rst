@@ -170,10 +170,14 @@ LayerSpec
       default parameter values.
 
    .. py:attribute:: log_on_cycle
+   .. py:attribute:: log_on_trial
+   .. py:attribute:: log_on_epoch
+   .. py:attribute:: log_on_batch
 
-      An iterable of strings specifying which layer attributes to log
-      each cycle. Defaults to an empty iterable, :code:`()`. Valid
-      members of the iterable are:
+
+      A tuple of strings specifying which layer attributes to log
+      at the respective frequency. Defaults to an empty tuple,
+      :code:`()`. Valid members of the tuple are:
 
       - :code:`avg_act`, the average layer activation.
       - :code:`avg_net`, the average layer net input.
@@ -293,15 +297,17 @@ ProjnSpec
       weight contrast before sending net input. Defaults to
       :code:`1`. Valid values are any float.
 
-
    .. py:attribute:: log_on_cycle
+   .. py:attribute:: log_on_trial
+   .. py:attribute:: log_on_epoch
+   .. py:attribute:: log_on_batch
 
-      An iterable of strings specifying which layer attributes to log
-      each cycle. Defaults to an empty iterable, :code:`()`. Valid
-      members of the iterable are:
+      A tuple of strings specifying which layer attributes to log at
+      the respective frequency. Defaults to an empty tuple,
+      :code:`()`. Valid members of the tuple are:
 
-      - :code:`conn_wt`, the sigmoid contrast-enhanced connection weights.
-      - :code:`conn_fwt`, the non-contrast-enhanced connection weights.
+      - :code:`"conn_wt"`, the sigmoid contrast-enhanced connection weights.
+      - :code:`"conn_fwt"`, the non-contrast-enhanced connection weights.
 
 
 UnitSpec

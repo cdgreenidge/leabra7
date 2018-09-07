@@ -149,7 +149,7 @@ The Network Object
                 are attributes of the object itself, like a layer's
                 :code:`"avg_act"`. The second element of the tuple
                 contains the logs for "parts" attributes, which are
-                attributes of the object's constitutents, like a
+                attributes of the object's constituents, like a
                 layer's :code:`"unit_act"` attribute. For layers,
                 parts attributes pertain to the units, and for
                 projections, parts attributes pertain to the
