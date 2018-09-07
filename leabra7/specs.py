@@ -220,8 +220,9 @@ class UnitSpec(Spec):
 
 class LayerSpec(ObservableSpec):
     """Spec for Layer objects."""
-    # Can be either "fffb" for feedforward-feedback inhibition, or
-    # "kwta" for k-winner-take-all inhibition
+    # Can be either "fffb" for feedforward-feedback inhibition,
+    # "kwta" for k-winner-take-all inhibition, or "kwta_avg" for average
+    # kwta inhibition.
     inhibition_type = "fffb"
     # Proportion of winners for k-winner-take-all inhibition
     kwta_pct = 0.1
