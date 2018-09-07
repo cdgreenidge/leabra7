@@ -154,6 +154,9 @@ class Net(events.EventListenerMixin):
         After unclamping, the layer's activations will be
         updated each cycle.
 
+        Args:
+            name: The name of the layer to unclamp.
+
         """
         self._validate_layer_name(name)
         self.handle(events.Unclamp(name))
@@ -221,7 +224,7 @@ class Net(events.EventListenerMixin):
             self.handle(events.Cycle())
         self.handle(events.EndMinusPhase())
 
-    def plus_phase_cycle(self, num_cycles: int = 50) -> None:
+    def plus_phase_cycle(self, num_cycles: int = 25) -> None:
         """Runs a series of cycles for the trial plus phase.
 
         A plus phase is the trial phase where target values are clamped on
@@ -305,6 +308,9 @@ class Net(events.EventListenerMixin):
           ValueError: if the object does not exist, does not support
             observations, or the attribute is not a valid loggable attribute.
 
+        Returns:
+          A dataframe containing the observation value.
+
         """
         try:
             obj = self.objs[name]
@@ -321,7 +327,7 @@ class Net(events.EventListenerMixin):
 
         Args:
             freq: The frequency at which the desired logs were recorded. One
-                of `["cycle"]`.
+                of `["cycle", "trial", "epoch", "batch"]`.
             name: The name of the object for which the logs were recorded.
 
         Raises:

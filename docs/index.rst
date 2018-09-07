@@ -1,23 +1,20 @@
-.. leabra7 documentation master file, created by
-   sphinx-quickstart on Mon Aug 20 14:39:13 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+**Welcome to leabra7's documentation!**
 
-Welcome to leabra7's documentation!
-===================================
+leabra7 is a Python package for simulating recurrent,
+biologically-realistic neural networks. To get started, look at the
+:doc:`installation guide<installation>` and then read through the
+:doc:`tutorial <tutorial>` for a quick overview.
+
+**Documentation contents**:
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
-   distributions
-   specs
+   installation
+   tutorial
+   api
 
-Check out the tutorial.
-
-Indices and tables
-==================
+**Indices and tables**
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
