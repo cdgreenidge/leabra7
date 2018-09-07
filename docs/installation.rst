@@ -23,5 +23,5 @@ Now, you can install leabra7 with
 
 		$ conda install -c cdg4 leabra7
 
-Now, you can head fover to the :doc:`tutorial <tutorial>` to get
+Now, you can head over to the :doc:`tutorial <tutorial>` to get
 started.
